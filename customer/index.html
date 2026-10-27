@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Client Portal &bull; Software CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #007788;
+      --primary-dark: #005f6d;
+      --primary-light: #e0f2f5;
+      --accent: #2563EB;
+      --accent-light: #EFF6FF;
+      --success: #10B981;
+      --success-light: #ECFDF5;
+      --warning: #F59E0B;
+      --warning-light: #FFFBEB;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --border: #E2E8F0;
+      --border-subtle: #F1F5F9;
+      --text-pri: #0F172A;
+      --text-sec: #475569;
+      --text-muted: #94A3B8;
+      --bottom-bar-height: 64px;
+      --header-height: 62px;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #E2E8F0;
+      color: var(--text-pri);
+      line-height: 1.45;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0;
+    }
+
+    /* Device Mockup Shell for Desktop Preview */
+    .app-viewport-wrapper {
+      width: 100%;
+      max-width: 440px;
+      min-height: 100vh;
+      background: var(--surface);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+      overflow-x: hidden;
+    }
+
+    @media (min-width: 768px) {
+      body {
+        padding: 24px 0;
+        background: #0F172A;
+      }
+      .app-viewport-wrapper {
+        border-radius: 36px;
+        min-height: 880px;
+        height: 92vh;
+        max-height: 940px;
+        border: 8px solid #1E293B;
+        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+    }
+
+    /* Top Sticky Client Header */
+    .client-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #007788, #00A3B4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      box-shadow: 0 4px 10px rgba(0, 119, 136, 0.3);
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-pri);
+      letter-spacing: -0.3px;
+      line-height: 1.15;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .client-profile-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 4px 10px 4px 5px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .avatar-circle {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F59E0B, #EF4444);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .client-name-txt {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-pri);
+      max-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Main Scrollable Body */
+    .app-main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: calc(var(--bottom-bar-height) + 24px);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Welcome Banner */
+    .client-welcome-card {
+      margin: 14px 16px;
+      padding: 16px 18px;
+      background: linear-gradient(135deg, #007788 0%, #005F6D 100%);
+      border-radius: var(--radius-lg);
+      color: #FFFFFF;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 20px -6px rgba(0, 119, 136, 0.4);
+    }
+
+    .client-welcome-card::after {
+      content: '';
+      position: absolute;
+      right: -20px;
+      bottom: -20px;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .welcome-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .welcome-subtitle {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 3px;
+      max-width: 85%;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .kpi-col {
+      text-align: center;
+    }
+
+    .kpi-val {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .kpi-label {
+      font-size: 10px;
+      opacity: 0.85;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-top: 2px;
+    }
+
+    /* Section Headers */
+    .section-header {
+      padding: 0 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-pri);
+      letter-spacing: -0.3px;
+    }
+
+    .section-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--bg);
+      color: var(--text-sec);
+      border: 1px solid var(--border);
+    }
+
+    /* Category Filter Strip */
+    .category-pills-strip {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .category-pills-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sec);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .category-pill.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(0, 119, 136, 0.25);
+    }
+
+    .category-pill:hover:not(.active) {
+      background: var(--bg);
+      border-color: #CBD5E1;
+    }
+
+    /* Search Box */
+    .search-bar-wrap {
+      padding: 0 16px;
+      margin-bottom: 12px;
+    }
+
+    .search-input-box {
+      width: 100%;
+      height: 42px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .search-input-box:focus-within {
+      background: var(--surface);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 119, 136, 0.1);
+    }
+
+    .search-input-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-pri);
+    }
+
+    /* Card List Container */
+    .cards-list {
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Task Card */
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .task-card:hover {
+      box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.08);
+      border-color: #CBD5E1;
+    }
+
+    .task-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .badge-category {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .cat-website {
+      background: #EFF6FF;
+      color: #2563EB;
+      border: 1px solid #BFDBFE;
+    }
+
+    .cat-marketing {
+      background: #ECFDF5;
+      color: #059669;
+      border: 1px solid #A7F3D0;
+    }
+
+    .cat-design {
+      background: #F5F3FF;
+      color: #7C3AED;
+      border: 1px solid #DDD6FE;
+    }
+
+    .cat-seo {
+      background: #FFFBEB;
+      color: #D97706;
+      border: 1px solid #FDE68A;
+    }
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    .status-in-progress {
+      background: #EFF6FF;
+      color: #2563EB;
+    }
+
+    .status-review {
+      background: #FFFBEB;
+      color: #D97706;
+      border: 1px solid #FDE68A;
+    }
+
+    .status-completed {
+      background: #ECFDF5;
+      color: #059669;
+    }
+
+    .status-pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .task-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-pri);
+      line-height: 1.35;
+      margin-bottom: 4px;
+    }
+
+    .task-desc {
+      font-size: 12px;
+      color: var(--text-sec);
+      line-height: 1.4;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Progress Bar */
+    .task-progress-wrap {
+      margin-bottom: 12px;
+    }
+
+    .task-progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sec);
+      margin-bottom: 4px;
+    }
+
+    .task-progress-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--bg);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .task-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #007788, #10B981);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    /* Task Footer */
+    .task-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .task-pm {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pm-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #E2E8F0;
+      color: var(--text-pri);
+      font-size: 9.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .task-btn-action {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 6px;
+      border-radius: 6px;
+    }
+
+    .task-btn-action:hover {
+      background: var(--primary-light);
+    }
+
+    /* ==========================================================================
+       TAB 2: SERVICES STYLING
+       ========================================================================== */
+    .service-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .service-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 8px 24px -6px rgba(0, 119, 136, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .service-card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .service-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .icon-box-web {
+      background: #EFF6FF;
+      color: #2563EB;
+      border: 1px solid #DBEAFE;
+    }
+
+    .icon-box-mkt {
+      background: #ECFDF5;
+      color: #059669;
+      border: 1px solid #D1FAE5;
+    }
+
+    .service-meta-head {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .service-tag {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--primary);
+    }
+
+    .service-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-pri);
+      line-height: 1.25;
+      margin-top: 2px;
+    }
+
+    .service-desc {
+      font-size: 12.5px;
+      color: var(--text-sec);
+      line-height: 1.45;
+      margin-bottom: 14px;
+    }
+
+    .features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+    }
+
+    .features-list li {
+      font-size: 11.5px;
+      color: var(--text-pri);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .features-list li svg {
+      color: var(--success);
+      flex-shrink: 0;
+    }
+
+    .service-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .price-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .price-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .price-amount {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-pri);
+      letter-spacing: -0.3px;
+    }
+
+    .btn-inquire {
+      background: var(--primary);
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, transform 0.1s;
+      font-family: inherit;
+    }
+
+    .btn-inquire:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    /* Fixed Bottom Navigation Bar (ONLY 2 Menus) */
+    .customer-bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--bottom-bar-height);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.15s ease;
+      height: 100%;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+    }
+
+    .tab-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2;
+      transition: transform 0.15s ease;
+    }
+
+    .tab-btn.active svg {
+      stroke-width: 2.3;
+      transform: scale(1.08);
+    }
+
+    .tab-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+    }
+
+    .tab-badge {
+      position: absolute;
+      top: 8px;
+      right: calc(50% - 24px);
+      background: var(--primary);
+      color: #FFFFFF;
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 999px;
+      min-width: 16px;
+      text-align: center;
+    }
+
+    /* Active indicator bar on top of selected bottom tab */
+    .tab-btn.active::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      width: 40px;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 0 0 4px 4px;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    @media (min-width: 768px) {
+      .modal-backdrop {
+        align-items: center;
+      }
+    }
+
+    .modal-dialog {
+      background: var(--surface);
+      width: 100%;
+      max-width: 440px;
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      padding: 20px 20px 28px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (min-width: 768px) {
+      .modal-dialog {
+        border-radius: var(--radius-xl);
+      }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-close-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+    }
+
+    .btn-close-modal {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-sec);
+    }
+
+    .btn-whatsapp-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px 18px;
+      background: #25D366;
+      color: #FFFFFF !important;
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
+      margin-top: 14px;
+      font-family: inherit;
+      border: none;
+    }
+
+    .btn-whatsapp-cta:hover {
+      background: #20BA5A;
+    }
+
+    [x-cloak] {
+      display: none !important;
+    }
+  </style>
+</head>
+<body x-data="customerPortalApp()" x-cloak>
+
+  <div class="app-viewport-wrapper">
+
+    <!-- Top Sticky Customer Header -->
+    <header class="client-header">
+      <div class="brand-group">
+        <div class="brand-logo-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="12" width="4" height="9" rx="1" fill="#FFFFFF"/>
+            <rect x="8" y="7" width="4" height="14" rx="1" fill="#FFFFFF"/>
+            <rect x="14" y="3" width="4" height="18" rx="1" fill="#FFFFFF"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Software CRM</h1>
+          <p>Client Hub &bull; Portal</p>
+        </div>
+      </div>
+
+      <!-- Customer Profile Chip -->
+      <div class="client-profile-chip" @click="showSupportModal = true" title="Contact Account Manager">
+        <div class="avatar-circle">RS</div>
+        <span class="client-name-txt">Rajesh S.</span>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-main-content">
+
+      <!-- Welcome Overview Card -->
+      <div class="client-welcome-card">
+        <div class="welcome-title">Hello, Apex Retail Ltd. 👋</div>
+        <div class="welcome-subtitle">Track your deliverables, tasks, and explore growth services.</div>
+        <div class="kpi-row">
+          <div class="kpi-col">
+            <div class="kpi-val" x-text="activeTasksCount">5</div>
+            <div class="kpi-label">Active Tasks</div>
+          </div>
+          <div class="kpi-col">
+            <div class="kpi-val">18</div>
+            <div class="kpi-label">Completed</div>
+          </div>
+          <div class="kpi-col">
+            <div class="kpi-val">2</div>
+            <div class="kpi-label">Live Services</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════
+           SCREEN / TAB 1: MY TASKS
+           ═══════════════════════════════════════════════════ -->
+      <div x-show="currentTab === 'tasks'" x-transition:enter.opacity.duration.200ms>
+        
+        <!-- Header -->
+        <div class="section-header">
+          <h2 class="section-title">My Tasks &amp; Milestones</h2>
+          <span class="section-badge" x-text="filteredTasks.length + ' Tasks'"></span>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar-wrap">
+          <div class="search-input-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input 
+              type="text" 
+              placeholder="Search tasks, milestones, deliverables..." 
+              x-model="taskSearch"
+            />
+          </div>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="category-pills-strip">
+          <button 
+            type="button" 
+            class="category-pill" 
+            :class="{ 'active': selectedCategory === 'all' }"
+            @click="selectedCategory = 'all'"
+          >
+            All Categories
+          </button>
+          <button 
+            type="button" 
+            class="category-pill" 
+            :class="{ 'active': selectedCategory === 'website' }"
+            @click="selectedCategory = 'website'"
+          >
+            🌐 Website Development
+          </button>
+          <button 
+            type="button" 
+            class="category-pill" 
+            :class="{ 'active': selectedCategory === 'marketing' }"
+            @click="selectedCategory = 'marketing'"
+          >
+            📈 Digital Marketing
+          </button>
+          <button 
+            type="button" 
+            class="category-pill" 
+            :class="{ 'active': selectedCategory === 'seo' }"
+            @click="selectedCategory = 'seo'"
+          >
+            🔍 SEO &amp; Analytics
+          </button>
+          <button 
+            type="button" 
+            class="category-pill" 
+            :class="{ 'active': selectedCategory === 'design' }"
+            @click="selectedCategory = 'design'"
+          >
+            🎨 UI/UX &amp; Branding
+          </button>
+        </div>
+
+        <!-- Tasks Cards List -->
+        <div class="cards-list">
+          <template x-for="task in filteredTasks" :key="task.id">
+            <div class="task-card" @click="openTaskDetail(task)">
+              
+              <!-- Card Top Row: Category + Status -->
+              <div class="task-card-header">
+                <span class="badge-category" :class="task.categoryClass" x-text="task.categoryName"></span>
+                <span class="status-pill" :class="task.statusClass">
+                  <span class="status-pulse-dot" x-show="task.status === 'In Progress'"></span>
+                  <span x-text="task.status"></span>
+                </span>
+              </div>
+
+              <!-- Task Title & Description -->
+              <h3 class="task-title" x-text="task.title"></h3>
+              <p class="task-desc" x-text="task.description"></p>
+
+              <!-- Progress Bar -->
+              <div class="task-progress-wrap">
+                <div class="task-progress-meta">
+                  <span x-text="task.milestoneText"></span>
+                  <span x-text="task.progress + '%'"></span>
+                </div>
+                <div class="task-progress-bar">
+                  <div class="task-progress-fill" :style="'width: ' + task.progress + '%'"></div>
+                </div>
+              </div>
+
+              <!-- Task Footer -->
+              <div class="task-footer">
+                <div class="task-pm">
+                  <div class="pm-avatar" x-text="task.pmInitials"></div>
+                  <span x-text="'Lead: ' + task.pmName"></span>
+                </div>
+                <button type="button" class="task-btn-action">
+                  <span>View Details</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
+
+            </div>
+          </template>
+
+          <div x-show="filteredTasks.length === 0" style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 10px;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <div style="font-size: 14px; font-weight: 700; color: var(--text-sec);">No tasks found</div>
+            <div style="font-size: 12px; margin-top: 4px;">Try selecting another category or clear search.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════
+           SCREEN / TAB 2: SERVICES (Website & Marketing)
+           ═══════════════════════════════════════════════════ -->
+      <div x-show="currentTab === 'services'" x-transition:enter.opacity.duration.200ms>
+        
+        <!-- Header -->
+        <div class="section-header">
+          <h2 class="section-title">Explore Growth Services</h2>
+          <span class="section-badge" x-text="filteredServices.length + ' Services'"></span>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="category-pills-strip">
+          <button 
+            type="button" 
+            class="category-pill" 
+            :class="{ 'active': serviceCategory === 'all' }"
+            @click="serviceCategory = 'all'"
+          >
+            All Services
+          </button>
+          <button 
+            type="button" 
+            class="category-pill" 
+            :class="{ 'active': serviceCategory === 'website' }"
+            @click="serviceCategory = 'website'"
+          >
+            🌐 Website Services
+          </button>
+          <button 
+            type="button" 
+            class="category-pill" 
+            :class="{ 'active': serviceCategory === 'marketing' }"
+            @click="serviceCategory = 'marketing'"
+          >
+            📈 Marketing Services
+          </button>
+        </div>
+
+        <!-- Services Cards List -->
+        <div class="cards-list">
+          <template x-for="service in filteredServices" :key="service.id">
+            <div class="service-card">
+              
+              <!-- Service Top Info -->
+              <div class="service-card-top">
+                <div class="service-icon-box" :class="service.category === 'website' ? 'icon-box-web' : 'icon-box-mkt'">
+                  <!-- Web Icon -->
+                  <svg x-show="service.category === 'website'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                  </svg>
+                  <!-- Marketing Icon -->
+                  <svg x-show="service.category === 'marketing'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                    <polyline points="17 6 23 6 23 12"></polyline>
+                  </svg>
+                </div>
+                <div class="service-meta-head">
+                  <div class="service-tag" x-text="service.categoryTitle"></div>
+                  <h3 class="service-title" x-text="service.title"></h3>
+                </div>
+              </div>
+
+              <!-- Service Description -->
+              <p class="service-desc" x-text="service.description"></p>
+
+              <!-- Deliverables Checklist -->
+              <ul class="features-list">
+                <template x-for="(feat, idx) in service.features" :key="idx">
+                  <li>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span x-text="feat"></span>
+                  </li>
+                </template>
+              </ul>
+
+              <!-- Card Bottom Pricing & Order Action -->
+              <div class="service-card-footer">
+                <div class="price-box">
+                  <span class="price-label">Starting At</span>
+                  <span class="price-amount" x-text="service.price"></span>
+                </div>
+                <button type="button" class="btn-inquire" @click="openServiceInquiry(service)">
+                  <span>Inquire / Order</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </div>
+
+            </div>
+          </template>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════
+         FIXED TWO-MENU BOTTOM NAVIGATION BAR
+         Only 2 Bottom Options as Requested:
+         1. My Tasks
+         2. Services
+         ═══════════════════════════════════════════════════ -->
+    <nav class="customer-bottom-bar">
+      <!-- 1. My Tasks Menu -->
+      <button 
+        type="button" 
+        class="tab-btn" 
+        :class="{ 'active': currentTab === 'tasks' }"
+        @click="currentTab = 'tasks'"
+      >
+        <span class="tab-badge" x-text="activeTasksCount"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <span class="tab-label">My Tasks</span>
+      </button>
+
+      <!-- 2. Services Menu -->
+      <button 
+        type="button" 
+        class="tab-btn" 
+        :class="{ 'active': currentTab === 'services' }"
+        @click="currentTab = 'services'"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        <span class="tab-label">Services</span>
+      </button>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════
+         MODAL 1: TASK DETAIL & FEEDBACK MODAL
+         ═══════════════════════════════════════════════════ -->
+    <div 
+      class="modal-backdrop" 
+      x-show="showTaskModal" 
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition ease-in duration-150"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+      @click.self="showTaskModal = false"
+    >
+      <div class="modal-dialog" x-show="selectedTask">
+        <div class="modal-close-row">
+          <button class="btn-close-modal" @click="showTaskModal = false">&times;</button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <span class="badge-category" :class="selectedTask?.categoryClass" x-text="selectedTask?.categoryName"></span>
+          <span class="status-pill" :class="selectedTask?.statusClass" x-text="selectedTask?.status"></span>
+        </div>
+
+        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-pri);" x-text="selectedTask?.title"></h3>
+        <p style="font-size: 13px; color: var(--text-sec); margin: 6px 0 16px;" x-text="selectedTask?.description"></p>
+
+        <!-- Milestones Checklist -->
+        <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px;">
+            Deliverable Milestones
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <template x-for="(m, idx) in selectedTask?.milestones || []" :key="idx">
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 12.5px;">
+                <span x-show="m.done" style="color: var(--success); font-weight: 700;">✓</span>
+                <span x-show="!m.done" style="color: var(--text-muted); font-weight: 700;">○</span>
+                <span :style="m.done ? 'text-decoration: line-through; opacity: 0.7;' : 'font-weight: 600;'" x-text="m.name"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Manager Contact on WhatsApp -->
+        <a 
+          :href="'https://wa.me/919460478224?text=' + encodeURIComponent('Hello! I am inquiring about Task: ' + (selectedTask?.title || ''))"
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="btn-whatsapp-cta"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#FFFFFF">
+            <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.04 14.69 2 12.04 2ZM12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.8 7.37 7.5 3.67 12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15ZM16.56 14.44C16.31 14.32 15.1 13.72 14.88 13.64C14.65 13.56 14.49 13.52 14.32 13.76C14.16 14.01 13.69 14.56 13.55 14.73C13.41 14.89 13.26 14.91 13.01 14.79C12.77 14.66 11.98 14.41 11.04 13.57C10.31 12.92 9.81 12.11 9.67 11.87C9.53 11.62 9.65 11.49 9.77 11.37C9.88 11.26 10.02 11.08 10.14 10.94C10.26 10.8 10.3 10.7 10.39 10.53C10.47 10.37 10.43 10.22 10.37 10.1C10.31 9.98 9.82 8.77 9.61 8.28C9.41 7.8 9.21 7.86 9.06 7.86C8.92 7.85 8.76 7.85 8.59 7.85C8.43 7.85 8.16 7.91 7.94 8.15C7.71 8.4 7.08 8.99 7.08 10.19C7.08 11.39 7.96 12.55 8.08 12.71C8.2 12.88 9.8 15.34 12.24 16.39C12.82 16.64 13.27 16.79 13.63 16.9C14.21 17.09 14.74 17.06 15.16 17C15.63 16.93 16.59 16.42 16.79 15.85C17 15.28 17 14.79 16.93 14.69C16.87 14.58 16.81 14.56 16.56 14.44Z"/>
+          </svg>
+          <span>Chat with Project Lead (+91 94604 78224)</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         MODAL 2: SERVICE INQUIRY / ORDER MODAL
+         ═══════════════════════════════════════════════════ -->
+    <div 
+      class="modal-backdrop" 
+      x-show="showServiceModal" 
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition ease-in duration-150"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+      @click.self="showServiceModal = false"
+    >
+      <div class="modal-dialog" x-show="selectedService">
+        <div class="modal-close-row">
+          <button class="btn-close-modal" @click="showServiceModal = false">&times;</button>
+        </div>
+
+        <div class="service-tag" x-text="selectedService?.categoryTitle"></div>
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-pri); margin: 3px 0 6px;" x-text="selectedService?.title"></h3>
+        <p style="font-size: 13px; color: var(--text-sec); margin-bottom: 14px;" x-text="selectedService?.description"></p>
+
+        <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Standard Package</span>
+            <span style="font-size: 18px; font-weight: 800; color: var(--primary);" x-text="selectedService?.price"></span>
+          </div>
+          <div style="font-size: 11.5px; color: var(--text-sec);">Includes full implementation, QA testing, and 30-day post-launch support.</div>
+        </div>
+
+        <!-- 1-Tap WhatsApp Request -->
+        <a 
+          :href="'https://wa.me/919460478224?text=' + encodeURIComponent('Hello! I would like to order / inquire about: ' + (selectedService?.title || '') + ' (' + (selectedService?.price || '') + ') for my business.')"
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="btn-whatsapp-cta"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#FFFFFF">
+            <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.04 14.69 2 12.04 2ZM12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.8 7.37 7.5 3.67 12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15ZM16.56 14.44C16.31 14.32 15.1 13.72 14.88 13.64C14.65 13.56 14.49 13.52 14.32 13.76C14.16 14.01 13.69 14.56 13.55 14.73C13.41 14.89 13.26 14.91 13.01 14.79C12.77 14.66 11.98 14.41 11.04 13.57C10.31 12.92 9.81 12.11 9.67 11.87C9.53 11.62 9.65 11.49 9.77 11.37C9.88 11.26 10.02 11.08 10.14 10.94C10.26 10.8 10.3 10.7 10.39 10.53C10.47 10.37 10.43 10.22 10.37 10.1C10.31 9.98 9.82 8.77 9.61 8.28C9.41 7.8 9.21 7.86 9.06 7.86C8.92 7.85 8.76 7.85 8.59 7.85C8.43 7.85 8.16 7.91 7.94 8.15C7.71 8.4 7.08 8.99 7.08 10.19C7.08 11.39 7.96 12.55 8.08 12.71C8.2 12.88 9.8 15.34 12.24 16.39C12.82 16.64 13.27 16.79 13.63 16.9C14.21 17.09 14.74 17.06 15.16 17C15.63 16.93 16.59 16.42 16.79 15.85C17 15.28 17 14.79 16.93 14.69C16.87 14.58 16.81 14.56 16.56 14.44Z"/>
+          </svg>
+          <span>Order via WhatsApp (+91 94604 78224)</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Local Alpine.js or CDN fallback -->
+  <script src="alpine.min.js"></script>
+  <script>
+    if (!window.Alpine) {
+      document.write('<script src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js"><\/script>');
+    }
+  </script>
+
+  <script>
+    function customerPortalApp() {
+      return {
+        // Active bottom navigation tab: 'tasks' | 'services'
+        currentTab: 'tasks',
+
+        // Tasks Filtering
+        selectedCategory: 'all',
+        taskSearch: '',
+        showTaskModal: false,
+        selectedTask: null,
+
+        // Services Filtering
+        serviceCategory: 'all',
+        showServiceModal: false,
+        selectedService: null,
+        showSupportModal: false,
+
+        // Sample Customer Tasks Data (Categorized)
+        tasks: [
+          {
+            id: 1,
+            title: 'E-Commerce Checkout & Payment Gateway',
+            category: 'website',
+            categoryName: 'Website',
+            categoryClass: 'cat-website',
+            status: 'In Progress',
+            statusClass: 'status-in-progress',
+            description: 'Integrating Razorpay UPI, Netbanking and Cards payment gateway with webhook verification for order processing.',
+            progress: 80,
+            milestoneText: '3 of 4 milestones complete',
+            pmName: 'Rahul Sharma',
+            pmInitials: 'RS',
+            milestones: [
+              { name: 'Payment gateway API keys configuration', done: true },
+              { name: 'Order cart checkout UI redesign', done: true },
+              { name: 'Webhook payment confirmation testing', done: true },
+              { name: 'Live production transactions test', done: false }
+            ]
+          },
+          {
+            id: 2,
+            title: 'Meta Ads Festive Campaign Setup',
+            category: 'marketing',
+            categoryName: 'Marketing',
+            categoryClass: 'cat-marketing',
+            status: 'Under Review',
+            statusClass: 'status-review',
+            description: 'Created 8 video reels and 12 carousel creatives targeting tier-1 fashion buyers with 4.5x target ROAS.',
+            progress: 65,
+            milestoneText: 'Waiting for client creative approval',
+            pmName: 'Priya Verma',
+            pmInitials: 'PV',
+            milestones: [
+              { name: 'Target custom audience segmentation', done: true },
+              { name: 'Ad copy & creative banners design', done: true },
+              { name: 'Client review and feedback approval', done: false },
+              { name: 'Campaign launch and pixel tracking', done: false }
+            ]
+          },
+          {
+            id: 3,
+            title: 'Mobile Speed Optimization & Core Web Vitals',
+            category: 'website',
+            categoryName: 'Website',
+            categoryClass: 'cat-website',
+            status: 'In Progress',
+            statusClass: 'status-in-progress',
+            description: 'Compressing WebP assets, lazy loading media, and minifying bundle CSS/JS to achieve < 1.2s mobile loading.',
+            progress: 45,
+            milestoneText: 'Asset compression ongoing',
+            pmName: 'Amit Patel',
+            pmInitials: 'AP',
+            milestones: [
+              { name: 'Core Web Vitals baseline audit', done: true },
+              { name: 'Next-gen WebP image conversions', done: true },
+              { name: 'Critical CSS rendering path fix', done: false },
+              { name: 'Server caching & CDN activation', done: false }
+            ]
+          },
+          {
+            id: 4,
+            title: 'Monthly SEO Keyword Ranking & Backlinks',
+            category: 'seo',
+            categoryName: 'SEO',
+            categoryClass: 'cat-seo',
+            status: 'In Progress',
+            statusClass: 'status-in-progress',
+            description: 'Publishing 4 optimized pillar articles and acquiring 15 high-DA guest posting backlinks for retail keywords.',
+            progress: 90,
+            milestoneText: '14 of 15 backlinks indexed',
+            pmName: 'Sneha Kapoor',
+            pmInitials: 'SK',
+            milestones: [
+              { name: 'Competitor gap analysis', done: true },
+              { name: '4 SEO pillar articles published', done: true },
+              { name: '15 High-DA contextual backlinks', done: true },
+              { name: 'Monthly Google Search Console report', done: false }
+            ]
+          },
+          {
+            id: 5,
+            title: 'Brand Identity & Social Media Templates',
+            category: 'design',
+            categoryName: 'Design',
+            categoryClass: 'cat-design',
+            status: 'Completed',
+            statusClass: 'status-completed',
+            description: 'Delivered Canva & Figma editable brand post templates, typography kit, and Instagram highlights cover set.',
+            progress: 100,
+            milestoneText: 'All assets delivered to client drive',
+            pmName: 'Priya Verma',
+            pmInitials: 'PV',
+            milestones: [
+              { name: 'Brand color palette & typography selection', done: true },
+              { name: 'Figma master template design', done: true },
+              { name: 'Canva editable team templates', done: true },
+              { name: 'Client final signoff & handover', done: true }
+            ]
+          }
+        ],
+
+        // Sample Available Services (Categorized: Website & Marketing)
+        services: [
+          {
+            id: 1,
+            title: 'Custom Business Website Development',
+            category: 'website',
+            categoryTitle: 'Website Services',
+            description: 'High-speed, modern, mobile-responsive custom website built for conversion, SEO ranking, and lead generation.',
+            price: '₹14,999',
+            features: [
+              '5-8 Custom Responsive Pages (Home, About, Services, etc.)',
+              'Fast Loading (< 1.5s) & SEO-Structured Semantic Code',
+              'WhatsApp & Lead Generation Form Integration',
+              '1-Year Free Domain, SSL & Server Maintenance Support'
+            ]
+          },
+          {
+            id: 2,
+            title: 'E-Commerce Online Store with Payments',
+            category: 'website',
+            categoryTitle: 'Website Services',
+            description: 'Full-featured online store with payment gateways, automated WhatsApp order alerts, inventory, and order tracking.',
+            price: '₹24,999',
+            features: [
+              'Razorpay, Stripe, UPI & Cash on Delivery (COD) Checkout',
+              'Automated WhatsApp Customer Order Notifications',
+              'Catalog Management for up to 500 Products',
+              'Discount Coupons, Abandoned Cart Recovery & Invoice PDF'
+            ]
+          },
+          {
+            id: 3,
+            title: 'Google & Meta (FB/Insta) Performance Ads',
+            category: 'marketing',
+            categoryTitle: 'Marketing Services',
+            description: 'Targeted performance marketing campaigns generating qualified customer inquiries with high Return On Ad Spend (ROAS).',
+            price: '₹11,999/mo',
+            features: [
+              'Pixel Setup, Conversion Tracking & Custom Audience Segments',
+              'Persuasive Ad Copywriting & High-CTR Banner Creatives',
+              'Weekly Bid Optimization & A/B Split Testing',
+              'Transparent Weekly Leads & ROI Analytics Reporting'
+            ]
+          },
+          {
+            id: 4,
+            title: 'Complete Social Media Management (SMM)',
+            category: 'marketing',
+            categoryTitle: 'Marketing Services',
+            description: 'Consistent organic presence building social authority, viral reels, community trust, and customer followers.',
+            price: '₹9,999/mo',
+            features: [
+              '16 Premium Designed Posts & Trending Video Reels/Month',
+              'Hashtag Research, Viral Hooks & Caption Writing',
+              'Daily Story Updates & Direct Message Interaction',
+              'Monthly Growth & Engagement Analytics Audit'
+            ]
+          },
+          {
+            id: 5,
+            title: 'High-Converting Landing Page Funnel',
+            category: 'website',
+            categoryTitle: 'Website Services',
+            description: 'Laser-focused sales landing page engineered to turn paid advertising clicks into paying leads and customers.',
+            price: '₹7,999',
+            features: [
+              'Direct-Response Copywriting & Value Proposition Framing',
+              'Speed-Optimized Single Page Funnel Layout',
+              'Instant CRM & WhatsApp Webhook Notification Integration',
+              'Ready in 3 to 5 Business Days'
+            ]
+          },
+          {
+            id: 6,
+            title: 'Full-Service SEO & Google Ranking Pack',
+            category: 'marketing',
+            categoryTitle: 'Marketing Services',
+            description: 'Rank for high-intent customer search keywords on Google Page 1 and generate recurring organic business leads.',
+            price: '₹8,999/mo',
+            features: [
+              'On-Page Optimization for Top 15 Commercial Keywords',
+              'Technical SEO Fixes, Sitemap & Google Search Console Tuning',
+              'High-DA Authoritative Backlinks & Local Citations',
+              'Detailed Monthly Organic Keyword Rank Tracking'
+            ]
+          }
+        ],
+
+        // Computed Filtered Tasks
+        get filteredTasks() {
+          return this.tasks.filter(t => {
+            const matchesCat = this.selectedCategory === 'all' || t.category === this.selectedCategory;
+            const matchesSearch = !this.taskSearch || 
+              t.title.toLowerCase().includes(this.taskSearch.toLowerCase()) || 
+              t.description.toLowerCase().includes(this.taskSearch.toLowerCase());
+            return matchesCat && matchesSearch;
+          });
+        },
+
+        // Computed Active Tasks Count
+        get activeTasksCount() {
+          return this.tasks.filter(t => t.status !== 'Completed').length;
+        },
+
+        // Computed Filtered Services
+        get filteredServices() {
+          return this.services.filter(s => {
+            return this.serviceCategory === 'all' || s.category === this.serviceCategory;
+          });
+        },
+
+        openTaskDetail(task) {
+          this.selectedTask = task;
+          this.showTaskModal = true;
+        },
+
+        openServiceInquiry(service) {
+          this.selectedService = service;
+          this.showServiceModal = true;
+        }
+      };
+    }
+  </script>
+</body>
+</html>

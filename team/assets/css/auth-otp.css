@@ -1,0 +1,659 @@
+/**
+ * Software CRM - 4-Digit OTP Authentication System
+ * Transferred from Software_Team_App Google Apps Script / Sheet OTP architecture
+ */
+
+#screen1.app-screen {
+  overflow-y: auto !important;
+  display: block !important;
+  height: 100%;
+}
+
+.login-container {
+  padding: 30px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  width: 100%;
+  background: var(--surface);
+}
+
+.sheet-sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #047857;
+  font-size: 11px;
+  font-weight: 600;
+  margin: 10px 0 16px;
+}
+
+.dark .sheet-sync-badge {
+  background: rgba(6, 78, 59, 0.4);
+  border-color: rgba(5, 150, 105, 0.5);
+  color: #6EE7B7;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  animation: pulseDot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.otp-alert {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.otp-alert-error {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+}
+
+.dark .otp-alert-error {
+  background: rgba(127, 29, 29, 0.3);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #FCA5A5;
+}
+
+.otp-alert-success {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #047857;
+}
+
+.dark .otp-alert-success {
+  background: rgba(6, 78, 59, 0.3);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #6EE7B7;
+}
+
+.form-group {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.form-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-pri);
+  margin-bottom: 6px;
+}
+
+.input-with-icon {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  transition: border 0.2s, background 0.2s;
+}
+
+.input-with-icon:focus-within {
+  background: var(--surface);
+  border-color: #007788;
+  box-shadow: 0 0 0 3px rgba(0, 119, 136, 0.12);
+}
+
+.input-with-icon input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  color: var(--text-pri);
+  font-family: inherit;
+}
+
+.input-with-icon input::placeholder {
+  color: #94A3B8;
+  font-weight: 400;
+  opacity: 1;
+}
+
+/* Quick Chips */
+.quick-chips-section {
+  width: 100%;
+  margin: 6px 0 16px;
+}
+
+.quick-chips-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.quick-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quick-account-chip {
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--bg-input);
+  color: var(--text-sec);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.quick-account-chip:hover {
+  background: rgba(0, 119, 136, 0.08);
+  color: #007788;
+  border-color: rgba(0, 119, 136, 0.3);
+}
+
+.quick-account-chip:active {
+  transform: scale(0.96);
+}
+
+/* 4-Digit OTP Input Boxes */
+.otp-boxes-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 0 14px;
+  width: 100%;
+}
+
+.otp-digit-input {
+  width: 54px;
+  height: 60px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  background: var(--bg-input);
+  font-size: 26px;
+  font-weight: 800;
+  text-align: center;
+  color: var(--text-pri);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.otp-digit-input:focus {
+  background: var(--surface);
+  border-color: #007788;
+  box-shadow: 0 0 0 4px rgba(0, 119, 136, 0.15);
+  transform: translateY(-2px);
+}
+
+.universal-test-hint {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  font-size: 11.5px;
+  text-align: center;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dark .universal-test-hint {
+  background: rgba(120, 53, 15, 0.3);
+  border-color: rgba(217, 119, 6, 0.4);
+  color: #FDE68A;
+}
+
+.universal-test-hint:hover {
+  background: #FEF3C7;
+}
+
+.otp-timer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--text-sec);
+}
+
+.btn-resend-otp {
+  background: none;
+  border: none;
+  color: #007788;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.btn-resend-otp:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.btn-login-primary {
+  width: 100%;
+  height: 48px;
+  background: #007788;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 14px;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 119, 136, 0.25);
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+.btn-login-primary:hover {
+  background: #006677;
+}
+
+.btn-login-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-login-primary:disabled {
+  background: #94A3B8;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.script-config-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+  cursor: pointer;
+  transition: color 0.15s;
+  font-family: inherit;
+}
+
+.script-config-toggle:hover {
+  color: #007788;
+}
+
+.script-config-panel {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.demo-bypass-pill {
+  margin-top: 16px;
+  background: var(--bg-input);
+  border: 1px dashed var(--border-dark);
+  padding: 9px 14px;
+  border-radius: 14px;
+  font-size: 11px;
+  color: var(--text-sec);
+  text-align: center;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s ease;
+}
+
+.demo-bypass-pill:hover {
+  border-color: #007788;
+  color: #007788;
+}
+
+.demo-bypass-pill strong {
+  color: #007788;
+}
+
+.otp-footer-notice {
+  margin-top: 24px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.otp-footer-notice code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--text-sec);
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   Animated Graphical Logo in Header
+   ========================================================================== */
+.animated-brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 18px 0 28px;
+  text-align: center;
+  width: 100%;
+}
+
+.animated-logo-wrapper {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pulsing ambient halo behind logo */
+.logo-pulse-halo {
+  position: absolute;
+  inset: -6px;
+  border-radius: 24px;
+  background: radial-gradient(circle, rgba(0, 119, 136, 0.45) 0%, rgba(0, 180, 200, 0.2) 55%, transparent 75%);
+  animation: logoPulseHalo 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes logoPulseHalo {
+  0%, 100% {
+    transform: scale(0.92);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.95;
+    filter: blur(5px);
+  }
+}
+
+/* Main logo squircle badge with floating motion and gradient */
+.logo-animated-badge {
+  position: relative;
+  z-index: 1;
+  width: 66px;
+  height: 66px;
+  border-radius: 19px;
+  background: linear-gradient(135deg, #007788 0%, #0099aa 50%, #00b4c8 100%);
+  box-shadow: 0 10px 24px -4px rgba(0, 119, 136, 0.45),
+              0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: logoFloat 4.2s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(1deg);
+  }
+}
+
+/* Diagonal shimmer sweep across badge */
+.logo-shimmer {
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
+  background: linear-gradient(
+    60deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 70%
+  );
+  transform: rotate(25deg);
+  animation: shimmerSweep 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-130%) rotate(25deg);
+  }
+  28%, 100% {
+    transform: translateX(130%) rotate(25deg);
+  }
+}
+
+/* Animated SVG bars inside logo */
+.animated-svg-logo {
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.anim-bar {
+  transform-origin: bottom;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+}
+
+.anim-bar-1 {
+  animation-name: barPulse1;
+  animation-duration: 1.8s;
+}
+
+.anim-bar-2 {
+  animation-name: barPulse2;
+  animation-duration: 2.2s;
+  animation-delay: 0.25s;
+}
+
+.anim-bar-3 {
+  animation-name: barPulse3;
+  animation-duration: 1.9s;
+  animation-delay: 0.5s;
+}
+
+@keyframes barPulse1 {
+  0% { transform: scaleY(0.7); }
+  100% { transform: scaleY(1.15); }
+}
+
+@keyframes barPulse2 {
+  0% { transform: scaleY(0.65); }
+  100% { transform: scaleY(1.1); }
+}
+
+@keyframes barPulse3 {
+  0% { transform: scaleY(0.75); }
+  100% { transform: scaleY(1.08); }
+}
+
+/* Animated trend line & glow dot */
+.anim-trend-path {
+  stroke-dasharray: 45;
+  stroke-dashoffset: 45;
+  animation: drawTrendPath 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes drawTrendPath {
+  0% { stroke-dashoffset: 45; opacity: 0.2; }
+  35%, 85% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0.75; }
+}
+
+.anim-trend-dot {
+  animation: dotBlink 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes dotBlink {
+  0% { r: 2.2; opacity: 0.7; }
+  100% { r: 3.2; opacity: 1; filter: drop-shadow(0 0 4px #FFFFFF); }
+}
+
+/* Brand Text Block */
+.brand-text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.brand-app-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--text-pri);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.brand-app-tagline {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-sec);
+  margin: 5px 0 0 0;
+  letter-spacing: 0.2px;
+}
+
+/* ==========================================================================
+   Permission Denied & WhatsApp Admin Button
+   ========================================================================== */
+.permission-denied-box {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #FEF2F2;
+  border: 1.5px solid #FECACA;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.08);
+}
+
+.dark .permission-denied-box {
+  background: rgba(127, 29, 29, 0.25);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.permission-denied-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.permission-denied-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #FEE2E2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.dark .permission-denied-icon {
+  background: rgba(220, 38, 38, 0.3);
+}
+
+.permission-denied-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #991B1B;
+  line-height: 1.25;
+}
+
+.dark .permission-denied-title {
+  color: #FCA5A5;
+}
+
+.permission-denied-desc {
+  font-size: 12px;
+  color: #B91C1C;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.dark .permission-denied-desc {
+  color: #F87171;
+}
+
+.btn-whatsapp-admin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 14px;
+  background: #25D366;
+  color: #FFFFFF !important;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+  transition: all 0.2s ease;
+  font-family: inherit;
+  border: none;
+  box-sizing: border-box;
+}
+
+.btn-whatsapp-admin:hover {
+  background: #20BA5A;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.45);
+}
+
+.btn-whatsapp-admin:active {
+  transform: translateY(0);
+}

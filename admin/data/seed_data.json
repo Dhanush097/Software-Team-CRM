@@ -1,0 +1,317 @@
+{
+  "stats": {
+    "contacts_count": 86,
+    "contacts_trend": 12,
+    "projects_count": 12,
+    "projects_trend": 20,
+    "tasks_count": 8,
+    "tasks_trend": -14,
+    "revenue_total": 12450,
+    "revenue_trend": 32,
+    "currency": "$"
+  },
+  "user": {
+    "name": "Suresh Kumar",
+    "email": "suresh@softwarecrm.io",
+    "initials": "SK",
+    "role": "Lead Architect & Admin",
+    "avatar_bg": "linear-gradient(135deg, #F59E0B, #EF4444)"
+  },
+  "contacts": [
+    {
+      "id": "c_1",
+      "name": "Rahul Sharma",
+      "company": "ABC Tech Solutions",
+      "position": "Founder",
+      "category": "Client",
+      "email": "rahul@abctech.com",
+      "phone": "+91 98765-43210",
+      "location": "Mumbai, India",
+      "source": "Website",
+      "tags": ["Important", "Long Term"],
+      "initials": "RS",
+      "avatar_color": "linear-gradient(135deg, #F59E0B, #EF4444)",
+      "last_activity": "Project updated: E-commerce Website (2h ago)"
+    },
+    {
+      "id": "c_2",
+      "name": "Priya Verma",
+      "company": "Verma Solutions",
+      "position": "Product Lead",
+      "category": "Lead",
+      "email": "priya@vermasolutions.com",
+      "phone": "+91 98234-56789",
+      "location": "Bengaluru, India",
+      "source": "LinkedIn",
+      "tags": ["Mobile App", "High Priority"],
+      "initials": "PV",
+      "avatar_color": "linear-gradient(135deg, #8B5CF6, #EC4899)",
+      "last_activity": "Proposal prepared (14 Aug)"
+    },
+    {
+      "id": "c_3",
+      "name": "Amit Patel",
+      "company": "Patel & Co.",
+      "position": "Managing Director",
+      "category": "Client",
+      "email": "amit@patelco.com",
+      "phone": "+91 97123-45678",
+      "location": "Ahmedabad, India",
+      "source": "Referral",
+      "tags": ["Enterprise", "Annual Client"],
+      "initials": "AP",
+      "avatar_color": "linear-gradient(135deg, #10B981, #3B82F6)",
+      "last_activity": "Invoice paid: INV-2024-004 ($800)"
+    },
+    {
+      "id": "c_4",
+      "name": "Sneha Kapoor",
+      "company": "Kapoor Designs",
+      "position": "Creative Director",
+      "category": "Prospect",
+      "email": "sneha@kapoordesigns.in",
+      "phone": "+91 96543-21098",
+      "location": "Delhi, India",
+      "source": "Instagram",
+      "tags": ["Branding", "Follow-up"],
+      "initials": "SK",
+      "avatar_color": "linear-gradient(135deg, #F97316, #F59E0B)",
+      "last_activity": "Brand identity delivered (100% complete)"
+    },
+    {
+      "id": "c_5",
+      "name": "Vikram Singh",
+      "company": "Singh Enterprises",
+      "position": "Chief Operations Officer",
+      "category": "Client",
+      "email": "vikram@singhenterprises.com",
+      "phone": "+91 95432-10987",
+      "location": "Pune, India",
+      "source": "Conference",
+      "tags": ["ERP", "VIP"],
+      "initials": "VS",
+      "avatar_color": "linear-gradient(135deg, #6366F1, #8B5CF6)",
+      "last_activity": "Cloud server maintenance checkup"
+    },
+    {
+      "id": "c_6",
+      "name": "Neha Gupta",
+      "company": "Gupta Media",
+      "position": "Head of Marketing",
+      "category": "Lead",
+      "email": "neha@guptamedia.com",
+      "phone": "+91 94321-09876",
+      "location": "Jaipur, India",
+      "source": "Website",
+      "tags": ["SEO", "Ad Campaigns"],
+      "initials": "NG",
+      "avatar_color": "linear-gradient(135deg, #EC4899, #F59E0B)",
+      "last_activity": "Requested quote for Google Ads automation"
+    }
+  ],
+  "projects": [
+    {
+      "id": "p_1",
+      "title": "E-commerce Website",
+      "client": "ABC Tech Solutions",
+      "client_id": "c_1",
+      "progress": 70,
+      "status": "active",
+      "icon": "🛒",
+      "icon_bg": "#EDE9FE",
+      "icon_color": "#7C3AED",
+      "due_date": "30 Aug 2024"
+    },
+    {
+      "id": "p_2",
+      "title": "Mobile App Development",
+      "client": "Verma Solutions",
+      "client_id": "c_2",
+      "progress": 40,
+      "status": "active",
+      "icon": "📱",
+      "icon_bg": "#EFF6FF",
+      "icon_color": "#2563EB",
+      "due_date": "15 Sep 2024"
+    },
+    {
+      "id": "p_3",
+      "title": "Brand Identity Design",
+      "client": "Kapoor Designs",
+      "client_id": "c_4",
+      "progress": 100,
+      "status": "completed",
+      "icon": "🎨",
+      "icon_bg": "#DCFCE7",
+      "icon_color": "#16A34A",
+      "due_date": "05 Aug 2024"
+    },
+    {
+      "id": "p_4",
+      "title": "CRM System",
+      "client": "Patel & Co.",
+      "client_id": "c_3",
+      "progress": 25,
+      "status": "active",
+      "icon": "💻",
+      "icon_bg": "#FFEDD5",
+      "icon_color": "#EA580C",
+      "due_date": "20 Oct 2024"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t_1",
+      "title": "Design Homepage",
+      "project": "E-commerce Website",
+      "priority": "High",
+      "due_str": "Today",
+      "is_overdue": false,
+      "completed": false,
+      "category": "my"
+    },
+    {
+      "id": "t_2",
+      "title": "Client Meeting - ABC Ltd",
+      "project": "Rahul Sharma",
+      "priority": "Medium",
+      "due_str": "Tomorrow",
+      "is_overdue": false,
+      "completed": false,
+      "category": "my"
+    },
+    {
+      "id": "t_3",
+      "title": "Prepare Proposal",
+      "project": "Verma Solutions",
+      "priority": "Low",
+      "due_str": "14 Aug",
+      "is_overdue": false,
+      "completed": false,
+      "category": "my"
+    },
+    {
+      "id": "t_4",
+      "title": "Review UI Design",
+      "project": "Mobile App Development",
+      "priority": "High",
+      "due_str": "16 Aug",
+      "is_overdue": true,
+      "completed": false,
+      "category": "overdue"
+    },
+    {
+      "id": "t_5",
+      "title": "Update Project Documentation",
+      "project": "CRM System",
+      "priority": "Medium",
+      "due_str": "18 Aug",
+      "is_overdue": false,
+      "completed": false,
+      "category": "my"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv_1",
+      "number": "INV-2024-001",
+      "client": "ABC Tech Solutions",
+      "date": "10 Aug 2024",
+      "amount": 2500,
+      "status": "Paid"
+    },
+    {
+      "id": "inv_2",
+      "number": "INV-2024-002",
+      "client": "Verma Solutions",
+      "date": "12 Aug 2024",
+      "amount": 1200,
+      "status": "Pending"
+    },
+    {
+      "id": "inv_3",
+      "number": "INV-2024-003",
+      "client": "Kapoor Designs",
+      "date": "05 Aug 2024",
+      "amount": 3000,
+      "status": "Overdue"
+    },
+    {
+      "id": "inv_4",
+      "number": "INV-2024-004",
+      "client": "Patel & Co.",
+      "date": "28 Jul 2024",
+      "amount": 800,
+      "status": "Paid"
+    }
+  ],
+  "calendar_events": [
+    {
+      "id": "ev_1",
+      "day": 7,
+      "title": "Client Meeting",
+      "type": "meeting",
+      "color": "green",
+      "client": "Rahul Sharma"
+    },
+    {
+      "id": "ev_2",
+      "day": 14,
+      "title": "Design Deadline",
+      "type": "deadline",
+      "color": "red",
+      "client": "Kapoor Designs"
+    },
+    {
+      "id": "ev_3",
+      "day": 22,
+      "title": "Team Meeting",
+      "type": "meeting",
+      "color": "blue",
+      "client": "Internal Dev Sprint"
+    },
+    {
+      "id": "ev_4",
+      "day": 30,
+      "title": "Invoice Due",
+      "type": "payment",
+      "color": "orange",
+      "client": "ABC Tech Solutions"
+    }
+  ],
+  "recent_activity": [
+    {
+      "id": "act_1",
+      "type": "contact",
+      "icon": "👤",
+      "icon_bg": "#EFF6FF",
+      "icon_color": "#2563EB",
+      "title": "New contact added",
+      "subtitle": "Rahul Sharma · ABC Tech Solutions",
+      "time_ago": "10 min ago",
+      "screen_target": 4
+    },
+    {
+      "id": "act_2",
+      "type": "project",
+      "icon": "💻",
+      "icon_bg": "#DCFCE7",
+      "icon_color": "#16A34A",
+      "title": "Project updated",
+      "subtitle": "E-commerce Website (70% done)",
+      "time_ago": "1 hour ago",
+      "screen_target": 5
+    },
+    {
+      "id": "act_3",
+      "type": "invoice",
+      "icon": "🧾",
+      "icon_bg": "#FEE2E2",
+      "icon_color": "#DC2626",
+      "title": "Invoice created",
+      "subtitle": "INV-2024-001 · $2,500",
+      "time_ago": "3 hours ago",
+      "screen_target": 8
+    }
+  ]
+}

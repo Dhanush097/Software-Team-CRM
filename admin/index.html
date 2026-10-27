@@ -1,0 +1,2376 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Software CRM — Mobile App</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Modular CSS System (Small Packets) -->
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/ghost-nav.css" />
+  <link rel="stylesheet" href="assets/css/auth-otp.css" />
+
+  <!-- Alpine.js (Defer) -->
+  <script defer src="assets/js/alpine.min.js"></script>
+
+  <!-- Modular JavaScript Architecture (Small Packets) -->
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/navigation.js"></script>
+  <script src="assets/js/app.js"></script>
+</head>
+<body x-data="crmApp" x-cloak>
+
+  <!-- ═════════════════════════════════════════════
+       MAIN APP VIEWPORT (BORDERLESS FULL-HEIGHT)
+  ═════════════════════════════════════════════ -->
+  <main class="app-viewport-wrapper" id="phoneWrapper">
+    <div class="phone-simulator" id="phoneSimulator">
+
+      <!-- Screen Stacking Container -->
+      <div class="screen-scroller" id="screenScroller">
+        <!-- ─────────────────────────────────────────
+     SCREEN 1: 4-DIGIT OTP AUTHENTICATION
+     Two-step verification synced with Google Sheet & Apps Script
+───────────────────────────────────────── -->
+<section class="app-screen no-bottom-bar" id="screen1">
+  <div class="login-container">
+
+    <!-- Animated Graphical Logo & Brand Header -->
+    <div class="animated-brand-header">
+      <div class="animated-logo-wrapper">
+        <div class="logo-pulse-halo"></div>
+        <div class="logo-animated-badge">
+          <div class="logo-shimmer"></div>
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" class="animated-svg-logo">
+            <!-- 3 Dynamic Animated Growth Bars -->
+            <rect class="anim-bar anim-bar-1" x="5" y="16" width="5.5" height="15" rx="2.5" fill="#FFFFFF" fill-opacity="0.9" />
+            <rect class="anim-bar anim-bar-2" x="14" y="10" width="5.5" height="21" rx="2.5" fill="#FFFFFF" fill-opacity="0.95" />
+            <rect class="anim-bar anim-bar-3" x="23" y="5" width="5.5" height="26" rx="2.5" fill="#FFFFFF" />
+            <!-- Upward Growth Spark Trendline & Dot -->
+            <path class="anim-trend-path" d="M 6 15 Q 16 8 30 4" stroke="#FDE047" stroke-width="2.2" stroke-linecap="round" fill="none" />
+            <circle class="anim-trend-dot" cx="30" cy="4" r="2.5" fill="#FEF08A" />
+          </svg>
+        </div>
+      </div>
+      <div class="brand-text-block">
+        <h1 class="brand-app-title">Software CRM</h1>
+        <p class="brand-app-tagline">Team &bull; Projects &bull; Clients &bull; Growth</p>
+      </div>
+    </div>
+
+    <!-- Permission Denied & WhatsApp Contact Alert Box -->
+    <div x-show="loginError" x-cloak class="permission-denied-box">
+      <div class="permission-denied-header">
+        <div class="permission-denied-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div style="flex: 1; min-width: 0;">
+          <div class="permission-denied-title">Permission Required</div>
+          <div class="permission-denied-desc" x-text="loginError"></div>
+        </div>
+      </div>
+
+      <!-- Direct WhatsApp Action Button -->
+      <a
+        x-show="showWhatsAppContact"
+        :href="'https://wa.me/919460478224?text=' + encodeURIComponent('Hello Admin, please grant login permission for Software CRM for my email: ' + (loginEmail || ''))"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-whatsapp-admin"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFFFF">
+          <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.04 14.69 2 12.04 2ZM12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.8 7.37 7.5 3.67 12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15ZM16.56 14.44C16.31 14.32 15.1 13.72 14.88 13.64C14.65 13.56 14.49 13.52 14.32 13.76C14.16 14.01 13.69 14.56 13.55 14.73C13.41 14.89 13.26 14.91 13.01 14.79C12.77 14.66 11.98 14.41 11.04 13.57C10.31 12.92 9.81 12.11 9.67 11.87C9.53 11.62 9.65 11.49 9.77 11.37C9.88 11.26 10.02 11.08 10.14 10.94C10.26 10.8 10.3 10.7 10.39 10.53C10.47 10.37 10.43 10.22 10.37 10.1C10.31 9.98 9.82 8.77 9.61 8.28C9.41 7.8 9.21 7.86 9.06 7.86C8.92 7.85 8.76 7.85 8.59 7.85C8.43 7.85 8.16 7.91 7.94 8.15C7.71 8.4 7.08 8.99 7.08 10.19C7.08 11.39 7.96 12.55 8.08 12.71C8.2 12.88 9.8 15.34 12.24 16.39C12.82 16.64 13.27 16.79 13.63 16.9C14.21 17.09 14.74 17.06 15.16 17C15.63 16.93 16.59 16.42 16.79 15.85C17 15.28 17 14.79 16.93 14.69C16.87 14.58 16.81 14.56 16.56 14.44Z"/>
+        </svg>
+        <span>Contact Admin on WhatsApp</span>
+        <span style="opacity: 0.9; font-size: 11px; font-weight: 500;">(+91 94604 78224)</span>
+      </a>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         STEP 1: EMAIL ADDRESS INPUT
+    ───────────────────────────────────────── -->
+    <div x-show="loginStep === 'email'" style="width: 100%;">
+      <div class="form-group">
+        <label class="form-label">Work Email Address</label>
+        <div class="input-with-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          <input
+            type="email"
+            placeholder="email@gmail.com"
+            x-model="loginEmail"
+            @keydown.enter.prevent="sendOtp()"
+            autofocus
+          />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="btn-login-primary"
+        :disabled="isSendingOtp || !loginEmail"
+        @click="sendOtp()"
+        style="margin-top: 10px;"
+      >
+        <span x-show="!isSendingOtp">Sign In →</span>
+        <span x-show="isSendingOtp">Checking Permission & Sending OTP...</span>
+      </button>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         STEP 2: 4-DIGIT OTP VERIFICATION SCREEN
+    ───────────────────────────────────────── -->
+    <div x-show="loginStep === 'otp'" x-cloak style="width: 100%;">
+      <!-- Email Summary & Change Action -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 10px 14px; background: var(--bg-input); border-radius: 12px; border: 1px solid var(--border);">
+        <div style="min-width: 0; flex: 1;">
+          <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Verification Code Sent To</div>
+          <div style="font-size: 13.5px; font-weight: 700; color: var(--text-pri); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" x-text="loginEmail"></div>
+        </div>
+        <button
+          type="button"
+          @click="loginStep = 'email'; otpError = ''; loginError = '';"
+          style="background: none; border: none; color: #007788; font-size: 12px; font-weight: 700; cursor: pointer; padding: 4px 8px;"
+        >
+          Change
+        </button>
+      </div>
+
+      <!-- OTP Success Notice -->
+      <div x-show="otpSuccess" class="otp-alert otp-alert-success" style="margin-bottom: 12px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span x-text="otpSuccess"></span>
+      </div>
+
+      <!-- OTP Error Alert -->
+      <div x-show="otpError" class="otp-alert otp-alert-error" style="margin-bottom: 12px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span x-text="otpError"></span>
+      </div>
+
+      <!-- 4-Digit OTP Boxes -->
+      <div class="otp-boxes-group">
+        <template x-for="(digit, idx) in otpDigits" :key="idx">
+          <input
+            type="text"
+            inputmode="numeric"
+            maxlength="1"
+            class="otp-digit-input"
+            :id="'otp-box-' + idx"
+            :value="otpDigits[idx]"
+            @input="handleOtpInput(idx, $event)"
+            @keydown="handleOtpKeydown(idx, $event)"
+            @paste="handleOtpPaste($event)"
+            autocomplete="one-time-code"
+          />
+        </template>
+      </div>
+
+      <!-- Timer & Resend Row -->
+      <div class="otp-timer-row">
+        <div>
+          <span x-show="otpTimer > 0" style="color: var(--text-muted);">
+            Resend in <strong style="color: var(--text-pri);" x-text="'00:' + (otpTimer < 10 ? '0' : '') + otpTimer"></strong>
+          </span>
+          <span x-show="otpTimer <= 0" style="color: var(--text-sec);">Didn't get code?</span>
+        </div>
+        <button
+          type="button"
+          class="btn-resend-otp"
+          :disabled="otpTimer > 0 || isSendingOtp"
+          @click="sendOtp()"
+        >
+          <span x-show="!isSendingOtp">Resend OTP</span>
+          <span x-show="isSendingOtp">Sending...</span>
+        </button>
+      </div>
+
+      <!-- Verify Button -->
+      <button
+        type="button"
+        class="btn-login-primary"
+        :disabled="isVerifyingOtp || otpDigits.some(d => !d)"
+        @click="verifyOtp()"
+        style="margin-top: 10px;"
+      >
+        <span x-show="!isVerifyingOtp">Verify & Sign In →</span>
+        <span x-show="isVerifyingOtp">Verifying...</span>
+      </button>
+
+      <!-- Back to Email Button -->
+      <button
+        type="button"
+        @click="loginStep = 'email'; otpError = ''; loginError = '';"
+        style="width: 100%; margin-top: 14px; background: none; border: none; color: var(--text-muted); font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 6px;"
+      >
+        ← Back to Email
+      </button>
+    </div>
+
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 2: MAIN DASHBOARD
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen2">
+  <!-- Top Navigation Header -->
+  <div class="crm-nav-header">
+    <div class="crm-brand-title">
+      <div class="logo-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="12" width="4" height="9" rx="1" fill="#FFFFFF"/>
+          <rect x="8" y="7" width="4" height="14" rx="1" fill="#FFFFFF"/>
+          <rect x="14" y="3" width="4" height="18" rx="1" fill="#FFFFFF"/>
+        </svg>
+      </div>
+      <div class="name-txt">Software CRM</div>
+    </div>
+    <div class="header-action-group">
+      <button class="icon-btn" @click="showToast('You have 2 unread client notifications!')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="badge-dot">2</span>
+      </button>
+      <div class="user-avatar-btn" @click="drawerOpen = true" x-text="user.initials">SK</div>
+    </div>
+  </div>
+
+  <!-- Dashboard Body Content -->
+  <div class="dashboard-body">
+
+    <!-- Greeting Banner -->
+    <div class="welcome-banner">
+      <div>
+        <h2 x-text="'Good morning, ' + user.name.split(' ')[0] + '! 👋'">Good morning, Suresh! 👋</h2>
+        <p>Here's what's happening today</p>
+      </div>
+      <div class="dashboard-view-mode-pill" @click="navigateTo(9)">
+        Compact View ⤢
+      </div>
+    </div>
+
+    <!-- 2×2 Metric KPI Grid -->
+    <div class="kpi-grid">
+      <!-- Total Contacts -->
+      <div class="kpi-card" @click="navigateTo(3)">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Total Contacts</span>
+          <div class="kpi-icon-circle" style="background: #EFF6FF; color: var(--primary);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number" x-text="stats.total_contacts">86</div>
+        <div class="kpi-trend trend-up">↑ 12%</div>
+      </div>
+
+      <!-- Active Projects -->
+      <div class="kpi-card" @click="navigateTo(5)">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Active Projects</span>
+          <div class="kpi-icon-circle" style="background: #DCFCE7; color: var(--success);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number" x-text="stats.active_projects">12</div>
+        <div class="kpi-trend trend-up">↑ 20%</div>
+      </div>
+
+      <!-- Pending Tasks -->
+      <div class="kpi-card" @click="navigateTo(6)">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Pending Tasks</span>
+          <div class="kpi-icon-circle" style="background: #FEF9C3; color: #CA8A04;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 11 12 14 22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number" x-text="stats.pending_tasks">8</div>
+        <div class="kpi-trend trend-down">↓ 14%</div>
+      </div>
+
+      <!-- Total Revenue -->
+      <div class="kpi-card" @click="navigateTo(8)">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Total Revenue</span>
+          <div class="kpi-icon-circle" style="background: var(--lead-bg); color: var(--lead);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number" x-text="stats.revenue">$12,450</div>
+        <div class="kpi-trend trend-up">↑ 32%</div>
+      </div>
+    </div>
+
+    <!-- Recent Activity Feed -->
+    <div class="content-box">
+      <div class="box-header">
+        <h3>Recent Activity</h3>
+        <a class="link-text" @click="navigateTo(3)">View All</a>
+      </div>
+
+      <template x-for="act in recentActivities" :key="act.id">
+        <div class="activity-row" @click="navigateTo(act.targetScreen || 3)">
+          <div class="activity-icon" :style="'background: ' + act.bg + '; color: ' + act.color + ';'" x-text="act.icon">👤</div>
+          <div class="activity-details">
+            <div class="activity-title" x-text="act.title">New contact added</div>
+            <div class="activity-sub" x-text="act.subtitle">Rahul Sharma · ABC Tech Solutions</div>
+          </div>
+          <div class="activity-time" x-text="act.time">10m ago</div>
+        </div>
+      </template>
+    </div>
+
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 3: CONTACTS / CLIENTS LIST
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen3">
+  <!-- Sticky Header Container containing Action Bar, Search Box & Filter Nav Bar -->
+  <div class="contacts-sticky-header">
+    <!-- Screen Action Bar -->
+    <div class="screen-action-bar">
+      <div class="title-with-hamburger">
+        <!-- Hamburger Menu -->
+        <button class="icon-btn" @click="drawerOpen = true">
+          <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+            <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <h2 class="screen-heading">Contacts</h2>
+      </div>
+
+      <!-- FAB Add Contact -->
+      <button class="fab-add" @click="addContactModal = true" title="Add New Contact">
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Search Input Box -->
+    <div class="search-input-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input 
+        type="text" 
+        placeholder="Search contacts..." 
+        x-model="contactSearch" 
+      />
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="cursor: pointer;" @click="contactSearch = ''">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+    </div>
+
+    <!-- Category Filter Pills Strip (Navigation Bar) -->
+    <div class="filter-pills-row">
+      <div 
+        class="chip-tab" 
+        :class="{ 'active': contactCategory === 'all' }" 
+        @click="contactCategory = 'all'"
+      >
+        All (<span x-text="contacts.length">86</span>)
+      </div>
+      <div 
+        class="chip-tab" 
+        :class="{ 'active': contactCategory === 'client' }" 
+        @click="contactCategory = 'client'"
+      >
+        Client
+      </div>
+      <div 
+        class="chip-tab" 
+        :class="{ 'active': contactCategory === 'lead' }" 
+        @click="contactCategory = 'lead'"
+      >
+        Lead
+      </div>
+      <div 
+        class="chip-tab" 
+        :class="{ 'active': contactCategory === 'prospect' }" 
+        @click="contactCategory = 'prospect'"
+      >
+        Prospect
+      </div>
+    </div>
+  </div>
+
+  <!-- Contacts List -->
+  <div style="flex: 1;">
+    <template x-for="contact in filteredContacts" :key="contact.id">
+      <div class="contact-item-row" @click="viewContactDetail(contact)">
+        <div class="contact-avatar" :style="'background: ' + contact.avatarBg" x-text="contact.initials">
+          RS
+        </div>
+        <div class="contact-meta">
+          <div class="contact-name-txt" x-text="contact.name">Rahul Sharma</div>
+          <div class="contact-company-txt" x-text="contact.company">ABC Tech Solutions</div>
+        </div>
+        <div class="row-right-actions">
+          <span 
+            class="status-badge" 
+            :class="{
+              'badge-client': contact.category.toLowerCase() === 'client',
+              'badge-lead': contact.category.toLowerCase() === 'lead',
+              'badge-prospect': contact.category.toLowerCase() === 'prospect'
+            }" 
+            x-text="contact.category"
+          >Client</span>
+          <span style="color: var(--text-muted); font-size: 16px;">⋮</span>
+        </div>
+      </div>
+    </template>
+
+    <div x-show="filteredContacts.length === 0" style="padding: 40px 20px; text-align: center; color: var(--text-sec);">
+      <p style="font-size: 14px;">No contacts match your search or filter.</p>
+    </div>
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 4: CONTACT DETAIL VIEW (WORTAL AESTHETIC - IMAGE 4)
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen4">
+  <!-- Top Bar with Back Arrow, Contact Name, Dark Toggle & Hamburger -->
+  <div class="detail-header-bar">
+    <div class="detail-header-left">
+      <button class="detail-back-btn" @click="historyStack.length > 1 ? goBack() : navigateTo(3)" title="Back to Contacts">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </button>
+      <div class="detail-header-title-box">
+        <h2 class="detail-header-name" x-text="selectedContact ? selectedContact.name : 'Contact Details'">Rahul Sharma</h2>
+        <p class="detail-header-sub" x-text="selectedContact ? (selectedContact.phone || selectedContact.company || '') : ''">+91 98765-43210</p>
+      </div>
+    </div>
+
+    <div class="detail-header-right">
+      <!-- Dark/Light Mode Switcher -->
+      <button class="detail-header-icon-btn" @click="toggleTheme()" title="Toggle Dark Mode">
+        <span x-show="!settings.darkMode">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        </span>
+        <span x-show="settings.darkMode">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+          </svg>
+        </span>
+      </button>
+
+      <!-- Hamburger Menu Button -->
+      <button class="detail-header-icon-btn" @click="drawerOpen = true" title="Open Navigation Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 5-Card Navigation Grid Bar (Strictly Matching Image 4 with Teal Accent) -->
+  <div class="detail-nav-grid-container">
+    <div class="detail-nav-grid">
+      <!-- 1. Info Tab -->
+      <button 
+        class="detail-nav-tab" 
+        :class="{ 'active': contactDetailTab === 'info' }" 
+        @click="contactDetailTab = 'info'"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+        </svg>
+        <span>Info</span>
+      </button>
+
+      <!-- 2. History Tab -->
+      <button 
+        class="detail-nav-tab" 
+        :class="{ 'active': contactDetailTab === 'history' }" 
+        @click="contactDetailTab = 'history'"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>
+        </svg>
+        <span>History</span>
+      </button>
+
+      <!-- 3. Media Tab -->
+      <button 
+        class="detail-nav-tab" 
+        :class="{ 'active': contactDetailTab === 'media' }" 
+        @click="contactDetailTab = 'media'"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+        </svg>
+        <span>Media</span>
+      </button>
+
+      <!-- 4. Tasks Tab -->
+      <button 
+        class="detail-nav-tab" 
+        :class="{ 'active': contactDetailTab === 'tasks' }" 
+        @click="contactDetailTab = 'tasks'"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <span>Tasks</span>
+      </button>
+
+      <!-- 5. More Tab -->
+      <button 
+        class="detail-nav-tab" 
+        :class="{ 'active': contactDetailTab === 'more' }" 
+        @click="contactDetailTab = 'more'"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/>
+        </svg>
+        <span>More</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Content Scrollable Container -->
+  <div class="detail-scrollable-content" x-show="selectedContact">
+
+    <!-- ==============================================
+         TAB CONTENT 1: ℹ️ INFO (CONTACT PROFILE)
+         ============================================== -->
+    <div x-show="contactDetailTab === 'info'" class="detail-tab-pane">
+
+      <!-- Avatar Hero Header (Wortal UI Style) -->
+      <div class="wortal-hero-header">
+        <div 
+          class="wortal-avatar-box" 
+          :style="'background: ' + (selectedContact.avatarBg || '#007788')" 
+          x-text="selectedContact && selectedContact.name ? selectedContact.name.charAt(0).toUpperCase() : '?'"
+        >
+          R
+        </div>
+
+        <div class="wortal-hero-title-group">
+          <h2 class="wortal-hero-name" x-text="selectedContact ? selectedContact.name : ''">Rahul Sharma</h2>
+          <p class="wortal-hero-sub" x-text="selectedContact ? (selectedContact.phone || selectedContact.company || '') : ''">+91 98765-43210</p>
+        </div>
+
+        <!-- Edit Profile & Star Quick Actions (Wortal Pills) -->
+        <div class="wortal-pills-row">
+          <button class="wortal-pill active" @click="showToast('Editing ' + selectedContact.name)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
+            </svg>
+            <span>Edit Profile</span>
+          </button>
+
+          <button class="wortal-pill" @click="selectedContact.is_starred = !selectedContact.is_starred; showToast(selectedContact.is_starred ? 'Starred ' + selectedContact.name : 'Removed Star')">
+            <span x-text="selectedContact && selectedContact.is_starred ? '⭐' : '☆'">☆</span>
+            <span x-text="selectedContact && selectedContact.is_starred ? 'Starred' : 'Star'">Star</span>
+          </button>
+        </div>
+
+        <!-- 5 Outline Vector Action Buttons on White Card (WhatsApp, Call, Mail, Quote, Share) -->
+        <div class="wortal-actions-row">
+          <!-- WhatsApp -->
+          <a 
+            :href="'https://wa.me/' + (selectedContact && selectedContact.phone ? selectedContact.phone.replace(/[^0-9]/g, '') : '')" 
+            target="_blank" 
+            class="wortal-action-square-btn btn-wa" 
+            title="WhatsApp"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+            </svg>
+          </a>
+
+          <!-- Direct Call -->
+          <a 
+            :href="'tel:' + (selectedContact ? selectedContact.phone : '')" 
+            class="wortal-action-square-btn btn-call" 
+            title="Direct Call"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </a>
+
+          <!-- Send Email -->
+          <a 
+            :href="'mailto:' + (selectedContact && selectedContact.email ? selectedContact.email : '')" 
+            class="wortal-action-square-btn btn-mail" 
+            title="Send Email"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+          </a>
+
+          <!-- Quotation Button -->
+          <button 
+            class="wortal-action-square-btn btn-quote" 
+            @click="showToast('Generate Quotation for ' + selectedContact.name)" 
+            title="Generate Quotation"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </button>
+
+          <!-- Share Contact -->
+          <button 
+            class="wortal-action-square-btn btn-share" 
+            @click="if (navigator.share) { navigator.share({title: selectedContact.name, text: selectedContact.name + ' - ' + selectedContact.phone}); } else { showToast('Contact copied to clipboard'); }" 
+            title="Share Contact"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Numbers & Info Card (Wortal Card) -->
+      <div class="wortal-card">
+        <!-- Mobile Primary Row -->
+        <div class="wortal-card-row">
+          <div class="wortal-card-info">
+            <span class="wortal-label">Mobile (Primary)</span>
+            <span class="wortal-mono-val" x-text="selectedContact ? selectedContact.phone : 'Not set'">+91 98765-43210</span>
+          </div>
+          <div class="wortal-quick-btns">
+            <a 
+              :href="'https://wa.me/' + (selectedContact && selectedContact.phone ? selectedContact.phone.replace(/[^0-9]/g, '') : '')" 
+              target="_blank" 
+              class="wortal-quick-btn wa" 
+              title="WhatsApp"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+              </svg>
+            </a>
+            <a 
+              :href="'tel:' + (selectedContact ? selectedContact.phone : '')" 
+              class="wortal-quick-btn call" 
+              title="Call"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Mobile Secondary / Alternate Row -->
+        <div class="wortal-card-row">
+          <div class="wortal-card-info">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="wortal-label">Mobile (Secondary)</span>
+              <span class="wortal-edit-link" @click="showToast('Edit secondary number')">Edit</span>
+            </div>
+            <span class="wortal-mono-val" x-text="selectedContact && selectedContact.phone2 ? selectedContact.phone2 : '+91 98765 43211'">+91 98765 43211</span>
+          </div>
+          <div class="wortal-quick-btns">
+            <a 
+              :href="'https://wa.me/' + (selectedContact && selectedContact.phone2 ? selectedContact.phone2.replace(/[^0-9]/g, '') : '919876543211')" 
+              target="_blank" 
+              class="wortal-quick-btn wa" 
+              title="WhatsApp Alternate"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+              </svg>
+            </a>
+            <a 
+              :href="'tel:' + (selectedContact && selectedContact.phone2 ? selectedContact.phone2 : '+919876543211')" 
+              class="wortal-quick-btn call" 
+              title="Call Alternate"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Location Address Row -->
+        <div class="wortal-card-row">
+          <div class="wortal-card-info">
+            <span class="wortal-label">Location Address</span>
+            <span class="wortal-text-val" x-text="selectedContact && (selectedContact.address || selectedContact.location) ? (selectedContact.address || selectedContact.location) : '123 Business Bay, Mumbai, MH'">123 Business Bay, Mumbai, MH</span>
+          </div>
+          <div class="wortal-quick-btns">
+            <button class="wortal-quick-btn location" @click="showToast('Address copied to clipboard')" title="Copy Location">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Referral & Status Info (Wortal Card) -->
+      <div class="wortal-card wortal-meta-card">
+        <div class="wortal-meta-row">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#007788" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" x2="6" y1="9" y2="21"/>
+            </svg>
+            <span style="color: var(--text-sec); font-size: 12px;">Referred By:</span>
+            <strong style="font-size: 12px; color: var(--text-pri);" x-text="selectedContact && selectedContact.source ? selectedContact.source : 'Direct / Organic'">Direct / Organic</strong>
+          </div>
+          <button class="wortal-link-btn" @click="contactSearch = selectedContact.source || ''; navigateTo(3)">Filter Leads</button>
+        </div>
+
+        <div class="wortal-meta-divider"></div>
+
+        <div class="wortal-meta-row">
+          <span style="color: var(--text-sec); font-size: 12px;">Business / Category:</span>
+          <strong style="font-size: 12px; color: var(--text-pri);" x-text="selectedContact ? (selectedContact.company || selectedContact.category || 'Client') : 'Client'">Client</strong>
+        </div>
+      </div>
+
+      <!-- Generate Quotation Action Banner -->
+      <button class="wortal-quotation-banner" @click="showToast('Quotation Generator launched')">
+        <div class="wortal-banner-left">
+          <div class="wortal-banner-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div class="wortal-banner-text">
+            <div class="wortal-banner-title">Generate Quotation</div>
+            <div class="wortal-banner-subtitle">PDF • Image • WhatsApp Message</div>
+          </div>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+
+      <!-- Bottom Action Icons (Quote, Location, QR Code, Share Contact) -->
+      <div class="wortal-bottom-grid">
+        <button class="wortal-bottom-card" @click="showToast('Quotation Generator')">
+          <div class="wortal-bottom-icon violet">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <span class="wortal-bottom-label violet">Quotation</span>
+        </button>
+
+        <button class="wortal-bottom-card" @click="showToast('Viewing Location on Map')">
+          <div class="wortal-bottom-icon blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <span class="wortal-bottom-label">Location</span>
+        </button>
+
+        <button class="wortal-bottom-card" @click="showToast('QR Code Generated')">
+          <div class="wortal-bottom-icon purple">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>
+            </svg>
+          </div>
+          <span class="wortal-bottom-label">QR Code</span>
+        </button>
+
+        <button class="wortal-bottom-card" @click="if (navigator.share) { navigator.share({title: selectedContact.name, text: selectedContact.name + ' - ' + selectedContact.phone}); } else { showToast('Contact copied'); }">
+          <div class="wortal-bottom-icon emerald">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </div>
+          <span class="wortal-bottom-label">Share</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ==============================================
+         TAB CONTENT 2: 🕒 HISTORY / FOLLOW-UPS
+         ============================================== -->
+    <div x-show="contactDetailTab === 'history'" class="detail-tab-pane">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-pri);">Interaction Timeline</h3>
+        <button class="wortal-pill active" @click="showToast('Add note or follow-up')">+ Log Activity</button>
+      </div>
+
+      <div class="wortal-card" style="margin-top: 0;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 32px; height: 32px; border-radius: 10px; background: #ECFDF5; color: #10B981; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px;">📞</div>
+            <div style="flex: 1;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-size: 13px; font-weight: 700; color: var(--text-pri);">Outbound Call Completed</span>
+                <span style="font-size: 11px; color: var(--text-muted);">2h ago</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-sec); margin-top: 2px;">Discussed proposal pricing and kickoff timelines for CRM deployment.</p>
+            </div>
+          </div>
+
+          <div style="height: 1px; background: var(--border);"></div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 32px; height: 32px; border-radius: 10px; background: #EFF6FF; color: #2563EB; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px;">💬</div>
+            <div style="flex: 1;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-size: 13px; font-weight: 700; color: var(--text-pri);">WhatsApp Follow-up</span>
+                <span style="font-size: 11px; color: var(--text-muted);">Yesterday</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-sec); margin-top: 2px;">Sent updated quotation PDF and feature overview brochure.</p>
+            </div>
+          </div>
+
+          <div style="height: 1px; background: var(--border);"></div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 32px; height: 32px; border-radius: 10px; background: #FAF5FF; color: #9333EA; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px;">📝</div>
+            <div style="flex: 1;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-size: 13px; font-weight: 700; color: var(--text-pri);">Client Initial Contact</span>
+                <span style="font-size: 11px; color: var(--text-muted);">12 Aug</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-sec); margin-top: 2px;">Lead generated from website inquiry form.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         TAB CONTENT 3: 🖼️ MEDIA & DOCUMENTS
+         ============================================== -->
+    <div x-show="contactDetailTab === 'media'" class="detail-tab-pane">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-pri);">Shared Files & Media</h3>
+        <button class="wortal-pill active" @click="showToast('Upload File')">+ Upload</button>
+      </div>
+
+      <div class="wortal-card" style="margin-top: 0;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: #FEE2E2; color: #DC2626; display: flex; align-items: center; justify-content: center; font-size: 14px;">📄</div>
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-pri);">Service_Agreement_v2.pdf</div>
+                <div style="font-size: 11px; color: var(--text-muted);">1.8 MB • Added 14 Aug</div>
+              </div>
+            </div>
+            <button class="wortal-quick-btn location" @click="showToast('Downloading Service Agreement')">⬇️</button>
+          </div>
+
+          <div style="height: 1px; background: var(--border);"></div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: #E0E7FF; color: #4F46E5; display: flex; align-items: center; justify-content: center; font-size: 14px;">📊</div>
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-pri);">Quotation_Estimate_Aug24.xlsx</div>
+                <div style="font-size: 11px; color: var(--text-muted);">450 KB • Added 10 Aug</div>
+              </div>
+            </div>
+            <button class="wortal-quick-btn location" @click="showToast('Downloading Quotation')">⬇️</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         TAB CONTENT 4: 📋 TASKS & PROJECTS
+         ============================================== -->
+    <div x-show="contactDetailTab === 'tasks'" class="detail-tab-pane">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-pri);">Associated Tasks</h3>
+        <button class="wortal-pill active" @click="showToast('Add new task')">+ Task</button>
+      </div>
+
+      <div class="wortal-card" style="margin-top: 0;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <template x-for="task in tasks.filter(t => t.client === selectedContact.company || t.client === selectedContact.name)" :key="task.id">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" :checked="task.completed" @change="toggleTask(task)" style="width: 18px; height: 18px; accent-color: #007788; cursor: pointer;" />
+                <span :style="task.completed ? 'text-decoration: line-through; color: var(--text-muted);' : 'font-weight: 600; color: var(--text-pri);'" style="font-size: 13px;" x-text="task.title"></span>
+              </div>
+              <span class="status-badge" :class="task.priority === 'High' ? 'badge-lead' : 'badge-client'" x-text="task.due">Today</span>
+            </div>
+          </template>
+
+          <div x-show="tasks.filter(t => t.client === selectedContact.company || t.client === selectedContact.name).length === 0" style="text-align: center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">
+            No specific tasks linked to this contact.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         TAB CONTENT 5: ⋯ MORE SETTINGS
+         ============================================== -->
+    <div x-show="contactDetailTab === 'more'" class="detail-tab-pane">
+      <div class="wortal-card" style="margin-top: 0;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button style="display: flex; align-items: center; justify-content: space-between; background: none; border: none; cursor: pointer; text-align: left; width: 100%; padding: 4px 0;" @click="showToast('Exporting vCard...')">
+            <span style="font-size: 13px; font-weight: 600; color: var(--text-pri);">Export Contact (.vcf)</span>
+            <span style="color: var(--text-muted);">›</span>
+          </button>
+          <div style="height: 1px; background: var(--border);"></div>
+          <button style="display: flex; align-items: center; justify-content: space-between; background: none; border: none; cursor: pointer; text-align: left; width: 100%; padding: 4px 0;" @click="showToast('Duplicate contact created')">
+            <span style="font-size: 13px; font-weight: 600; color: var(--text-pri);">Duplicate Contact</span>
+            <span style="color: var(--text-muted);">›</span>
+          </button>
+          <div style="height: 1px; background: var(--border);"></div>
+          <button style="display: flex; align-items: center; justify-content: space-between; background: none; border: none; cursor: pointer; text-align: left; width: 100%; padding: 4px 0;" @click="showToast('Contact archived')">
+            <span style="font-size: 13px; font-weight: 600; color: var(--text-sec);">Archive Contact</span>
+            <span style="color: var(--text-muted);">›</span>
+          </button>
+          <div style="height: 1px; background: var(--border);"></div>
+          <button style="display: flex; align-items: center; justify-content: space-between; background: none; border: none; cursor: pointer; text-align: left; width: 100%; padding: 4px 0;" @click="showToast('Contact deleted'); navigateTo(3)">
+            <span style="font-size: 13px; font-weight: 600; color: var(--danger);">Delete Contact</span>
+            <span style="color: var(--danger);">🗑️</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 5: PROJECTS MANAGEMENT
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen5">
+  <!-- Action Bar -->
+  <div class="screen-action-bar">
+    <div class="title-with-hamburger">
+      <button class="icon-btn" @click="drawerOpen = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <h2 class="screen-heading">Projects</h2>
+    </div>
+    <button class="fab-add" @click="showToast('New Project modal opened')" title="New Project">
+      <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Filter Pills -->
+  <div class="filter-pills-row">
+    <div class="chip-tab" :class="{ 'active': projectFilter === 'all' }" @click="projectFilter = 'all'">
+      All (<span x-text="projects.length">12</span>)
+    </div>
+    <div class="chip-tab" :class="{ 'active': projectFilter === 'active' }" @click="projectFilter = 'active'">
+      Active (<span x-text="projects.filter(p => p.status === 'active').length">8</span>)
+    </div>
+    <div class="chip-tab" :class="{ 'active': projectFilter === 'completed' }" @click="projectFilter = 'completed'">
+      Completed (<span x-text="projects.filter(p => p.status === 'completed').length">3</span>)
+    </div>
+  </div>
+
+  <!-- Projects List Container -->
+  <div style="flex: 1; overflow-y: auto; padding-bottom: 24px;">
+    <template x-for="project in filteredProjects" :key="project.id">
+      <div class="project-card-item" @click="showToast('Viewing ' + project.title)">
+        <div class="project-top-row">
+          <!-- Coloured icon box -->
+          <div class="project-icon-badge" :style="'background: ' + project.bg + '; color: ' + project.color + ';'" x-text="project.icon">
+            🛒
+          </div>
+          <!-- Info -->
+          <div class="project-info">
+            <div class="project-title" x-text="project.title">E-commerce Website</div>
+            <div class="project-client" x-text="project.client">ABC Tech Solutions</div>
+          </div>
+          <!-- Options menu -->
+          <div style="color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 0 4px;" @click.stop="showToast('Project settings')">
+            ⋮
+          </div>
+        </div>
+
+        <!-- Progress Row -->
+        <div>
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 5px;">
+            <span
+              class="project-progress-pct"
+              :style="'color: ' + (project.progress === 100 ? 'var(--success)' : 'var(--primary)')"
+              x-text="project.progress + '%'"
+            >
+              70%
+            </span>
+          </div>
+          <!-- Progress Bar -->
+          <div class="progress-bar-wrap">
+            <div
+              class="progress-bar-fill"
+              :style="'width: ' + project.progress + '%;' + (project.progress === 100 ? ' background: var(--success);' : '')"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <div x-show="filteredProjects.length === 0" style="padding: 40px 20px; text-align: center; color: var(--text-sec);">
+      <p style="font-size: 14px;">No projects match the selected filter.</p>
+    </div>
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 6: TASK MANAGEMENT
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen6">
+  <!-- Screen Action Bar -->
+  <div class="screen-action-bar">
+    <div class="title-with-hamburger">
+      <button class="icon-btn" @click="drawerOpen = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <h2 class="screen-heading">Tasks</h2>
+    </div>
+    <button class="fab-add" @click="addTaskModal = true" title="Create New Task">
+      <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Filter Pills Strip -->
+  <div class="filter-pills-row" style="margin-top: 4px;">
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': taskFilter === 'my' }" 
+      @click="taskFilter = 'my'"
+    >
+      My Tasks (8)
+    </div>
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': taskFilter === 'all' }" 
+      @click="taskFilter = 'all'"
+    >
+      All Tasks (24)
+    </div>
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': taskFilter === 'overdue' }" 
+      @click="taskFilter = 'overdue'"
+    >
+      Overdue (3)
+    </div>
+  </div>
+
+  <!-- Tasks List -->
+  <div style="flex: 1;">
+    <template x-for="task in filteredTasks" :key="task.id">
+      <div class="task-item-card" @click="toggleTask(task)">
+        <!-- Custom Checkbox -->
+        <div class="task-checkbox" :class="{ 'checked': task.completed }">
+          <svg x-show="task.completed" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+
+        <!-- Task Content -->
+        <div class="task-content">
+          <div 
+            class="task-title-txt" 
+            :class="{ 'strikethrough': task.completed }" 
+            x-text="task.title"
+          >
+            Design Homepage
+          </div>
+          <div class="task-due-info">
+            <span :style="'color: ' + (task.overdue ? 'var(--danger)' : 'var(--warning)')">⏰</span>
+            <span x-text="task.project">E-commerce Website</span>
+          </div>
+        </div>
+
+        <!-- Priority & Due -->
+        <div style="text-align: right;">
+          <span 
+            class="status-badge" 
+            :class="{
+              'badge-high': task.priority === 'High',
+              'badge-medium': task.priority === 'Medium',
+              'badge-low': task.priority === 'Low'
+            }" 
+            x-text="task.priority"
+          >High</span>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" x-text="task.due">Today</div>
+        </div>
+      </div>
+    </template>
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 7: CALENDAR VIEW
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen7">
+  <!-- Screen Action Bar -->
+  <div class="screen-action-bar">
+    <div class="title-with-hamburger">
+      <button class="icon-btn" @click="drawerOpen = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <h2 class="screen-heading">Calendar</h2>
+    </div>
+    <button class="fab-add" @click="showToast('Schedule New Event modal opened')" title="Schedule Event">
+      <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Calendar Card -->
+  <div class="calendar-card">
+    <div class="month-nav-row">
+      <button class="month-nav-btn" @click="showToast('Previous month')">‹</button>
+      <div class="month-label">August 2024</div>
+      <button class="month-nav-btn" @click="showToast('Next month')">›</button>
+    </div>
+
+    <!-- Weekdays Header -->
+    <div class="calendar-weekdays">
+      <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+    </div>
+
+    <!-- Month Days Grid -->
+    <div class="calendar-days-grid">
+      <!-- Trailing previous month days -->
+      <div class="day-cell muted"><span class="day-num">28</span></div>
+      <div class="day-cell muted"><span class="day-num">29</span></div>
+      <div class="day-cell muted"><span class="day-num">30</span></div>
+
+      <!-- August Days -->
+      <div class="day-cell" @click="selectCalendarDay(1)"><span class="day-num">1</span></div>
+      <div class="day-cell" @click="selectCalendarDay(2)"><span class="day-num">2</span></div>
+      <div class="day-cell" @click="selectCalendarDay(3)"><span class="day-num">3</span></div>
+      <div class="day-cell" @click="selectCalendarDay(4)"><span class="day-num">4</span></div>
+
+      <div class="day-cell" @click="selectCalendarDay(5)"><span class="day-num">5</span></div>
+      <div class="day-cell" @click="selectCalendarDay(6)"><span class="day-num">6</span></div>
+      <div class="day-cell" :class="{ 'selected': selectedDate === 7 }" @click="selectCalendarDay(7)">
+        <span class="day-num">7</span>
+        <span class="event-pill-mini" style="background: var(--success-bg); color: var(--success);">Client Mtg</span>
+      </div>
+      <div class="day-cell" @click="selectCalendarDay(8)"><span class="day-num">8</span></div>
+      <div class="day-cell" @click="selectCalendarDay(9)"><span class="day-num">9</span></div>
+      <div class="day-cell" @click="selectCalendarDay(10)"><span class="day-num">10</span></div>
+      <div class="day-cell" @click="selectCalendarDay(11)"><span class="day-num">11</span></div>
+
+      <div class="day-cell today" @click="selectCalendarDay(12)"><span class="day-num">12</span></div>
+      <div class="day-cell" @click="selectCalendarDay(13)"><span class="day-num">13</span></div>
+      <div class="day-cell" :class="{ 'selected': selectedDate === 14 }" @click="selectCalendarDay(14)">
+        <span class="day-num">14</span>
+        <span class="event-pill-mini" style="background: var(--danger-bg); color: var(--danger);">Design Deadline</span>
+      </div>
+      <div class="day-cell" @click="selectCalendarDay(15)"><span class="day-num">15</span></div>
+      <div class="day-cell" @click="selectCalendarDay(16)"><span class="day-num">16</span></div>
+      <div class="day-cell" @click="selectCalendarDay(17)"><span class="day-num">17</span></div>
+      <div class="day-cell" @click="selectCalendarDay(18)"><span class="day-num">18</span></div>
+
+      <div class="day-cell" @click="selectCalendarDay(19)"><span class="day-num">19</span></div>
+      <div class="day-cell" @click="selectCalendarDay(20)"><span class="day-num">20</span></div>
+      <div class="day-cell" @click="selectCalendarDay(21)"><span class="day-num">21</span></div>
+      <div class="day-cell" :class="{ 'selected': selectedDate === 22 }" @click="selectCalendarDay(22)">
+        <span class="day-num">22</span>
+        <span class="event-pill-mini" style="background: var(--primary-light); color: var(--primary);">Team Meeting</span>
+      </div>
+      <div class="day-cell" @click="selectCalendarDay(23)"><span class="day-num">23</span></div>
+      <div class="day-cell" @click="selectCalendarDay(24)"><span class="day-num">24</span></div>
+      <div class="day-cell" @click="selectCalendarDay(25)"><span class="day-num">25</span></div>
+
+      <div class="day-cell" @click="selectCalendarDay(26)"><span class="day-num">26</span></div>
+      <div class="day-cell" @click="selectCalendarDay(27)"><span class="day-num">27</span></div>
+      <div class="day-cell" @click="selectCalendarDay(28)"><span class="day-num">28</span></div>
+      <div class="day-cell" @click="selectCalendarDay(29)"><span class="day-num">29</span></div>
+      <div class="day-cell" :class="{ 'selected': selectedDate === 30 }" @click="selectCalendarDay(30)">
+        <span class="day-num">30</span>
+        <span class="event-pill-mini" style="background: var(--warning-bg); color: var(--warning);">Invoice Due</span>
+      </div>
+      <div class="day-cell" @click="selectCalendarDay(31)"><span class="day-num">31</span></div>
+      <div class="day-cell muted"><span class="day-num">1</span></div>
+    </div>
+  </div>
+
+  <!-- Events for selected day -->
+  <div x-show="selectedDate" style="padding: 0 16px 16px;">
+    <div class="content-box">
+      <div class="box-header">
+        <h3>Events on <span x-text="'Aug ' + selectedDate"></span></h3>
+        <a class="link-text" @click="showToast('Add event for this date')">+ Add</a>
+      </div>
+      <div class="activity-row">
+        <div class="activity-icon" style="background: var(--success-bg); color: var(--success);">📅</div>
+        <div class="activity-details">
+          <div class="activity-title">Client Meeting</div>
+          <div class="activity-sub">ABC Tech Solutions — 10:00 AM</div>
+        </div>
+        <div class="activity-time">1h</div>
+      </div>
+    </div>
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 8: INVOICES & PAYMENTS
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen8">
+  <!-- Action Bar -->
+  <div class="screen-action-bar">
+    <div class="title-with-hamburger">
+      <button class="icon-btn" @click="drawerOpen = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <h2 class="screen-heading">Invoices</h2>
+    </div>
+    <button class="fab-add" @click="showToast('Create Invoice modal opened')" title="Create Invoice">
+      <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Filter Pills Strip -->
+  <div class="filter-pills-row">
+    <div class="chip-tab" :class="{ 'active': invoiceFilter === 'all' }" @click="invoiceFilter = 'all'">
+      All (<span x-text="invoices.length">15</span>)
+    </div>
+    <div class="chip-tab" :class="{ 'active': invoiceFilter === 'paid' }" @click="invoiceFilter = 'paid'">
+      Paid (10)
+    </div>
+    <div class="chip-tab" :class="{ 'active': invoiceFilter === 'pending' }" @click="invoiceFilter = 'pending'">
+      Pending (4)
+    </div>
+    <div class="chip-tab" :class="{ 'active': invoiceFilter === 'overdue' }" @click="invoiceFilter = 'overdue'">
+      Overdue (1)
+    </div>
+  </div>
+
+  <!-- Invoices List Container -->
+  <div style="flex: 1;">
+    <template x-for="inv in filteredInvoices" :key="inv.id">
+      <div class="invoice-card-row" @click="showToast('Opening ' + inv.id + ' (' + inv.amount + ')')">
+        <!-- Blue SVG document icon -->
+        <div class="invoice-icon-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+        </div>
+        <!-- Invoice info -->
+        <div class="invoice-mid-info">
+          <div class="invoice-id-txt" x-text="inv.id">INV-2024-001</div>
+          <div class="invoice-client-txt" x-text="inv.client + ' · ' + inv.date">ABC Tech Solutions · 10 Aug 2024</div>
+        </div>
+        <!-- Amount + Status -->
+        <div class="invoice-amount-block">
+          <div class="amount-value" x-text="inv.amount">$2,500</div>
+          <span
+            class="status-badge"
+            :class="{
+              'badge-paid': inv.status === 'paid',
+              'badge-pending': inv.status === 'pending',
+              'badge-overdue': inv.status === 'overdue'
+            }"
+            x-text="inv.status"
+          >Paid</span>
+        </div>
+      </div>
+    </template>
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 9: MOBILE DASHBOARD (COMPACT 2x2)
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen9">
+  <!-- Nav Header -->
+  <div class="crm-nav-header">
+    <div class="crm-brand-title">
+      <div class="logo-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="12" width="4" height="9" rx="1" fill="#FFFFFF"/>
+          <rect x="8" y="7" width="4" height="14" rx="1" fill="#FFFFFF"/>
+          <rect x="14" y="3" width="4" height="18" rx="1" fill="#FFFFFF"/>
+        </svg>
+      </div>
+      <div class="name-txt">Software CRM</div>
+    </div>
+    <div class="header-action-group">
+      <button class="icon-btn" @click="showToast('2 notifications')">🔔</button>
+      <div class="user-avatar-btn" @click="drawerOpen = true" x-text="user.initials">SK</div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="dashboard-body">
+    <div class="welcome-banner">
+      <div>
+        <h2 x-text="'Good morning, ' + user.name.split(' ')[0] + '! 👋'">Good morning, Suresh! 👋</h2>
+        <p style="font-size: 11px; color: var(--text-sec); margin-top: 2px;">Quick Overview</p>
+      </div>
+      <div class="dashboard-view-mode-pill" @click="navigateTo(2)">
+        <span>Standard View ⤢</span>
+      </div>
+    </div>
+
+    <!-- 2x2 Large Numbers Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="kpi-card" style="padding: 18px 14px;" @click="navigateTo(3)">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="kpi-label">Contacts</span>
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: #DBEAFE; color: #2563EB; display: flex; align-items: center; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number" style="font-size: 28px; margin-top: 4px;" x-text="stats.total_contacts">86</div>
+      </div>
+
+      <div class="kpi-card" style="padding: 18px 14px;" @click="navigateTo(5)">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="kpi-label">Projects</span>
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number" style="font-size: 28px; margin-top: 4px;" x-text="stats.active_projects">12</div>
+      </div>
+
+      <div class="kpi-card" style="padding: 18px 14px;" @click="navigateTo(6)">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="kpi-label">Tasks</span>
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: #D1FAE5; color: #059669; display: flex; align-items: center; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number" style="font-size: 28px; margin-top: 4px;" x-text="stats.pending_tasks">8</div>
+      </div>
+
+      <div class="kpi-card" style="padding: 18px 14px;" @click="navigateTo(8)">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="kpi-label">Revenue</span>
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: #EDE9FE; color: #7C3AED; display: flex; align-items: center; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number" style="font-size: 24px; margin-top: 4px;" x-text="stats.revenue">$12.4K</div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="content-box">
+      <div class="box-header">
+        <h3>Recent Activity</h3>
+        <a class="link-text" @click="navigateTo(3)">View All</a>
+      </div>
+
+      <template x-for="act in recentActivities" :key="act.id">
+        <div class="activity-row" @click="navigateTo(act.targetScreen || 3)">
+          <div class="activity-icon" :style="'background: ' + act.bg + '; color: ' + act.color + ';'" x-text="act.icon">👤</div>
+          <div class="activity-details">
+            <div class="activity-title" x-text="act.title">New contact added</div>
+            <div class="activity-sub" x-text="act.subtitle">Rahul Sharma</div>
+          </div>
+          <div class="activity-time" x-text="act.time">10m ago</div>
+        </div>
+      </template>
+    </div>
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 11: DOCUMENTS & FILES MANAGEMENT
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen11">
+  <!-- Screen Action Bar -->
+  <div class="screen-action-bar">
+    <div class="title-with-hamburger">
+      <button class="icon-btn" @click="drawerOpen = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <h2 class="screen-heading">Documents</h2>
+    </div>
+    <button class="fab-add" @click="showToast('Upload Document modal opened')" title="Upload Document">
+      <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Search Input Box -->
+  <div class="search-input-box">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input 
+      type="text" 
+      placeholder="Search documents..." 
+      x-model="documentSearch" 
+    />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="cursor: pointer;" @click="documentSearch = ''">
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+    </svg>
+  </div>
+
+  <!-- Category Filter Pills Strip -->
+  <div class="filter-pills-row" style="margin-top: 4px;">
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': documentFilter === 'all' }" 
+      @click="documentFilter = 'all'"
+    >
+      All (<span x-text="documents.length">6</span>)
+    </div>
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': documentFilter === 'contracts' }" 
+      @click="documentFilter = 'contracts'"
+    >
+      Contracts (<span x-text="documents.filter(d => d.category === 'contracts').length">2</span>)
+    </div>
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': documentFilter === 'proposals' }" 
+      @click="documentFilter = 'proposals'"
+    >
+      Proposals (<span x-text="documents.filter(d => d.category === 'proposals').length">2</span>)
+    </div>
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': documentFilter === 'invoices' }" 
+      @click="documentFilter = 'invoices'"
+    >
+      Invoices (<span x-text="documents.filter(d => d.category === 'invoices').length">2</span>)
+    </div>
+  </div>
+
+  <!-- Documents List Container -->
+  <div style="flex: 1; overflow-y: auto; padding-bottom: 24px;">
+    <template x-for="doc in filteredDocuments" :key="doc.id">
+      <div class="document-card-row" @click="showToast('Downloading ' + doc.title + ' (' + doc.size + ')...')">
+        <!-- File Icon Badge -->
+        <div class="doc-icon-badge" :style="'background: ' + doc.iconBg + '; color: ' + doc.iconColor + ';'">
+          <template x-if="doc.type === 'pdf'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </template>
+          <template x-if="doc.type === 'xlsx'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="17"/>
+              <line x1="16" y1="13" x2="8" y2="17"/>
+            </svg>
+          </template>
+          <template x-if="doc.type === 'docx'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </template>
+          <template x-if="doc.type === 'zip'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+          </template>
+        </div>
+
+        <!-- Document Details -->
+        <div class="doc-info-mid">
+          <div class="doc-title-txt" x-text="doc.title">Project_Proposal_v2.pdf</div>
+          <div class="doc-meta-txt">
+            <span x-text="doc.client">ABC Tech Solutions</span>
+            <span>·</span>
+            <span x-text="doc.date">12 Aug 2024</span>
+          </div>
+        </div>
+
+        <!-- Size Badge & Download Icon -->
+        <div class="doc-action-right">
+          <div class="doc-size-tag" x-text="doc.size">2.4 MB</div>
+          <button class="doc-download-btn" @click.stop="showToast('Downloading ' + doc.title)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <div x-show="filteredDocuments.length === 0" style="padding: 40px 20px; text-align: center; color: var(--text-sec);">
+      <p style="font-size: 14px;">No documents match your filter.</p>
+    </div>
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 12: TEAM MANAGEMENT
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen12">
+  <!-- Screen Action Bar -->
+  <div class="screen-action-bar">
+    <div class="title-with-hamburger">
+      <button class="icon-btn" @click="drawerOpen = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <h2 class="screen-heading">Team</h2>
+    </div>
+    <button class="fab-add" @click="showToast('Invite Team Member modal opened')" title="Invite Member">
+      <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Team Status Banner -->
+  <div style="padding: 12px 18px 4px; display: flex; justify-content: space-between; align-items: center;">
+    <div style="font-size: 13px; font-weight: 700; color: var(--text-pri);">
+      <span x-text="teamMembers.length">5</span> Members
+      <span style="color: var(--text-sec); font-weight: 500;">·</span>
+      <span style="color: var(--success);" x-text="teamMembers.filter(m => m.status === 'online').length + ' Online'">4 Online</span>
+    </div>
+    <div style="font-size: 11px; font-weight: 600; color: var(--primary); cursor: pointer;" @click="showToast('Manage roles')">
+      Manage Roles ⚙️
+    </div>
+  </div>
+
+  <!-- Filter Pills Strip -->
+  <div class="filter-pills-row" style="margin-top: 6px;">
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': teamFilter === 'all' }" 
+      @click="teamFilter = 'all'"
+    >
+      All (<span x-text="teamMembers.length">5</span>)
+    </div>
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': teamFilter === 'management' }" 
+      @click="teamFilter = 'management'"
+    >
+      Management (<span x-text="teamMembers.filter(m => m.department === 'management').length">2</span>)
+    </div>
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': teamFilter === 'design' }" 
+      @click="teamFilter = 'design'"
+    >
+      Design (<span x-text="teamMembers.filter(m => m.department === 'design').length">1</span>)
+    </div>
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': teamFilter === 'dev' }" 
+      @click="teamFilter = 'dev'"
+    >
+      Engineering (<span x-text="teamMembers.filter(m => m.department === 'dev').length">2</span>)
+    </div>
+  </div>
+
+  <!-- Team Member List -->
+  <div style="flex: 1; overflow-y: auto; padding-bottom: 24px;">
+    <template x-for="member in filteredTeam" :key="member.id">
+      <div class="team-member-card" @click="showToast('Viewing ' + member.name)">
+        <!-- Avatar with Online Status Dot -->
+        <div class="team-avatar-wrap">
+          <div class="team-avatar" :style="'background: ' + member.avatarBg" x-text="member.initials">
+            SK
+          </div>
+          <span 
+            class="team-status-dot" 
+            :class="{
+              'status-online': member.status === 'online',
+              'status-away': member.status === 'away',
+              'status-offline': member.status === 'offline'
+            }"
+          ></span>
+        </div>
+
+        <!-- Info -->
+        <div class="team-member-info">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div class="team-name-txt" x-text="member.name">Suresh Kumar</div>
+            <span 
+              class="status-badge"
+              :class="{
+                'badge-client': member.department === 'management',
+                'badge-lead': member.department === 'design',
+                'badge-prospect': member.department === 'dev'
+              }"
+              x-text="member.department"
+            ></span>
+          </div>
+          <div class="team-role-txt" x-text="member.role">Founder & CEO</div>
+          <div class="team-sub-meta">
+            <span x-text="member.email">suresh@softwarecrm.io</span>
+            <span>·</span>
+            <span x-text="member.tasksAssigned + ' tasks active'">4 tasks active</span>
+          </div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="team-actions-row">
+          <button class="team-quick-btn" @click.stop="showToast('Calling ' + member.name + ' (' + member.phone + ')')">
+            📞
+          </button>
+          <button class="team-quick-btn" @click.stop="showToast('Emailing ' + member.name)">
+            ✉️
+          </button>
+        </div>
+      </div>
+    </template>
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 13: REPORTS & ANALYTICS
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen13">
+  <!-- Screen Action Bar -->
+  <div class="screen-action-bar">
+    <div class="title-with-hamburger">
+      <button class="icon-btn" @click="drawerOpen = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <h2 class="screen-heading">Reports</h2>
+    </div>
+    <button class="export-report-btn" @click="showToast('Exporting PDF Report...')">
+      <span>Export</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M7 17l9.2-9.2M17 17V8H8"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Period Tabs -->
+  <div class="filter-pills-row">
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': reportPeriod === 'month' }" 
+      @click="reportPeriod = 'month'"
+    >
+      This Month (Aug)
+    </div>
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': reportPeriod === 'quarter' }" 
+      @click="reportPeriod = 'quarter'"
+    >
+      Quarter 3
+    </div>
+    <div 
+      class="chip-tab" 
+      :class="{ 'active': reportPeriod === 'year' }" 
+      @click="reportPeriod = 'year'"
+    >
+      Year 2024
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="dashboard-body" style="padding-bottom: 24px;">
+    <!-- Revenue Hero Card -->
+    <div class="report-hero-card">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <span style="font-size: 11px; font-weight: 600; color: var(--text-sec);">TOTAL REVENUE (AUG 2024)</span>
+          <div style="font-size: 32px; font-weight: 800; color: var(--text-pri); margin-top: 4px; letter-spacing: -1px;">$12,450</div>
+        </div>
+        <div class="kpi-trend trend-up">
+          ↑ 32.4%
+        </div>
+      </div>
+
+      <!-- Bar Chart -->
+      <div style="margin-top: 18px;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between;">
+          <span>MONTHLY REVENUE TRAJECTORY</span>
+          <span>Target: $10,000/mo</span>
+        </div>
+
+        <div class="bar-chart-container">
+          <template x-for="item in monthlyRevenueData" :key="item.month">
+            <div class="chart-bar-col" @click="showToast(item.month + ': ' + item.revenue)">
+              <div class="chart-bar-wrap">
+                <div 
+                  class="chart-bar-fill" 
+                  :style="'height: ' + item.heightPct + '%;' + (item.month === 'Aug' ? ' background: var(--primary);' : '')"
+                ></div>
+              </div>
+              <div class="chart-bar-label" :style="item.month === 'Aug' ? 'color: var(--primary); font-weight: 700;' : ''" x-text="item.month">Jan</div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2x2 Metric Breakdown Grid -->
+    <div class="kpi-grid">
+      <div class="kpi-card" @click="navigateTo(3)">
+        <div class="kpi-card-top">
+          <span class="kpi-label">New Clients</span>
+          <div class="kpi-icon-circle" style="background: #EFF6FF; color: var(--primary);">👥</div>
+        </div>
+        <div class="kpi-number">+14</div>
+        <div class="kpi-trend trend-up">↑ 18% vs Jul</div>
+      </div>
+
+      <div class="kpi-card" @click="navigateTo(5)">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Active Deals</span>
+          <div class="kpi-icon-circle" style="background: #DCFCE7; color: var(--success);">📁</div>
+        </div>
+        <div class="kpi-number">12</div>
+        <div class="kpi-trend trend-up">↑ 3 new</div>
+      </div>
+
+      <div class="kpi-card" @click="navigateTo(6)">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Tasks Closed</span>
+          <div class="kpi-icon-circle" style="background: #FEF9C3; color: #CA8A04;">☑️</div>
+        </div>
+        <div class="kpi-number">21</div>
+        <div class="kpi-trend trend-up">92% velocity</div>
+      </div>
+
+      <div class="kpi-card" @click="navigateTo(8)">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Invoices Cleared</span>
+          <div class="kpi-icon-circle" style="background: var(--lead-bg); color: var(--lead);">🧾</div>
+        </div>
+        <div class="kpi-number">$7.2K</div>
+        <div class="kpi-trend trend-up">100% on time</div>
+      </div>
+    </div>
+
+    <!-- Conversion Funnel Summary Box -->
+    <div class="content-box">
+      <div class="box-header">
+        <h3>Pipeline Conversion Rate</h3>
+        <span style="font-size: 13px; font-weight: 800; color: var(--success);">68.2%</span>
+      </div>
+      <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="funnel-row">
+          <span class="funnel-label">Leads Contacted</span>
+          <span class="funnel-val">86 Leads (100%)</span>
+        </div>
+        <div class="funnel-row">
+          <span class="funnel-label">Proposals Sent</span>
+          <span class="funnel-val">42 Proposals (48.8%)</span>
+        </div>
+        <div class="funnel-row">
+          <span class="funnel-label">Active Contracts</span>
+          <span class="funnel-val">12 Clients (13.9%)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+        <!-- ─────────────────────────────────────────
+     SCREEN 14: SETTINGS & PREFERENCES
+───────────────────────────────────────── -->
+<section class="app-screen" id="screen14">
+  <!-- Screen Action Bar -->
+  <div class="screen-action-bar">
+    <div class="title-with-hamburger">
+      <button class="icon-btn" @click="drawerOpen = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <h2 class="screen-heading">Settings</h2>
+    </div>
+    <button class="icon-btn" @click="showToast('Help & Support')">❓</button>
+  </div>
+
+  <div class="dashboard-body" style="padding-bottom: 30px;">
+    <!-- Profile Card -->
+    <div class="settings-profile-card">
+      <div class="settings-avatar" x-text="user.initials">SK</div>
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-size: 16px; font-weight: 800; color: var(--text-pri);" x-text="user.name">Suresh Kumar</div>
+        <div style="font-size: 12px; color: var(--text-sec); margin-top: 1px;" x-text="user.role">Founder & CEO</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;" x-text="user.email">suresh@softwarecrm.io</div>
+      </div>
+      <button class="settings-edit-btn" @click="showToast('Edit profile modal')">Edit</button>
+    </div>
+
+    <!-- Notification Settings Group -->
+    <div class="settings-group-card">
+      <div class="settings-group-title">NOTIFICATIONS</div>
+
+      <div class="settings-row" @click="settings.pushNotifications = !settings.pushNotifications">
+        <div>
+          <div class="settings-item-label">Push Notifications</div>
+          <div class="settings-item-sub">Instant alerts for new leads & deals</div>
+        </div>
+        <div class="toggle-switch" :class="{ 'on': settings.pushNotifications }">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+
+      <div class="settings-row" @click="settings.emailAlerts = !settings.emailAlerts">
+        <div>
+          <div class="settings-item-label">Email Alerts</div>
+          <div class="settings-item-sub">Invoice updates and client replies</div>
+        </div>
+        <div class="toggle-switch" :class="{ 'on': settings.emailAlerts }">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+
+      <div class="settings-row" @click="settings.weeklyDigest = !settings.weeklyDigest">
+        <div>
+          <div class="settings-item-label">Weekly Performance Digest</div>
+          <div class="settings-item-sub">Every Monday 9:00 AM summary</div>
+        </div>
+        <div class="toggle-switch" :class="{ 'on': settings.weeklyDigest }">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Preferences Group -->
+    <div class="settings-group-card">
+      <div class="settings-group-title">APP PREFERENCES</div>
+
+      <div class="settings-row" @click="showToast('Currency selection modal')">
+        <div>
+          <div class="settings-item-label">Default Currency</div>
+          <div class="settings-item-sub">Invoices and dashboard metrics</div>
+        </div>
+        <div style="font-size: 13px; font-weight: 700; color: var(--primary);" x-text="settings.currency">USD ($) ›</div>
+      </div>
+
+      <div class="settings-row" @click="navigateTo(9)">
+        <div>
+          <div class="settings-item-label">Dashboard View Mode</div>
+          <div class="settings-item-sub">Switch to compact 2x2 grid</div>
+        </div>
+        <div style="font-size: 13px; font-weight: 700; color: var(--primary);">Compact View ›</div>
+      </div>
+
+      <div class="settings-row" @click="showToast('Language options')">
+        <div>
+          <div class="settings-item-label">Language</div>
+          <div class="settings-item-sub">System interface language</div>
+        </div>
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-sec);" x-text="settings.language">English ›</div>
+      </div>
+    </div>
+
+    <!-- Security Group -->
+    <div class="settings-group-card">
+      <div class="settings-group-title">SECURITY & ACCESS</div>
+
+      <div class="settings-row" @click="showToast('OTP authentication is active')">
+        <div>
+          <div class="settings-item-label">4-Digit OTP Authentication</div>
+          <div class="settings-item-sub">Google Apps Script Email OTP active</div>
+        </div>
+        <span class="status-badge badge-client">Active</span>
+      </div>
+
+      <div class="settings-row" @click="settings.biometricLogin = !settings.biometricLogin">
+        <div>
+          <div class="settings-item-label">Biometric / FaceID Login</div>
+          <div class="settings-item-sub">Fast unlock on mobile device</div>
+        </div>
+        <div class="toggle-switch" :class="{ 'on': settings.biometricLogin }">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sign Out Button -->
+    <button class="settings-logout-btn" @click="logout()">
+      <span>Sign Out of Software CRM</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+  </div>
+</section>
+      </div><!-- /screen-scroller -->
+
+
+      <!-- Global Persistent Bottom Navigation Bar -->
+      <!-- Global Persistent Bottom Navigation Bar -->
+<nav class="global-bottom-bar" id="globalBottomBar" :class="{ 'hidden': currentScreen === 1 }">
+  <!-- Home Tab -->
+  <button 
+    class="nav-tab-btn" 
+    :class="{ 'active': currentScreen === 2 || currentScreen === 9 }" 
+    @click="navigateTo(2)"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    <span>Home</span>
+  </button>
+
+  <!-- Contacts Tab -->
+  <button 
+    class="nav-tab-btn" 
+    :class="{ 'active': currentScreen === 3 || currentScreen === 4 }" 
+    @click="navigateTo(3)"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <span>Contacts</span>
+  </button>
+
+  <!-- Projects Tab -->
+  <button 
+    class="nav-tab-btn" 
+    :class="{ 'active': currentScreen === 5 }" 
+    @click="navigateTo(5)"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    </svg>
+    <span>Projects</span>
+  </button>
+
+  <!-- Tasks Tab -->
+  <button 
+    class="nav-tab-btn" 
+    :class="{ 'active': currentScreen === 6 }" 
+    @click="navigateTo(6)"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M9 11l3 3L22 4"/>
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+    </svg>
+    <span>Tasks</span>
+  </button>
+
+  <!-- More / Drawer Menu Tab -->
+  <button 
+    class="nav-tab-btn" 
+    :class="{ 'active': drawerOpen || (currentScreen >= 7 && currentScreen !== 9) }"
+    @click="drawerOpen = true"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="12" cy="12" r="1"/>
+      <circle cx="19" cy="12" r="1"/>
+      <circle cx="5" cy="12" r="1"/>
+    </svg>
+    <span>More</span>
+  </button>
+</nav>
+
+      <!-- Screen 10: Slide-out Navigation Drawer -->
+      <!-- Screen 10: Navigation Menu Drawer (Side Menu Overlay) -->
+<div 
+  class="drawer-overlay" 
+  :class="{ 'open': drawerOpen }" 
+  @click="drawerOpen = false"
+></div>
+
+<aside class="drawer-panel" :class="{ 'open': drawerOpen }">
+  <!-- Drawer Header -->
+  <div class="drawer-header">
+    <div class="crm-brand-title">
+      <div class="logo-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="12" width="4" height="9" rx="1" fill="#FFFFFF"/>
+          <rect x="8" y="7" width="4" height="14" rx="1" fill="#FFFFFF"/>
+          <rect x="14" y="3" width="4" height="18" rx="1" fill="#FFFFFF"/>
+        </svg>
+      </div>
+      <div>
+        <div class="name-txt" style="color: #FFFFFF;">Software CRM</div>
+        <div style="font-size: 11px; color: #94A3B8;" x-text="user.name">Suresh Kumar</div>
+      </div>
+    </div>
+    <button class="drawer-close-btn" @click="drawerOpen = false" aria-label="Close menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Menu List with Modern Vector SVG Icons -->
+  <div class="drawer-menu-list">
+    <!-- Dashboard -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 2 }" 
+      @click="navigateTo(2); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </span>
+      <span>Dashboard</span>
+    </div>
+
+    <!-- Contacts -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 3 }" 
+      @click="navigateTo(3); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </span>
+      <span>Contacts</span>
+    </div>
+
+    <!-- Companies -->
+    <div 
+      class="drawer-menu-item" 
+      @click="navigateTo(3); contactCategory = 'client'; drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 21h18"/>
+          <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/>
+          <path d="M9 7h1"/>
+          <path d="M9 11h1"/>
+          <path d="M9 15h1"/>
+          <path d="M14 7h1"/>
+          <path d="M14 11h1"/>
+          <path d="M14 15h1"/>
+        </svg>
+      </span>
+      <span>Companies</span>
+    </div>
+
+    <!-- Projects -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 5 }" 
+      @click="navigateTo(5); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+      </span>
+      <span>Projects</span>
+    </div>
+
+    <!-- Tasks -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 6 }" 
+      @click="navigateTo(6); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </span>
+      <span>Tasks</span>
+    </div>
+
+    <!-- Calendar -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 7 }" 
+      @click="navigateTo(7); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </span>
+      <span>Calendar</span>
+    </div>
+
+    <!-- Invoices -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 8 }" 
+      @click="navigateTo(8); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </span>
+      <span>Invoices</span>
+    </div>
+
+    <!-- Compact Dashboard -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 9 }" 
+      @click="navigateTo(9); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      </span>
+      <span>Compact Dashboard</span>
+    </div>
+
+    <!-- Documents -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 11 }" 
+      @click="navigateTo(11); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+          <polyline points="13 2 13 9 20 9"/>
+        </svg>
+      </span>
+      <span>Documents</span>
+    </div>
+
+    <!-- Team -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 12 }" 
+      @click="navigateTo(12); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </span>
+      <span>Team</span>
+    </div>
+
+    <!-- Reports -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 13 }" 
+      @click="navigateTo(13); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      </span>
+      <span>Reports</span>
+    </div>
+
+    <!-- Settings -->
+    <div 
+      class="drawer-menu-item" 
+      :class="{ 'active': currentScreen === 14 }" 
+      @click="navigateTo(14); drawerOpen = false;"
+    >
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </span>
+      <span>Settings</span>
+    </div>
+  </div>
+
+  <!-- Drawer Footer: Logout -->
+  <div class="drawer-footer">
+    <div class="drawer-menu-item" style="color: #F87171;" @click="logout()">
+      <span class="drawer-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </span>
+      <span>Sign Out</span>
+    </div>
+  </div>
+</aside>
+
+    </div><!-- /phone-simulator -->
+  </main>
+
+  <!-- Modals (Add Contact / Add Task) -->
+  <!-- Add Contact Modal -->
+<div 
+  class="modal-overlay" 
+  :class="{ 'open': addContactModal }" 
+  @click.self="addContactModal = false"
+>
+  <div class="modal-sheet-panel">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+      <h3 style="margin: 0;">Add New Contact</h3>
+      <button style="background: none; border: none; font-size: 18px; color: var(--text-sec); cursor: pointer;" @click="addContactModal = false">✕</button>
+    </div>
+
+    <label class="form-label">Full Name *</label>
+    <input type="text" class="modal-input" placeholder="e.g. Ananya Roy" x-model="newContact.name" />
+
+    <label class="form-label">Company Name</label>
+    <input type="text" class="modal-input" placeholder="e.g. Roy Tech Labs" x-model="newContact.company" />
+
+    <label class="form-label">Category</label>
+    <select class="modal-input" x-model="newContact.category">
+      <option value="Lead">Lead</option>
+      <option value="Client">Client</option>
+      <option value="Prospect">Prospect</option>
+    </select>
+
+    <label class="form-label">Email Address</label>
+    <input type="email" class="modal-input" placeholder="ananya@roytech.com" x-model="newContact.email" />
+
+    <label class="form-label">Phone Number</label>
+    <input type="tel" class="modal-input" placeholder="+91 98765-11223" x-model="newContact.phone" />
+
+    <div class="modal-actions">
+      <button class="btn-secondary" @click="addContactModal = false">Cancel</button>
+      <button class="btn-primary" @click="saveContact()">Save Contact</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Task Modal -->
+<div 
+  class="modal-overlay" 
+  :class="{ 'open': addTaskModal }" 
+  @click.self="addTaskModal = false"
+>
+  <div class="modal-sheet-panel">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+      <h3 style="margin: 0;">Create New Task</h3>
+      <button style="background: none; border: none; font-size: 18px; color: var(--text-sec); cursor: pointer;" @click="addTaskModal = false">✕</button>
+    </div>
+
+    <label class="form-label">Task Title *</label>
+    <input type="text" class="modal-input" placeholder="e.g. Prepare Client Pitch Deck" x-model="newTask.title" />
+
+    <label class="form-label">Project / Client</label>
+    <input type="text" class="modal-input" placeholder="e.g. E-commerce Website" x-model="newTask.project" />
+
+    <label class="form-label">Priority</label>
+    <select class="modal-input" x-model="newTask.priority">
+      <option value="High">High</option>
+      <option value="Medium">Medium</option>
+      <option value="Low">Low</option>
+    </select>
+
+    <label class="form-label">Due Date</label>
+    <input type="text" class="modal-input" placeholder="Today / Tomorrow / 20 Aug" x-model="newTask.due" />
+
+    <div class="modal-actions">
+      <button class="btn-secondary" @click="addTaskModal = false">Cancel</button>
+      <button class="btn-primary" @click="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+  <!-- Reactive Toast Notification -->
+  <!-- Reactive Toast Notification Component -->
+<div 
+  class="toast-box" 
+  :class="{ 'show': toast.show }"
+>
+  <span style="font-size: 14px;">⚡</span>
+  <span x-text="toast.message">Notification message</span>
+</div>
+
+</body>
+</html>

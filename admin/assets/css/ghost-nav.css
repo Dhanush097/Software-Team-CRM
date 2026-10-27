@@ -1,0 +1,172 @@
+/**
+ * Software CRM - Ghost Back Screen Architecture
+ * Visual depth layering, smooth back navigation, and floating back pill
+ */
+
+/* ─────────────────────────────────────────────
+   ACTIVE FOREGROUND SCREEN
+───────────────────────────────────────────── */
+.app-screen.active {
+  visibility: visible;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+  z-index: 10;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+
+/* ─────────────────────────────────────────────
+   👻 GHOST BACK SCREEN LAYER (Hidden from background display)
+───────────────────────────────────────────── */
+.app-screen.ghost-back {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.ghost-back-float-btn {
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────
+   SLIDING OUT (Back navigation animation)
+───────────────────────────────────────────── */
+.app-screen.sliding-out {
+  visibility: visible;
+  opacity: 1;
+  transform: translate3d(100%, 0, 0) !important;
+  pointer-events: none;
+  z-index: 15;
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.28s ease !important;
+}
+
+/* ─────────────────────────────────────────────
+   RESTORING ACTIVE (Ghost back restoring to foreground)
+───────────────────────────────────────────── */
+.app-screen.restoring-active {
+  visibility: visible;
+  opacity: 1 !important;
+  transform: scale(1) translateY(0) translate3d(0, 0, 0) !important;
+  filter: brightness(1) blur(0) !important;
+  pointer-events: auto;
+  z-index: 10;
+  border-radius: 0;
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+              opacity 0.28s ease,
+              filter 0.28s ease,
+              border-radius 0.28s ease !important;
+}
+
+/* ─────────────────────────────────────────────
+   FLOATING GHOST BACK BUTTON WIDGET
+───────────────────────────────────────────── */
+.ghost-back-float-btn {
+  position: absolute;
+  bottom: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom, 0px) + 12px);
+  right: 14px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 7px 13px;
+  border-radius: 24px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 95;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  animation: floatIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ghost-back-float-btn:hover {
+  background: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(37,99,235,0.45);
+}
+
+.ghost-back-float-btn:active {
+  transform: scale(0.95);
+}
+
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─────────────────────────────────────────────
+   MOBILE DEMO JUMP SHEET
+───────────────────────────────────────────── */
+.mobile-demo-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #0F172A;
+  color: #FFFFFF;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px max(20px, env(safe-area-inset-bottom));
+  z-index: 1300;
+  transform: translateY(100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+}
+
+.mobile-demo-sheet.open {
+  transform: translateY(0);
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #475569;
+  border-radius: 2px;
+  margin: 0 auto 16px;
+  cursor: pointer;
+}
+
+.sheet-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.sheet-title-row h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.sheet-btn {
+  background: #1E293B;
+  border: 1px solid #334155;
+  color: #E2E8F0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #FFFFFF;
+}

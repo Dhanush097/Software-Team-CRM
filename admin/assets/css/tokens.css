@@ -1,0 +1,117 @@
+/**
+ * Software CRM - Design System Tokens (Image One UI v2)
+ * Enhanced palette, typography, spacing, and visual elevation
+ */
+
+:root {
+  /* Brand Accents */
+  --primary: #2563EB;
+  --primary-dark: #1D4ED8;
+  --primary-light: #EFF6FF;
+  --primary-border: #BFDBFE;
+
+  /* Status Colors */
+  --success: #16A34A;
+  --success-bg: #DCFCE7;
+  --warning: #CA8A04;
+  --warning-bg: #FEF9C3;
+  --danger: #DC2626;
+  --danger-bg: #FEE2E2;
+
+  /* Contact Category Colors */
+  --client: #2563EB;
+  --client-bg: #EFF6FF;
+  --lead: #7C3AED;
+  --lead-bg: #EDE9FE;
+  --prospect: #EA580C;
+  --prospect-bg: #FFEDD5;
+
+  /* Canvas & Surfaces */
+  --bg-page: #F1F5F9;
+  --bg-app: #F8FAFC;
+  --bg-input: #F1F5F9;
+  --surface: #FFFFFF;
+  --surface-alt: #F8FAFC;
+  --border: #E2E8F0;
+  --border-dark: #CBD5E1;
+
+  /* Typography */
+  --text-pri: #0F172A;
+  --text-sec: #64748B;
+  --text-muted: #94A3B8;
+
+  /* Shell Elements */
+  --drawer-bg: #0B132B;
+  --bottom-bar-height: 64px;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04);
+  --shadow-lg: 0 8px 24px rgba(15,23,42,0.10), 0 4px 8px rgba(15,23,42,0.06);
+  --shadow-phone: none;
+}
+
+html.dark, body.dark, .dark {
+  --bg-page: #020617;
+  --bg-app: #090D16;
+  --bg-input: #1E293B;
+  --surface: #0F172A;
+  --surface-alt: #1E293B;
+  --border: #1E293B;
+  --border-dark: #334155;
+  --text-pri: #F8FAFC;
+  --text-sec: #94A3B8;
+  --text-muted: #64748B;
+}
+
+.dark .wortal-card {
+  background-color: #0F172A !important;
+  border-color: #1E293B !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .wortal-pill {
+  background-color: #1E293B;
+  border-color: #334155;
+  color: #CBD5E1;
+}
+
+.dark .wortal-action-square-btn {
+  background-color: #0F172A;
+  border-color: #1E293B;
+}
+
+.dark .wortal-bottom-card {
+  background-color: #0F172A;
+  border-color: #1E293B;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-app);
+  color: var(--text-pri);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
