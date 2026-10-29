@@ -292,3 +292,4 @@ foreach ($tables as $sql) {
 }
 
 echo "✅ SQLite initialized: $created tables ready.\n";
+
