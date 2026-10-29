@@ -1,0 +1,70 @@
+<?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Content-Type: application/json; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+require_once __DIR__ . '/session_guard.php';
+SessionGuard::requireAuth(true);
+require_once __DIR__ . '/db.php';
+$pdo = Database::getConnection();
+
+function sendJson($data, $code = 200) {
+    http_response_code($code);
+    echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+
+if ($method === 'GET') {
+    if ($pdo) {
+        try {
+            $stmt = $pdo->query("SELECT * FROM crm_calendar_events ORDER BY event_date ASC, event_time ASC");
+            $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            sendJson(['status' => 'success', 'data' => $events]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    } else {
+        sendJson(['status' => 'error', 'message' => 'Database connection failed'], 500);
+    }
+}
+
+if ($method === 'POST') {
+    $raw = file_get_contents('php://input');
+    $input = json_decode($raw, true) ?: $_POST;
+
+    if (empty($input['title']) || empty($input['event_date'])) {
+        sendJson(['status' => 'error', 'message' => 'Title and event date are required'], 400);
+    }
+
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO crm_calendar_events 
+                (title, event_date, event_time, category, color, description)
+                VALUES 
+                (:title, :event_date, :event_time, :category, :color, :description)
+            ");
+
+            $stmt->execute([
+                ':title' => trim($input['title']),
+                ':event_date' => trim($input['event_date']),
+                ':event_time' => trim($input['event_time'] ?? '10:00 AM'),
+                ':category' => trim($input['category'] ?? 'Meeting'),
+                ':color' => trim($input['color'] ?? '#2563eb'),
+                ':description' => trim($input['description'] ?? '')
+            ]);
+
+            sendJson(['status' => 'success', 'id' => $pdo->lastInsertId(), 'message' => 'Event scheduled successfully']);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+}

@@ -1,0 +1,632 @@
+<?php
+/**
+ * Software Team Production REST API
+ * Connects to MySQL/SQLite with JSON cache synchronization.
+ */
+
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+require_once __DIR__ . '/db.php';
+
+$pdo = Database::getConnection();
+$engine = Database::getEngine();
+
+$base_dir = dirname(__DIR__);
+$json_file = file_exists($base_dir . '/data/software_clients.json') 
+    ? $base_dir . '/data/software_clients.json' 
+    : $base_dir . '/software_clients.json';
+$uploads_base = $base_dir . '/uploads';
+
+function sendResponse($status, $data = null, $message = '', $code = 200) {
+    global $engine;
+    http_response_code($code);
+    echo json_encode([
+        'status' => $status,
+        'engine' => $engine,
+        'message' => $message,
+        'data' => $data,
+        'timestamp' => date('c')
+    ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    exit;
+}
+
+$action = $_GET['action'] ?? ($_POST['action'] ?? '');
+
+// Helper to get raw JSON payload
+function getJsonPayload() {
+    $raw = file_get_contents('php://input');
+    $data = json_decode($raw, true);
+    return is_array($data) ? $data : $_POST;
+}
+
+// -------------------------------------------------------------
+// 1. GET ALL CONTACTS (WITH HISTORY & MEDIA JOINED)
+// -------------------------------------------------------------
+if ($action === 'get_contacts' || ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($action))) {
+    if ($pdo) {
+        try {
+            // Fetch contacts
+            $stmt = $pdo->query("SELECT * FROM crm_contacts ORDER BY created_at DESC");
+            $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Fetch history
+            $hist_stmt = $pdo->query("SELECT * FROM crm_history ORDER BY id ASC");
+            $all_hist = $hist_stmt->fetchAll(PDO::FETCH_ASSOC);
+            $hist_map = [];
+            foreach ($all_hist as $h) {
+                $cid = $h['contact_id'];
+                if (!isset($hist_map[$cid])) $hist_map[$cid] = [];
+
+                $decoded = json_decode($h['note_text'], true);
+                if (is_array($decoded)) {
+                    $hist_map[$cid][] = array_merge([
+                        'id' => (int)$h['id'],
+                        'time' => $decoded['time'] ?? ($h['time_str'] ?: date('h:i A', strtotime($h['created_at']))),
+                        'staff' => $h['staff'] ?: 'Akash (Dev Lead)',
+                        'duration' => $h['duration'] ?: '15 mins',
+                        'type' => $h['type'] ?: 'note',
+                        'text' => $decoded['text'] ?? ($decoded['field2_val'] ?? $h['note_text']),
+                        'title' => $decoded['title'] ?? 'Plant Care Log',
+                        'condition' => $decoded['condition'] ?? 'GOOD',
+                        'date_str' => $decoded['date_str'] ?? date('D, M j', strtotime($h['created_at'])),
+                        'field1_label' => $decoded['field1_label'] ?? 'Water',
+                        'field1_val' => $decoded['field1_val'] ?? 'Medium',
+                        'field2_label' => $decoded['field2_label'] ?? 'Frequency',
+                        'field2_val' => $decoded['field2_val'] ?? 'Alternative Days',
+                        'doc_count' => $decoded['doc_count'] ?? 2,
+                        'icon' => $decoded['icon'] ?? 'water',
+                        'image' => $decoded['image'] ?? ''
+                    ], $decoded);
+                } else {
+                    $hist_map[$cid][] = [
+                        'id' => (int)$h['id'],
+                        'time' => $h['time_str'] ?: date('h:i A', strtotime($h['created_at'])),
+                        'staff' => $h['staff'] ?: 'Akash (Dev Lead)',
+                        'duration' => $h['duration'] ?: '15 mins',
+                        'type' => $h['type'] ?: 'note',
+                        'text' => $h['note_text'],
+                        'title' => $h['staff'] ?: 'Interaction Note',
+                        'condition' => 'GOOD',
+                        'date_str' => date('D, M j', strtotime($h['created_at'])),
+                        'field1_label' => 'Type',
+                        'field1_val' => ucfirst($h['type'] ?: 'Note'),
+                        'field2_label' => 'Summary',
+                        'field2_val' => $h['note_text'],
+                        'doc_count' => 1,
+                        'icon' => 'water',
+                        'image' => ''
+                    ];
+                }
+            }
+
+            // Fetch media
+            $media_stmt = $pdo->query("SELECT * FROM crm_media ORDER BY id ASC");
+            $all_media = $media_stmt->fetchAll(PDO::FETCH_ASSOC);
+            $media_map = [];
+            foreach ($all_media as $m) {
+                $cid = $m['contact_id'];
+                if (!isset($media_map[$cid])) $media_map[$cid] = [];
+                $media_map[$cid][] = $m['file_url'];
+            }
+
+            // Format response array
+            $formatted = [];
+            foreach ($contacts as $c) {
+                $cid = $c['id'];
+                $formatted[] = [
+                    'id' => $cid,
+                    'name' => $c['name'],
+                    'phone' => $c['phone'],
+                    'phone2' => $c['phone2'] ?: '',
+                    'email' => $c['email'] ?: '',
+                    'company' => $c['company'] ?: '',
+                    'occupation' => $c['occupation'] ?: 'Business Client',
+                    'category' => $c['category'] ?: 'Contact',
+                    'address' => $c['address'] ?: 'Jaipur, Rajasthan',
+                    'lead_from' => $c['lead_from'] ?: '',
+                    'notes' => $c['notes'] ?: '',
+                    'whatsapp_notes' => $c['whatsapp_notes'] ?: '',
+                    'drive_link' => $c['drive_link'] ?: '',
+                    'website_link' => $c['website_link'] ?: '',
+                    'creds_server' => $c['creds_server'] ?: '',
+                    'creds_social' => $c['creds_social'] ?: '',
+                    'budget' => $c['budget'] ?: '',
+                    'amount_status' => $c['amount_status'] ?: 'Pending',
+                    'amount_percentage_paid' => $c['amount_percentage_paid'] ?: '0',
+                    'specifications' => $c['specifications'] ?: '',
+                    'is_starred' => (bool)$c['is_starred'],
+                    'is_blocked' => (bool)$c['is_blocked'],
+                    'last_contact' => $c['last_contact'] ?: 'Recent',
+                    'history' => $hist_map[$cid] ?? [],
+                    'images' => $media_map[$cid] ?? []
+                ];
+            }
+
+            // Sync with JSON file cache in background
+            @file_put_contents($json_file, json_encode($formatted, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+
+            sendResponse('success', $formatted, 'Contacts loaded from ' . strtoupper($engine) . ' database');
+        } catch (Exception $e) {
+            // If SQL query fails, fall back to JSON
+        }
+    }
+
+    // JSON Fallback
+    if (file_exists($json_file)) {
+        $raw = json_decode(file_get_contents($json_file), true);
+        sendResponse('success', $raw ?: [], 'Contacts loaded from JSON cache (Offline Mode)');
+    }
+
+    sendResponse('error', [], 'Database not available', 500);
+}
+
+// -------------------------------------------------------------
+// 2. SAVE / UPDATE CONTACT
+// -------------------------------------------------------------
+if ($action === 'save_contact' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $p = getJsonPayload();
+    if (empty($p['name']) || empty($p['phone'])) {
+        sendResponse('error', null, 'Name and phone are required', 400);
+    }
+
+    $cid = !empty($p['id']) ? $p['id'] : ('CNT_' . time());
+    $is_new = empty($p['is_edit']);
+
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO crm_contacts 
+                (id, name, phone, phone2, email, company, occupation, category, address, lead_from, notes, whatsapp_notes, drive_link, website_link, creds_server, creds_social, budget, amount_status, amount_percentage_paid, specifications, is_starred, is_blocked, last_contact)
+                VALUES 
+                (:id, :name, :phone, :phone2, :email, :company, :occupation, :category, :address, :lead_from, :notes, :whatsapp_notes, :drive_link, :website_link, :creds_server, :creds_social, :budget, :amount_status, :amount_percentage_paid, :specifications, :is_starred, :is_blocked, :last_contact)
+                ON DUPLICATE KEY UPDATE
+                name = VALUES(name), phone = VALUES(phone), phone2 = VALUES(phone2), email = VALUES(email), company = VALUES(company), occupation = VALUES(occupation), category = VALUES(category), address = VALUES(address), lead_from = VALUES(lead_from), notes = VALUES(notes), drive_link = VALUES(drive_link), website_link = VALUES(website_link), creds_server = VALUES(creds_server), creds_social = VALUES(creds_social), budget = VALUES(budget), amount_status = VALUES(amount_status), amount_percentage_paid = VALUES(amount_percentage_paid), specifications = VALUES(specifications), is_starred = VALUES(is_starred), is_blocked = VALUES(is_blocked), last_contact = VALUES(last_contact)
+            ");
+
+            $stmt->execute([
+                ':id' => $cid,
+                ':name' => trim($p['name']),
+                ':phone' => trim($p['phone']),
+                ':phone2' => trim($p['phone2'] ?? ''),
+                ':email' => trim($p['email'] ?? ''),
+                ':company' => trim($p['company'] ?? ''),
+                ':occupation' => trim($p['occupation'] ?? 'Business Client'),
+                ':category' => $p['category'] ?? 'Contact',
+                ':address' => trim($p['address'] ?? 'Jaipur, Rajasthan'),
+                ':lead_from' => trim($p['lead_from'] ?? ''),
+                ':notes' => trim($p['notes'] ?? ''),
+                ':whatsapp_notes' => trim($p['whatsapp_notes'] ?? ''),
+                ':drive_link' => trim($p['drive_link'] ?? ''),
+                ':website_link' => trim($p['website_link'] ?? ''),
+                ':creds_server' => trim($p['creds_server'] ?? ''),
+                ':creds_social' => trim($p['creds_social'] ?? ''),
+                ':budget' => trim($p['budget'] ?? ''),
+                ':amount_status' => trim($p['amount_status'] ?? 'Pending'),
+                ':amount_percentage_paid' => trim($p['amount_percentage_paid'] ?? '0'),
+                ':specifications' => trim($p['specifications'] ?? ''),
+                ':is_starred' => !empty($p['is_starred']) ? 1 : 0,
+                ':is_blocked' => !empty($p['is_blocked']) ? 1 : 0,
+                ':last_contact' => 'Today'
+            ]);
+
+            // If new contact and initial note provided, add to history
+            if (!empty($p['notes']) && $is_new) {
+                $pdo->prepare("INSERT INTO crm_history (contact_id, staff, time_str, duration, type, note_text) VALUES (?, ?, ?, ?, ?, ?)")
+                    ->execute([$cid, 'Akash (Dev Lead)', 'Just now', 'Created', 'note', trim($p['notes'])]);
+            }
+
+            sendResponse('success', ['id' => $cid], 'Contact saved to ' . strtoupper($engine) . ' database');
+        } catch (Exception $e) {
+            sendResponse('error', null, 'SQL Error: ' . $e->getMessage(), 500);
+        }
+    }
+
+    sendResponse('error', null, 'Database unavailable', 500);
+}
+
+// -------------------------------------------------------------
+// 3. DELETE CONTACT
+// -------------------------------------------------------------
+if ($action === 'delete_contact' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $p = getJsonPayload();
+    $cid = $p['id'] ?? '';
+
+    if (empty($cid)) {
+        sendResponse('error', null, 'Contact ID required', 400);
+    }
+
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("DELETE FROM crm_contacts WHERE id = ?");
+            $stmt->execute([$cid]);
+            sendResponse('success', ['id' => $cid], 'Contact deleted from database');
+        } catch (Exception $e) {
+            sendResponse('error', null, $e->getMessage(), 500);
+        }
+    }
+
+    sendResponse('error', null, 'Database unavailable', 500);
+}
+
+// -------------------------------------------------------------
+// 4. ADD TIMELINE INTERACTION NOTE
+// -------------------------------------------------------------
+if ($action === 'add_history' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $p = getJsonPayload();
+    if (empty($p['contact_id']) || empty($p['note_text'])) {
+        sendResponse('error', null, 'contact_id and note_text are required', 400);
+    }
+
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO crm_history (contact_id, staff, time_str, duration, type, note_text)
+                VALUES (:contact_id, :staff, :time_str, :duration, :type, :note_text)
+            ");
+            $stmt->execute([
+                ':contact_id' => $p['contact_id'],
+                ':staff' => $p['staff'] ?? 'Akash (Dev Lead)',
+                ':time_str' => $p['time_str'] ?? 'Just now',
+                ':duration' => $p['duration'] ?? 'Note',
+                ':type' => $p['type'] ?? 'note',
+                ':note_text' => trim($p['note_text'])
+            ]);
+            $new_id = (int)$pdo->lastInsertId();
+
+            sendResponse('success', ['id' => $new_id], 'Timeline note saved');
+        } catch (Exception $e) {
+            sendResponse('error', null, $e->getMessage(), 500);
+        }
+    }
+
+    sendResponse('error', null, 'Database unavailable', 500);
+}
+
+// -------------------------------------------------------------
+// 5. UPLOAD MEDIA / FILE ATTACHMENT
+// -------------------------------------------------------------
+if ($action === 'upload_media' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['file'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        $image_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+        $doc_exts = ['pdf', 'doc', 'docx', 'txt', 'fig', 'zip'];
+        $invoice_exts = ['xls', 'xlsx', 'csv'];
+
+        $allowed = array_merge($image_exts, $doc_exts, $invoice_exts);
+
+        if (!in_array($ext, $allowed)) {
+            sendResponse('error', null, 'File extension .' . $ext . ' not allowed', 400);
+        }
+
+        $contact_id = $_POST['contact_id'] ?? 'CNT_GLOBAL';
+        $folder = $_POST['folder'] ?? (in_array($ext, $image_exts) ? 'photos' : (in_array($ext, $invoice_exts) ? 'invoices' : 'documents'));
+
+        $target_dir = $uploads_base . '/' . $folder;
+        if (!file_exists($target_dir)) {
+            @mkdir($target_dir, 0755, true);
+        }
+
+        $safe_name = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', pathinfo($file['name'], PATHINFO_FILENAME));
+        $new_filename = $safe_name . '_' . time() . '.' . $ext;
+        $target_path = $target_dir . '/' . $new_filename;
+
+        if (move_uploaded_file($file['tmp_name'], $target_path)) {
+            $web_path = 'uploads/' . $folder . '/' . $new_filename;
+
+            // Log into crm_media if database is connected
+            if ($pdo && $contact_id !== 'CNT_GLOBAL') {
+                try {
+                    $pdo->prepare("
+                        INSERT INTO crm_media (contact_id, folder, file_name, file_url, file_size, file_type)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ")->execute([
+                        $contact_id,
+                        $folder,
+                        $file['name'],
+                        $web_path,
+                        $file['size'],
+                        $file['type']
+                    ]);
+                } catch (Exception $e) {}
+            }
+
+            sendResponse('success', [
+                'filename' => $file['name'],
+                'url' => $web_path,
+                'folder' => $folder,
+                'size' => $file['size'],
+                'type' => $file['type']
+            ], 'File uploaded successfully to ' . $folder);
+        } else {
+            sendResponse('error', null, 'Failed to save uploaded file', 500);
+        }
+    } else {
+        sendResponse('error', null, 'No valid file uploaded', 400);
+    }
+}
+
+// -------------------------------------------------------------
+// 6. BULK SYNC ALL CONTACTS
+// -------------------------------------------------------------
+if ($action === 'sync_all' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $payload = getJsonPayload();
+    $contacts = $payload['contacts'] ?? $payload;
+
+    if (!is_array($contacts)) {
+        sendResponse('error', null, 'Invalid contacts array', 400);
+    }
+
+    // Save to JSON cache
+    @file_put_contents($json_file, json_encode($contacts, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+
+    sendResponse('success', ['count' => count($contacts)], 'Bulk sync completed successfully');
+}
+
+// -------------------------------------------------------------
+// 7. SYSTEM & DATABASE STATS
+// -------------------------------------------------------------
+if ($action === 'stats') {
+    $total_contacts = 0;
+    $total_history = 0;
+    $total_media = 0;
+
+    if ($pdo) {
+        try {
+            $total_contacts = (int)$pdo->query("SELECT COUNT(*) FROM crm_contacts")->fetchColumn();
+            $total_history = (int)$pdo->query("SELECT COUNT(*) FROM crm_history")->fetchColumn();
+            $total_media = (int)$pdo->query("SELECT COUNT(*) FROM crm_media")->fetchColumn();
+        } catch (Exception $e) {}
+    } else if (file_exists($json_file)) {
+        $d = json_decode(file_get_contents($json_file), true) ?: [];
+        $total_contacts = count($d);
+    }
+
+    sendResponse('success', [
+        'engine' => $engine,
+        'contacts_count' => $total_contacts,
+        'history_logs_count' => $total_history,
+        'media_files_count' => $total_media,
+        'uploads' => [
+            'photos' => count(@scandir($uploads_base . '/photos') ?: []) - 2,
+            'documents' => count(@scandir($uploads_base . '/documents') ?: []) - 2,
+            'invoices' => count(@scandir($uploads_base . '/invoices') ?: []) - 2
+        ]
+    ], 'Server status: ' . strtoupper($engine));
+}
+
+// -------------------------------------------------------------
+// 8. PROJECT GROUP CHATS (WHATSAPP ARCHITECTURE)
+// -------------------------------------------------------------
+$chats_json_file = $base_dir . '/data/project_chats.json';
+
+function ensureProjectChatsTable($pdo) {
+    if (!$pdo) return;
+    try {
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `crm_project_chats` (
+              `id` INT AUTO_INCREMENT PRIMARY KEY,
+              `project_id` VARCHAR(64) NOT NULL,
+              `sender_id` VARCHAR(64) NOT NULL,
+              `sender_name` VARCHAR(128) NOT NULL,
+              `sender_role` VARCHAR(64) DEFAULT 'Team Member',
+              `sender_color` VARCHAR(32) DEFAULT '#2563eb',
+              `sender_avatar` VARCHAR(255) DEFAULT '',
+              `message` TEXT NOT NULL,
+              `reply_to_name` VARCHAR(128) DEFAULT NULL,
+              `reply_to_text` TEXT DEFAULT NULL,
+              `attachment_type` VARCHAR(32) DEFAULT NULL,
+              `attachment_url` TEXT DEFAULT NULL,
+              `is_me` TINYINT(1) DEFAULT 0,
+              `time_str` VARCHAR(32) DEFAULT NULL,
+              `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+              INDEX `idx_proj_id` (`project_id`),
+              INDEX `idx_created_at` (`created_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ");
+    } catch (Exception $e) {}
+}
+
+if ($action === 'get_project_chats') {
+    $project_id = $_GET['project_id'] ?? 'proj_1';
+    $messages = [];
+    ensureProjectChatsTable($pdo);
+
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM crm_project_chats WHERE project_id = :pid ORDER BY id ASC");
+            $stmt->execute([':pid' => $project_id]);
+            $db_messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!empty($db_messages)) {
+                foreach ($db_messages as $m) {
+                    $messages[] = [
+                        'id' => (int)$m['id'],
+                        'project_id' => $m['project_id'],
+                        'sender_id' => $m['sender_id'],
+                        'sender_name' => $m['sender_name'],
+                        'sender_role' => $m['sender_role'],
+                        'sender_color' => $m['sender_color'],
+                        'sender_avatar' => $m['sender_avatar'],
+                        'message' => $m['message'],
+                        'reply_to_name' => $m['reply_to_name'],
+                        'reply_to_text' => $m['reply_to_text'],
+                        'attachment_type' => $m['attachment_type'],
+                        'attachment_url' => $m['attachment_url'],
+                        'is_me' => (bool)$m['is_me'],
+                        'time' => $m['time_str'] ?: date('h:i a', strtotime($m['created_at'])),
+                        'created_at' => $m['created_at']
+                    ];
+                }
+            } else if (file_exists($chats_json_file)) {
+                // Seed initial messages from JSON into MySQL if empty
+                $all_chats = json_decode(file_get_contents($chats_json_file), true) ?: [];
+                $seed = $all_chats[$project_id] ?? [];
+                foreach ($seed as $s) {
+                    try {
+                        $ins = $pdo->prepare("INSERT INTO crm_project_chats 
+                            (project_id, sender_id, sender_name, sender_role, sender_color, sender_avatar, message, reply_to_name, reply_to_text, is_me, time_str, created_at)
+                            VALUES (:pid, :sid, :sname, :srole, :scolor, :savatar, :msg, :rname, :rtext, :isme, :tstr, :cat)");
+                        $ins->execute([
+                            ':pid' => $s['project_id'],
+                            ':sid' => $s['sender_id'],
+                            ':sname' => $s['sender_name'],
+                            ':srole' => $s['sender_role'] ?? 'Member',
+                            ':scolor' => $s['sender_color'] ?? '#2563eb',
+                            ':savatar' => $s['sender_avatar'] ?? '',
+                            ':msg' => $s['message'],
+                            ':rname' => $s['reply_to_name'] ?? null,
+                            ':rtext' => $s['reply_to_text'] ?? null,
+                            ':isme' => !empty($s['is_me']) ? 1 : 0,
+                            ':tstr' => $s['time'] ?? date('h:i a'),
+                            ':cat' => $s['created_at'] ?? date('Y-m-d H:i:s')
+                        ]);
+                    } catch (Exception $e2) {}
+                }
+                $messages = $seed;
+            }
+        } catch (Exception $e) {}
+    }
+
+    if (empty($messages) && file_exists($chats_json_file)) {
+        $all_chats = json_decode(file_get_contents($chats_json_file), true) ?: [];
+        $messages = $all_chats[$project_id] ?? [];
+    }
+
+    sendResponse('success', $messages, "Fetched chats for $project_id");
+}
+
+if ($action === 'get_all_chats') {
+    ensureProjectChatsTable($pdo);
+    $all_chats = [];
+    if (file_exists($chats_json_file)) {
+        $all_chats = json_decode(file_get_contents($chats_json_file), true) ?: [];
+    }
+    
+    // Also merge latest from DB if available
+    if ($pdo) {
+        try {
+            $stmt = $pdo->query("SELECT * FROM crm_project_chats ORDER BY id ASC");
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($rows)) {
+                $db_grouped = [];
+                foreach ($rows as $r) {
+                    $pid = $r['project_id'];
+                    if (!isset($db_grouped[$pid])) $db_grouped[$pid] = [];
+                    $db_grouped[$pid][] = [
+                        'id' => (int)$r['id'],
+                        'project_id' => $r['project_id'],
+                        'sender_id' => $r['sender_id'],
+                        'sender_name' => $r['sender_name'],
+                        'sender_role' => $r['sender_role'],
+                        'sender_color' => $r['sender_color'],
+                        'sender_avatar' => $r['sender_avatar'],
+                        'message' => $r['message'],
+                        'reply_to_name' => $r['reply_to_name'],
+                        'reply_to_text' => $r['reply_to_text'],
+                        'attachment_type' => $r['attachment_type'],
+                        'attachment_url' => $r['attachment_url'],
+                        'is_me' => (bool)$r['is_me'],
+                        'time' => $r['time_str'] ?: date('h:i a', strtotime($r['created_at'])),
+                        'created_at' => $r['created_at']
+                    ];
+                }
+                $all_chats = array_merge($all_chats, $db_grouped);
+            }
+        } catch (Exception $e) {}
+    }
+    sendResponse('success', $all_chats, 'All chats loaded');
+}
+
+if ($action === 'send_project_chat' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $payload = getJsonPayload();
+    $project_id = $payload['project_id'] ?? 'proj_1';
+    $message = trim($payload['message'] ?? '');
+    
+    if ($message === '') {
+        sendResponse('error', null, 'Message cannot be empty', 400);
+    }
+    
+    $sender_id = $payload['sender_id'] ?? 'me';
+    $sender_name = $payload['sender_name'] ?? 'You';
+    $sender_role = $payload['sender_role'] ?? 'Lead Architect';
+    $sender_color = $payload['sender_color'] ?? '#0d9488';
+    $sender_avatar = $payload['sender_avatar'] ?? 'You';
+    $is_me = !empty($payload['is_me']) || $sender_id === 'me';
+    $reply_to_name = $payload['reply_to_name'] ?? null;
+    $reply_to_text = $payload['reply_to_text'] ?? null;
+    $attachment_type = $payload['attachment_type'] ?? null;
+    $attachment_url = $payload['attachment_url'] ?? null;
+    $time_str = date('h:i a');
+    $created_at = date('Y-m-d H:i:s');
+    
+    $new_id = time() . rand(10, 99);
+    
+    ensureProjectChatsTable($pdo);
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("INSERT INTO crm_project_chats 
+                (project_id, sender_id, sender_name, sender_role, sender_color, sender_avatar, message, reply_to_name, reply_to_text, attachment_type, attachment_url, is_me, time_str, created_at)
+                VALUES (:pid, :sid, :sname, :srole, :scolor, :savatar, :msg, :rname, :rtext, :att_type, :att_url, :isme, :tstr, :cat)");
+            $stmt->execute([
+                ':pid' => $project_id,
+                ':sid' => $sender_id,
+                ':sname' => $sender_name,
+                ':srole' => $sender_role,
+                ':scolor' => $sender_color,
+                ':savatar' => $sender_avatar,
+                ':msg' => $message,
+                ':rname' => $reply_to_name,
+                ':rtext' => $reply_to_text,
+                ':att_type' => $attachment_type,
+                ':att_url' => $attachment_url,
+                ':isme' => $is_me ? 1 : 0,
+                ':tstr' => $time_str,
+                ':cat' => $created_at
+            ]);
+            $new_id = (int)$pdo->lastInsertId();
+        } catch (Exception $e) {}
+    }
+    
+    $new_msg = [
+        'id' => (int)$new_id,
+        'project_id' => $project_id,
+        'sender_id' => $sender_id,
+        'sender_name' => $sender_name,
+        'sender_role' => $sender_role,
+        'sender_color' => $sender_color,
+        'sender_avatar' => $sender_avatar,
+        'message' => $message,
+        'reply_to_name' => $reply_to_name,
+        'reply_to_text' => $reply_to_text,
+        'attachment_type' => $attachment_type,
+        'attachment_url' => $attachment_url,
+        'is_me' => $is_me,
+        'time' => $time_str,
+        'created_at' => $created_at
+    ];
+    
+    // Save to JSON cache
+    if (file_exists($chats_json_file)) {
+        $all_chats = json_decode(file_get_contents($chats_json_file), true) ?: [];
+        if (!isset($all_chats[$project_id])) $all_chats[$project_id] = [];
+        $all_chats[$project_id][] = $new_msg;
+        @file_put_contents($chats_json_file, json_encode($all_chats, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    }
+    
+    sendResponse('success', $new_msg, 'Chat message saved successfully');
+}
+
+sendResponse('error', null, 'Unknown action', 400);

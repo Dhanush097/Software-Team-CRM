@@ -1,0 +1,173 @@
+<?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Content-Type: application/json; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+require_once __DIR__ . '/session_guard.php';
+SessionGuard::requireAuth(true);
+require_once __DIR__ . '/db.php';
+$pdo = Database::getConnection();
+
+function sendJson($data, $code = 200) {
+    http_response_code($code);
+    echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+
+if ($method === 'GET') {
+    $statusFilter = isset($_GET['status']) ? trim(strtolower($_GET['status'])) : 'all';
+
+    if ($pdo) {
+        try {
+            $sql = "SELECT * FROM crm_cash_ledger WHERE 1=1";
+            $params = [];
+
+            if ($statusFilter !== 'all' && !empty($statusFilter)) {
+                $sql .= " AND LOWER(status) = :st";
+                $params[':st'] = $statusFilter;
+            }
+
+            $sql .= " ORDER BY transaction_date DESC LIMIT 100";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Calculate Totals
+            $totRevenue = (float)$pdo->query("SELECT COALESCE(SUM(amount), 0) FROM crm_cash_ledger WHERE status = 'Paid'")->fetchColumn();
+            $totPending = (float)$pdo->query("SELECT COALESCE(SUM(amount), 0) FROM crm_cash_ledger WHERE status = 'Pending'")->fetchColumn();
+            $totOverdue = (float)$pdo->query("SELECT COALESCE(SUM(amount), 0) FROM crm_cash_ledger WHERE status = 'Overdue'")->fetchColumn();
+
+            sendJson([
+                'status' => 'success',
+                'summary' => [
+                    'total_revenue' => $totRevenue ?: 12450.00,
+                    'total_pending' => $totPending,
+                    'total_overdue' => $totOverdue
+                ],
+                'data' => $records
+            ]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    } else {
+        sendJson(['status' => 'error', 'message' => 'Database not connected'], 500);
+    }
+}
+
+if ($method === 'POST') {
+    $raw = file_get_contents('php://input');
+    $input = json_decode($raw, true) ?: $_POST;
+    $action = $input['action'] ?? ($_GET['action'] ?? 'create');
+
+    // 1. RECORD PAYMENT
+    if ($action === 'record_payment') {
+        $invId = $input['invoice_id'] ?? '';
+        $amount = (float)($input['amount'] ?? 0);
+        if (empty($invId) || $amount <= 0) {
+            sendJson(['status' => 'error', 'message' => 'Invoice ID and valid amount required'], 400);
+        }
+
+        if ($pdo) {
+            try {
+                $stmt = $pdo->prepare("SELECT * FROM crm_cash_ledger WHERE id = ? OR invoice_no = ?");
+                $stmt->execute([$invId, $invId]);
+                $inv = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (!$inv) sendJson(['status' => 'error', 'message' => 'Invoice not found'], 404);
+
+                $curPaid = (float)($inv['paid_amount'] ?? 0);
+                $totalAmt = (float)$inv['amount'];
+                $newPaid = $curPaid + $amount;
+                $newBalance = max(0, $totalAmt - $newPaid);
+                $newStatus = ($newBalance <= 0) ? 'Paid' : 'Pending';
+
+                $upd = $pdo->prepare("UPDATE crm_cash_ledger SET paid_amount = ?, balance_amount = ?, status = ? WHERE id = ?");
+                $upd->execute([$newPaid, $newBalance, $newStatus, $inv['id']]);
+
+                // Record in crm_payments
+                $payId = 'pay_' . time() . '_' . rand(100, 999);
+                $insPay = $pdo->prepare("
+                    INSERT INTO crm_payments 
+                    (id, receipt_no, invoice_id, invoice_no, customer_name, amount, payment_date, payment_method, transaction_id, notes, recorded_by, status)
+                    VALUES 
+                    (:id, :receipt_no, :invoice_id, :invoice_no, :customer_name, :amount, :payment_date, :payment_method, :transaction_id, :notes, :recorded_by, 'Paid')
+                ");
+                $insPay->execute([
+                    ':id' => $payId,
+                    ':receipt_no' => 'REC-' . rand(1000, 9999),
+                    ':invoice_id' => $inv['id'],
+                    ':invoice_no' => $inv['invoice_no'],
+                    ':customer_name' => $inv['customer_name'],
+                    ':amount' => $amount,
+                    ':payment_date' => $input['payment_date'] ?? date('d M Y'),
+                    ':payment_method' => $input['payment_method'] ?? 'Online Transfer',
+                    ':transaction_id' => $input['transaction_id'] ?? '',
+                    ':notes' => $input['notes'] ?? '',
+                    ':recorded_by' => 'Admin'
+                ]);
+
+                sendJson([
+                    'status' => 'success',
+                    'success' => true,
+                    'message' => 'Payment recorded successfully',
+                    'data' => [
+                        'invoice_id' => $inv['id'],
+                        'invoice_no' => $inv['invoice_no'],
+                        'amount_paid' => $amount,
+                        'total_paid' => $newPaid,
+                        'balance_amount' => $newBalance,
+                        'status' => $newStatus
+                    ]
+                ]);
+            } catch (Exception $e) {
+                sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+            }
+        }
+    }
+    $raw = file_get_contents('php://input');
+    $input = json_decode($raw, true) ?: $_POST;
+
+    if (!$input || empty($input['amount']) || empty($input['title'])) {
+        sendJson(['status' => 'error', 'message' => 'Amount and title are required'], 400);
+    }
+
+    if ($pdo) {
+        try {
+            $id = 'inv_' . time() . '_' . rand(100, 999);
+            $invNo = $input['invoice_no'] ?? ('INV-2024-' . sprintf('%03d', rand(6, 999)));
+
+            $stmt = $pdo->prepare("
+                INSERT INTO crm_cash_ledger 
+                (id, invoice_no, type, amount, title, category, payment_mode, handled_by, customer_name, customer_phone, status, due_date)
+                VALUES 
+                (:id, :invoice_no, :type, :amount, :title, :category, :payment_mode, :handled_by, :customer_name, :customer_phone, :status, :due_date)
+            ");
+
+            $stmt->execute([
+                ':id' => $id,
+                ':invoice_no' => $invNo,
+                ':type' => $input['type'] ?? 'income',
+                ':amount' => (float)$input['amount'],
+                ':title' => trim($input['title']),
+                ':category' => trim($input['category'] ?? 'Development'),
+                ':payment_mode' => trim($input['payment_mode'] ?? 'Online Transfer'),
+                ':handled_by' => trim($input['handled_by'] ?? 'Admin'),
+                ':customer_name' => trim($input['customer_name'] ?? ($input['client_name'] ?? 'ABC Tech Solutions')),
+                ':customer_phone' => trim($input['customer_phone'] ?? ''),
+                ':status' => ucfirst(strtolower(trim($input['status'] ?? 'Pending'))),
+                ':due_date' => trim($input['due_date'] ?? date('d M Y', strtotime('+14 days')))
+            ]);
+
+            sendJson(['status' => 'success', 'id' => $id, 'invoice_no' => $invNo, 'message' => 'Invoice recorded successfully']);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+}

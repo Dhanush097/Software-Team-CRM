@@ -1,0 +1,43 @@
+# Environment variables - contains secrets
+.env
+.env.local
+.env.production
+
+# Google Cloud Service Account credentials - NEVER commit these
+config/google_service_account.json
+*.json
+!package.json
+!composer.json
+
+# Data directory (contains DB, logs, private emails, sensitive data)
+data/
+
+# Large binary executables
+cloudflared.exe
+*.exe
+
+# Backup files
+*.backup
+*.backup2
+*.bak
+*.bak_*
+*.backup_*
+index.php.backup*
+index.php.pre_auth_fix.backup
+
+# Test cookie files
+*.txt
+!README.md
+
+# Logs
+tunnel.log
+*.log
+
+# ZIP archives
+*.zip
+
+# Uploads (user-generated content)
+uploads/
+
+# Scratch/temp files
+scratch/

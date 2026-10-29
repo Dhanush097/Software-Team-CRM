@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Record Video</title></head>
+<body style="margin:0;background:#140708;overflow:hidden;">
+  <canvas id="c" width="960" height="540" style="width:960px;height:540px;"></canvas>
+  <div id="status" style="color:white;font-family:sans-serif;padding:10px;">Init...</div>
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    const stream = canvas.captureStream(30);
+    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+    const chunks = [];
+
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = () => {
+      document.getElementById('status').innerText = 'Saving...';
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      fetch('save_video.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'video/webm' },
+        body: blob
+      }).then(r => r.json()).then(j => {
+        document.getElementById('status').innerText = 'SAVED: ' + JSON.stringify(j);
+        document.title = 'SAVED';
+      }).catch(err => {
+        document.getElementById('status').innerText = 'ERR: ' + err.message;
+      });
+    };
+
+    recorder.start();
+
+    let frame = 0;
+    const totalFrames = 150; // 5 seconds at 30fps
+
+    function draw() {
+      frame++;
+      const elapsed = frame * 33.3;
+      const t = frame / totalFrames;
+
+      // Deep burgundy background
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, '#1E0C0F');
+      grad.addColorStop(0.5, '#2D1217');
+      grad.addColorStop(1, '#150608');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Ambient glows
+      ctx.fillStyle = 'rgba(120, 27, 27, 0.4)';
+      ctx.beginPath();
+      ctx.arc(W * 0.3 + Math.sin(t * 6.28) * 30, H * 0.4, 180, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(233, 213, 194, 0.2)';
+      ctx.beginPath();
+      ctx.arc(W * 0.7 + Math.cos(t * 6.28) * 30, H * 0.6, 150, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Card
+      const cardX = 80, cardY = 40, cardW = 800, cardH = 460;
+      ctx.fillStyle = '#FFFEFC';
+      ctx.strokeStyle = '#E8DDD1';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardW, cardH, 24);
+      ctx.fill(); ctx.stroke();
+
+      // Top logo
+      ctx.fillStyle = '#781B1B';
+      ctx.beginPath();
+      ctx.roundRect(cardX + 30, cardY + 25, 44, 44, 12);
+      ctx.fill();
+      ctx.fillStyle = '#8A7D73'; ctx.fillRect(cardX + 39, cardY + 45, 5, 14);
+      ctx.fillStyle = '#E9D5C2'; ctx.fillRect(cardX + 49, cardY + 37, 5, 22);
+      ctx.fillStyle = '#FFFEFC'; ctx.fillRect(cardX + 59, cardY + 31, 5, 28);
+
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillStyle = '#651717';
+      ctx.fillText('Software Team CRM', cardX + 88, cardY + 46);
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillStyle = '#8A7D73';
+      ctx.fillText('ENTERPRISE TEAM PLATFORM', cardX + 88, cardY + 62);
+
+      // Live pulse
+      const ping = (elapsed % 1500) / 1500;
+      ctx.fillStyle = 'rgba(16, 185, 129, ' + (1 - ping) * 0.6 + ')';
+      ctx.beginPath(); ctx.arc(cardX + cardW - 130, cardY + 44, 4 + ping * 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#10B981';
+      ctx.beginPath(); ctx.arc(cardX + cardW - 130, cardY + 44, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('LIVE WORKSPACE', cardX + cardW - 116, cardY + 48);
+
+      // Left Box: Sprint & metrics
+      const leftX = cardX + 30, leftY = cardY + 85, leftW = 340, leftH = 310;
+      ctx.fillStyle = '#FAF7F2'; ctx.strokeStyle = '#E8DDD1';
+      ctx.beginPath(); ctx.roundRect(leftX, leftY, leftW, leftH, 16); ctx.fill(); ctx.stroke();
+
+      ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = '#25211F';
+      ctx.fillText('Sprint 48 Delivery', leftX + 18, leftY + 30);
+      ctx.fillStyle = '#781B1B'; ctx.fillText('88% On Track', leftX + leftW - 95, leftY + 30);
+
+      // Sprint bar
+      ctx.fillStyle = '#E8DDD1';
+      ctx.beginPath(); ctx.roundRect(leftX + 18, leftY + 42, leftW - 36, 10, 5); ctx.fill();
+      const prog = Math.min(0.88, t * 1.2);
+      const bGrad = ctx.createLinearGradient(leftX + 18, 0, leftX + leftW - 18, 0);
+      bGrad.addColorStop(0, '#781B1B'); bGrad.addColorStop(1, '#E9D5C2');
+      ctx.fillStyle = bGrad;
+      ctx.beginPath(); ctx.roundRect(leftX + 18, leftY + 42, (leftW - 36) * prog, 10, 5); ctx.fill();
+
+      // Metric chips
+      ctx.fillStyle = '#FFFEFC'; ctx.strokeStyle = '#E8DDD1';
+      ctx.beginPath(); ctx.roundRect(leftX + 18, leftY + 70, 140, 75, 12); ctx.fill(); ctx.stroke();
+      ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#8A7D73'; ctx.fillText('TASKS CLOSED', leftX + 30, leftY + 95);
+      ctx.font = 'bold 22px sans-serif'; ctx.fillStyle = '#651717'; ctx.fillText('142', leftX + 30, leftY + 130);
+
+      ctx.fillStyle = '#FFFEFC';
+      ctx.beginPath(); ctx.roundRect(leftX + 178, leftY + 70, 140, 75, 12); ctx.fill(); ctx.stroke();
+      ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#8A7D73'; ctx.fillText('CASH FLOW', leftX + 190, leftY + 95);
+      ctx.font = 'bold 22px sans-serif'; ctx.fillStyle = '#651717'; ctx.fillText('$48.9K', leftX + 190, leftY + 130);
+
+      // Bar chart
+      for (let b = 0; b < 6; b++) {
+        const bh = 15 + Math.sin(t * 12 + b) * 14;
+        ctx.fillStyle = b === 4 ? '#781B1B' : (b % 2 === 0 ? '#8A7D73' : '#E9D5C2');
+        ctx.beginPath(); ctx.roundRect(leftX + 22 + b * 50, leftY + 280 - bh, 34, bh, 4); ctx.fill();
+      }
+
+      // Right Box: Team Desk Animation
+      const rX = cardX + 390, rY = cardY + 85, rW = 380, rH = 310;
+      ctx.fillStyle = '#FAF6EE'; ctx.strokeStyle = '#E8DDD1';
+      ctx.beginPath(); ctx.roundRect(rX, rY, rW, rH, 16); ctx.fill(); ctx.stroke();
+
+      // Desk
+      ctx.fillStyle = '#D9C0AB'; ctx.fillRect(rX + 30, rY + 200, rW - 60, 10);
+      ctx.fillStyle = '#D7C4B5';
+      ctx.fillRect(rX + 60, rY + 210, 8, 50); ctx.fillRect(rX + rW - 68, rY + 210, 8, 50);
+
+      // Monitor
+      const mX = rX + (rW / 2) - 35, mY = rY + 115;
+      ctx.fillStyle = '#FFFEFC'; ctx.strokeStyle = '#D7C4B5';
+      ctx.beginPath(); ctx.roundRect(mX, mY, 70, 50, 6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#D7C4B5'; ctx.fillRect(mX + 30, mY + 50, 10, 25);
+      // Pulsing screen bars
+      for (let s = 0; s < 4; s++) {
+        const sb = 10 + Math.sin(t * 16 + s * 1.5) * 8;
+        ctx.fillStyle = s === 2 ? '#781B1B' : (s === 1 ? '#E9D5C2' : '#8A7D73');
+        ctx.fillRect(mX + 12 + s * 13, mY + 40 - sb, 8, sb);
+      }
+
+      // People
+      const py = rY + 110;
+      ctx.fillStyle = '#781B1B';
+      ctx.beginPath(); ctx.arc(rX + 90, py, 18, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(rX + 90, py + 65, 26, Math.PI, 0); ctx.fill();
+
+      ctx.fillStyle = '#E9D5C2'; ctx.strokeStyle = '#781B1B'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(rX + rW - 90, py, 18, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#8A7D73';
+      ctx.beginPath(); ctx.arc(rX + rW - 90, py + 65, 26, Math.PI, 0); ctx.fill();
+
+      // Flowing dotted connection arc
+      ctx.save();
+      ctx.strokeStyle = '#781B1B'; ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 6]);
+      ctx.lineDashOffset = -(elapsed * 0.05);
+      ctx.beginPath();
+      ctx.moveTo(rX + 110, py);
+      ctx.quadraticCurveTo(rX + (rW / 2), py - 50, rX + rW - 110, py);
+      ctx.stroke();
+      ctx.restore();
+
+      // Bottom Video Controls Bar Overlay
+      ctx.fillStyle = 'rgba(34, 15, 18, 0.92)';
+      ctx.beginPath(); ctx.roundRect(cardX + 30, cardY + cardH - 46, cardW - 60, 32, 10); ctx.fill();
+      ctx.fillStyle = '#FFFEFC'; ctx.font = 'bold 10px sans-serif';
+      ctx.fillText('▶ SOFTWARE CRM ANIMATED INTRO VIDEO', cardX + 48, cardY + cardH - 26);
+      ctx.fillStyle = '#E9D5C2'; ctx.font = 'bold 10px monospace';
+      ctx.fillText(Math.floor(elapsed / 1000) + 's / 5s  •  HD 1080p', cardX + cardW - 160, cardY + cardH - 26);
+
+      if (frame < totalFrames) {
+        setTimeout(draw, 33);
+      } else {
+        recorder.stop();
+      }
+    }
+
+    setTimeout(draw, 33);
+  </script>
+</body>
+</html>

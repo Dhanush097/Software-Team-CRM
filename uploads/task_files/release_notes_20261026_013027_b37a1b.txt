@@ -1,0 +1,5 @@
+Software CRM - Project Architecture Notes
+==========================================
+1. Database schema: crm_tasks & crm_task_files
+2. Secure file streaming with SessionGuard auth.
+3. Content-Disposition: inline vs attachment.

@@ -1,0 +1,382 @@
+<?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE, PUT');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Content-Type: application/json; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+require_once __DIR__ . '/session_guard.php';
+SessionGuard::requireAuth(true);
+require_once __DIR__ . '/db.php';
+$pdo = Database::getConnection();
+
+function sendJson($data, $code = 200) {
+    if ($code >= 200 && $code < 300) {
+        if (!isset($data['success'])) {
+            $data['success'] = true;
+        }
+    } else {
+        if (!isset($data['success'])) {
+            $data['success'] = false;
+        }
+    }
+    http_response_code($code);
+    echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+
+// GET ALL TASKS
+if ($method === 'GET') {
+    if ($pdo) {
+        try {
+            $stmt = $pdo->query("SELECT * FROM crm_tasks ORDER BY completed ASC, created_at DESC");
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($tasks as &$t) {
+                $t['completed'] = (int)$t['completed'];
+                if (empty($t['project_name']) && !empty($t['client_name'])) {
+                    $t['project_name'] = $t['client_name'];
+                }
+            }
+            sendJson(['status' => 'success', 'data' => $tasks]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    } else {
+        sendJson(['status' => 'error', 'message' => 'Database connection failed'], 500);
+    }
+}
+
+// DELETE HTTP METHOD
+if ($method === 'DELETE') {
+    $raw = file_get_contents('php://input');
+    $input = json_decode($raw, true) ?: $_GET;
+    $id = $input['id'] ?? ($_GET['id'] ?? '');
+    if (empty($id)) sendJson(['status' => 'error', 'message' => 'ID required'], 400);
+
+    try {
+        $stmt = $pdo->prepare("DELETE FROM crm_tasks WHERE id = ?");
+        $stmt->execute([$id]);
+        sendJson(['status' => 'success', 'message' => 'Task deleted']);
+    } catch (Exception $e) {
+        sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+}
+
+// POST - CREATE, TOGGLE, UPDATE, BULK, OR DELETE
+if ($method === 'POST') {
+    $raw = file_get_contents('php://input');
+    $input = json_decode($raw, true) ?: $_POST;
+    $action = $input['action'] ?? ($_GET['action'] ?? 'create');
+
+    if (!$pdo) {
+        sendJson(['status' => 'error', 'message' => 'Database not connected'], 500);
+    }
+
+    // 1. TOGGLE COMPLETION
+    if ($action === 'toggle') {
+        $id = $input['id'] ?? '';
+        if (empty($id)) sendJson(['status' => 'error', 'message' => 'ID required'], 400);
+
+        try {
+            $stmt = $pdo->prepare("SELECT completed FROM crm_tasks WHERE id = ?");
+            $stmt->execute([$id]);
+            $task = $stmt->fetch();
+            if (!$task) sendJson(['status' => 'error', 'message' => 'Task not found'], 404);
+
+            $newCompleted = $task['completed'] ? 0 : 1;
+            $newStatus = $newCompleted ? 'Completed' : 'In Progress';
+
+            $upd = $pdo->prepare("UPDATE crm_tasks SET completed = ?, status = ? WHERE id = ?");
+            $upd->execute([$newCompleted, $newStatus, $id]);
+
+            sendJson([
+                'status' => 'success',
+                'success' => true,
+                'message' => $newCompleted ? 'Task marked as completed' : 'Task reopened',
+                'id' => $id,
+                'completed' => $newCompleted,
+                'task_status' => $newStatus,
+                'data' => [
+                    'id' => $id,
+                    'completed' => $newCompleted,
+                    'status' => $newStatus
+                ]
+            ]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // 2. SET EXPLICIT COMPLETION
+    if ($action === 'set_completed') {
+        $id = $input['id'] ?? '';
+        if (empty($id)) sendJson(['status' => 'error', 'message' => 'ID required'], 400);
+        $completedVal = !empty($input['completed']) ? 1 : 0;
+        $newStatus = $completedVal ? 'Completed' : 'In Progress';
+
+        try {
+            $upd = $pdo->prepare("UPDATE crm_tasks SET completed = ?, status = ? WHERE id = ?");
+            $upd->execute([$completedVal, $newStatus, $id]);
+            sendJson([
+                'status' => 'success',
+                'id' => $id,
+                'completed' => $completedVal,
+                'task_status' => $newStatus
+            ]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // 3. UPDATE TASK
+    if ($action === 'update') {
+        $id = $input['id'] ?? '';
+        if (empty($id)) sendJson(['status' => 'error', 'message' => 'Task ID required'], 400);
+        if (empty($input['title'])) sendJson(['status' => 'error', 'message' => 'Task Title is required'], 400);
+
+        $status = trim($input['status'] ?? 'In Progress');
+        $completed = (strtolower($status) === 'completed' || !empty($input['completed'])) ? 1 : 0;
+        if ($completed) $status = 'Completed';
+
+        try {
+            $stmt = $pdo->prepare("
+                UPDATE crm_tasks SET
+                    title = :title,
+                    description = :description,
+                    project_id = :project_id,
+                    project_name = :project_name,
+                    client_name = :client_name,
+                    assigned_staff = :assigned_staff,
+                    priority = :priority,
+                    due_time = :due_time,
+                    due_date = :due_date,
+                    status = :status,
+                    completed = :completed
+                WHERE id = :id
+            ");
+
+            $projectName = trim($input['project_name'] ?? ($input['project'] ?? ''));
+            $clientName = trim($input['client_name'] ?? ($input['client'] ?? $projectName));
+
+            $stmt->execute([
+                ':id' => $id,
+                ':title' => trim($input['title']),
+                ':description' => trim($input['description'] ?? ''),
+                ':project_id' => trim($input['project_id'] ?? ''),
+                ':project_name' => $projectName,
+                ':client_name' => $clientName,
+                ':assigned_staff' => trim($input['assigned_staff'] ?? ($input['assignedStaff'] ?? 'Rahul Sharma')),
+                ':priority' => ucfirst(strtolower(trim($input['priority'] ?? 'Medium'))),
+                ':due_time' => trim($input['due_time'] ?? 'Today'),
+                ':due_date' => trim($input['due_date'] ?? ''),
+                ':status' => $status,
+                ':completed' => $completed
+            ]);
+
+            sendJson(['status' => 'success', 'message' => 'Task updated successfully', 'id' => $id]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // 4. DELETE TASK
+    if ($action === 'delete') {
+        $id = $input['id'] ?? '';
+        if (empty($id)) sendJson(['status' => 'error', 'message' => 'ID required'], 400);
+
+        try {
+            $stmt = $pdo->prepare("DELETE FROM crm_tasks WHERE id = ?");
+            $stmt->execute([$id]);
+            sendJson(['status' => 'success', 'message' => 'Task deleted']);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // 5. DUPLICATE TASK
+    if ($action === 'duplicate') {
+        $id = $input['id'] ?? '';
+        if (empty($id)) sendJson(['status' => 'error', 'message' => 'ID required'], 400);
+
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM crm_tasks WHERE id = ?");
+            $stmt->execute([$id]);
+            $orig = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$orig) sendJson(['status' => 'error', 'message' => 'Task not found'], 404);
+
+            $newId = 'tsk_' . time() . '_' . rand(100, 999);
+            $newTitle = 'Copy of ' . $orig['title'];
+
+            $ins = $pdo->prepare("
+                INSERT INTO crm_tasks 
+                (id, title, description, client_name, project_name, project_id, assigned_staff, due_time, due_date, priority, category, domain, icon, status, completed)
+                VALUES 
+                (:id, :title, :description, :client_name, :project_name, :project_id, :assigned_staff, :due_time, :due_date, :priority, :category, :domain, :icon, :status, 0)
+            ");
+            $ins->execute([
+                ':id' => $newId,
+                ':title' => $newTitle,
+                ':description' => $orig['description'] ?? '',
+                ':client_name' => $orig['client_name'] ?? '',
+                ':project_name' => $orig['project_name'] ?? '',
+                ':project_id' => $orig['project_id'] ?? '',
+                ':assigned_staff' => $orig['assigned_staff'] ?? 'Rahul Sharma',
+                ':due_time' => $orig['due_time'] ?? 'Today',
+                ':due_date' => $orig['due_date'] ?? '',
+                ':priority' => $orig['priority'] ?? 'Medium',
+                ':category' => $orig['category'] ?? 'Design',
+                ':domain' => $orig['domain'] ?? 'software.local',
+                ':icon' => $orig['icon'] ?? 'layout',
+                ':status' => 'In Progress'
+            ]);
+
+            sendJson(['status' => 'success', 'message' => 'Task duplicated', 'id' => $newId]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // 6. BULK ACTIONS
+    if ($action === 'bulk_complete') {
+        $ids = $input['ids'] ?? [];
+        if (!is_array($ids) || empty($ids)) sendJson(['status' => 'error', 'message' => 'IDs array required'], 400);
+
+        try {
+            $inClause = implode(',', array_fill(0, count($ids), '?'));
+            $stmt = $pdo->prepare("UPDATE crm_tasks SET completed = 1, status = 'Completed' WHERE id IN ($inClause)");
+            $stmt->execute(array_values($ids));
+            sendJson(['status' => 'success', 'message' => count($ids) . ' tasks marked as completed', 'count' => count($ids)]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    if ($action === 'bulk_delete') {
+        $ids = $input['ids'] ?? [];
+        if (!is_array($ids) || empty($ids)) sendJson(['status' => 'error', 'message' => 'IDs array required'], 400);
+
+        try {
+            $inClause = implode(',', array_fill(0, count($ids), '?'));
+            $stmt = $pdo->prepare("DELETE FROM crm_tasks WHERE id IN ($inClause)");
+            $stmt->execute(array_values($ids));
+            sendJson(['status' => 'success', 'message' => count($ids) . ' tasks deleted', 'count' => count($ids)]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    if ($action === 'bulk_assign') {
+        $ids = $input['ids'] ?? [];
+        $staff = trim($input['assigned_staff'] ?? '');
+        if (!is_array($ids) || empty($ids) || empty($staff)) sendJson(['status' => 'error', 'message' => 'IDs and staff required'], 400);
+
+        try {
+            $inClause = implode(',', array_fill(0, count($ids), '?'));
+            $params = array_merge([$staff], array_values($ids));
+            $stmt = $pdo->prepare("UPDATE crm_tasks SET assigned_staff = ? WHERE id IN ($inClause)");
+            $stmt->execute($params);
+            sendJson(['status' => 'success', 'message' => count($ids) . ' tasks assigned to ' . $staff]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    if ($action === 'bulk_move') {
+        $ids = $input['ids'] ?? [];
+        $projectId = trim($input['project_id'] ?? '');
+        $projectName = trim($input['project_name'] ?? '');
+        if (!is_array($ids) || empty($ids)) sendJson(['status' => 'error', 'message' => 'IDs required'], 400);
+
+        try {
+            $inClause = implode(',', array_fill(0, count($ids), '?'));
+            $params = array_merge([$projectId, $projectName, $projectName], array_values($ids));
+            $stmt = $pdo->prepare("UPDATE crm_tasks SET project_id = ?, project_name = ?, client_name = ? WHERE id IN ($inClause)");
+            $stmt->execute($params);
+            sendJson(['status' => 'success', 'message' => count($ids) . ' tasks moved to ' . $projectName]);
+        } catch (Exception $e) {
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // 7. DEFAULT: CREATE TASK
+    if (empty($input['title']) || !trim($input['title'])) {
+        sendJson(['status' => 'error', 'success' => false, 'message' => 'Task Title is required'], 400);
+    }
+
+    try {
+        $id = 'tsk_' . time() . '_' . rand(100, 999);
+        $projectName = trim($input['project_name'] ?? ($input['project'] ?? ''));
+        $clientName = trim($input['client_name'] ?? ($input['client'] ?? ($projectName ?: 'ABC Tech Solutions')));
+        $status = trim($input['status'] ?? 'To Do');
+        if (empty($status)) $status = 'To Do';
+        $completed = (strtolower($status) === 'completed' || !empty($input['completed'])) ? 1 : 0;
+        if ($completed) $status = 'Completed';
+
+        $dueDate = trim($input['due_date'] ?? date('Y-m-d'));
+        $dueTime = trim($input['due_time'] ?? ($input['dueTime'] ?? ''));
+        if (empty($dueTime) && !empty($dueDate)) {
+            $timestamp = strtotime($dueDate);
+            if ($timestamp) {
+                $dueTime = date('d M', $timestamp);
+            } else {
+                $dueTime = 'Today';
+            }
+        } elseif (empty($dueTime)) {
+            $dueTime = 'Today';
+        }
+
+        $stmt = $pdo->prepare("
+            INSERT INTO crm_tasks 
+            (id, title, description, client_name, project_name, project_id, phone, location, assigned_staff, due_time, due_date, priority, category, domain, icon, status, completed)
+            VALUES 
+            (:id, :title, :description, :client_name, :project_name, :project_id, :phone, :location, :assigned_staff, :due_time, :due_date, :priority, :category, :domain, :icon, :status, :completed)
+        ");
+
+        $stmt->execute([
+            ':id' => $id,
+            ':title' => trim($input['title']),
+            ':description' => trim($input['description'] ?? ''),
+            ':client_name' => $clientName,
+            ':project_name' => $projectName,
+            ':project_id' => trim($input['project_id'] ?? ''),
+            ':phone' => trim($input['phone'] ?? ''),
+            ':location' => trim($input['location'] ?? ''),
+            ':assigned_staff' => trim($input['assigned_staff'] ?? ($input['assignedStaff'] ?? '')),
+            ':due_time' => $dueTime,
+            ':due_date' => $dueDate,
+            ':priority' => ucfirst(strtolower(trim($input['priority'] ?? 'Medium'))),
+            ':category' => trim($input['category'] ?? 'Design'),
+            ':domain' => 'software.local',
+            ':icon' => trim($input['icon'] ?? 'layout'),
+            ':status' => $status,
+            ':completed' => $completed
+        ]);
+
+        sendJson([
+            'status' => 'success',
+            'success' => true,
+            'id' => $id,
+            'message' => 'Task created successfully',
+            'data' => [
+                'id' => $id,
+                'title' => trim($input['title']),
+                'project_id' => trim($input['project_id'] ?? ''),
+                'client_name' => $clientName,
+                'assigned_staff' => trim($input['assigned_staff'] ?? ($input['assignedStaff'] ?? '')),
+                'due_date' => $dueDate,
+                'due_time' => $dueTime,
+                'priority' => ucfirst(strtolower(trim($input['priority'] ?? 'Medium'))),
+                'status' => $status,
+                'completed' => $completed
+            ]
+        ]);
+    } catch (Exception $e) {
+        sendJson(['status' => 'error', 'success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
