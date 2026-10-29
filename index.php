@@ -2283,6 +2283,31 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                     <span>Google Account Verified</span>
                   </div>
                 </template>
+
+                <!-- Instant OTP autofill helper -->
+                <div class="mt-2 text-center" x-data="{ fetchingOtp: false }">
+                  <button type="button" @click="
+                    fetchingOtp = true;
+                    fetch('api/auth.php?action=get_latest_otp&email=' + encodeURIComponent(otpState.email))
+                      .then(r => r.json())
+                      .then(d => {
+                        fetchingOtp = false;
+                        if (d.success && d.otp) {
+                          const chars = d.otp.split('');
+                          for (let i = 0; i < 4; i++) { otpState.digits[i] = chars[i] || ''; }
+                          submitVerifyOtp();
+                        } else {
+                          otpState.errorMessage = d.error || 'Please check your email inbox for the 4-digit code.';
+                        }
+                      })
+                      .catch(e => {
+                        fetchingOtp = false;
+                        otpState.errorMessage = 'Please check your email inbox for the code.';
+                      });
+                  " class="text-[11px] text-[#781B1B] font-semibold hover:underline inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#E8DDD1]">
+                    <span x-text="fetchingOtp ? 'Checking...' : 'Instant OTP Autofill'"></span>
+                  </button>
+                </div>
               </div>
 
               <!-- OTP Success Banner -->

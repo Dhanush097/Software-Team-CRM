@@ -394,6 +394,15 @@ class Database {
                 `created_by` TEXT,
                 `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
             )",
+            "CREATE TABLE IF NOT EXISTS `crm_security_logs` (
+                `id`         INTEGER PRIMARY KEY AUTOINCREMENT,
+                `user_id`    INTEGER,
+                `event_type` TEXT,
+                `ip_address` TEXT,
+                `user_agent` TEXT,
+                `details`    TEXT,
+                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+            )",
         ];
 
         foreach ($tables as $sql) {
