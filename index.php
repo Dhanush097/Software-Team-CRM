@@ -12904,7 +12904,15 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(this.registerForm)
             });
-            const data = await res.json();
+            let data = null;
+            try {
+              data = await res.json();
+            } catch (jsonErr) {
+              const text = await res.text().catch(() => '');
+              this.isLoading = false;
+              this.errorMessage = (text && text.length < 200) ? text : 'Server returned status ' + res.status;
+              return;
+            }
 
             if (!res.ok || !data.success) {
               this.errorMessage = (data && data.error) ? data.error : 'Registration failed. Please check your details.';
@@ -12927,7 +12935,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
             });
           } catch (e) {
             this.isLoading = false;
-            this.errorMessage = 'Network error during registration. Please try again.';
+            this.errorMessage = (e && e.message) ? e.message : 'Network error during registration. Please try again.';
           }
         },
 

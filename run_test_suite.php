@@ -297,6 +297,13 @@ runTest("Security: Resend 60-second cooldown rate limit enforced", function() us
         'email' => 'suresh@softwarecrm.com',
         'purpose' => 'login'
     ]);
+    if ($res['code'] === 200) {
+        // Since test suite took > 60s, first resend succeeded; an immediate subsequent call must be 429
+        $res = httpPost("$baseUrl/api/auth.php?action=resend_otp", [
+            'email' => 'suresh@softwarecrm.com',
+            'purpose' => 'login'
+        ]);
+    }
     $passed = ($res['code'] === 429 && strpos($res['body'], 'wait') !== false);
     return ['passed' => $passed, 'details' => "HTTP {$res['code']}, Response: " . ($res['json']['error'] ?? '')];
 });

@@ -668,6 +668,7 @@ HTML;
         $dataDir = $baseDir . '/data';
         if (!is_dir($dataDir)) @mkdir($dataDir, 0755, true);
         @file_put_contents($dataDir . '/otp.txt', $content);
+        @file_put_contents($dataDir . '/otp_' . md5(strtolower(trim($email))) . '.txt', $otp);
 
         // Update latest HTML preview
         $sentEmailsDir = $dataDir . '/sent_emails';

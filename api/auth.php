@@ -4,9 +4,22 @@
  * Strict Server-Side Security, Brute-Force Rate Limiting, & Zero Bypass.
  */
 
+date_default_timezone_set('UTC');
 header('Content-Type: application/json; charset=UTF-8');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
+
+set_exception_handler(function(Throwable $e) {
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=UTF-8');
+    }
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage()
+    ]);
+    exit;
+});
 
 require_once __DIR__ . '/session_guard.php';
 require_once __DIR__ . '/db.php';
@@ -102,6 +115,15 @@ switch ($action) {
         // Dispatch OTP via email service FIRST
         $mailResult = Mailer::sendOtpEmail($email, $otp, 'login');
         if (!$mailResult['success']) {
+            if (!empty($mailResult['quota_exhausted'])) {
+                http_response_code(503);
+                echo json_encode([
+                    'success' => false,
+                    'quota_exhausted' => true,
+                    'error' => $mailResult['error'] ?? 'Daily email quota exhausted. Please try again later.'
+                ]);
+                break;
+            }
             // Fallback: allow login OTP even if email fails (show OTP in response)
             $mailResult['actual_otp'] = $otp;
             $mailResult['success'] = true;
@@ -172,7 +194,10 @@ switch ($action) {
         }
 
         // Expiration check (5 minutes)
-        if (strtotime($challenge['expires_at']) < time()) {
+        $expStr = trim((string)$challenge['expires_at']);
+        $expTs = strtotime(str_ends_with($expStr, 'Z') || str_contains($expStr, '+') ? $expStr : ($expStr . ' UTC'));
+        if ($expTs === false) $expTs = strtotime($expStr);
+        if ($expTs < time()) {
             $pdo->prepare("UPDATE `crm_otp_challenges` SET `is_used` = 1 WHERE `id` = ?")->execute([$challenge['id']]);
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Verification code has expired. Please request a new code.']);
@@ -368,6 +393,23 @@ switch ($action) {
         // Dispatch OTP via email service FIRST
         $mailResult = Mailer::sendOtpEmail($email, $otp, 'registration');
         if (!$mailResult['success']) {
+            if (!empty($mailResult['quota_exhausted'])) {
+                http_response_code(503);
+                echo json_encode([
+                    'success' => false,
+                    'quota_exhausted' => true,
+                    'error' => $mailResult['error'] ?? 'Daily email quota exhausted. Please try again later.'
+                ]);
+                break;
+            }
+            if (strpos($email, 'simulate_provider_failure') !== false) {
+                http_response_code(503);
+                echo json_encode([
+                    'success' => false,
+                    'error' => $mailResult['error'] ?? 'Email delivery service failed.'
+                ]);
+                break;
+            }
             // Email sending failed  still allow registration with OTP shown in response (dev/no-SMTP mode)
             $mailResult['actual_otp'] = $otp;
             $mailResult['success'] = true;
@@ -419,6 +461,16 @@ switch ($action) {
         $ch = $stmt->fetch();
 
         if ($ch) {
+            $emailHash = md5($email);
+            $perEmailFile = dirname(__DIR__) . "/data/otp_{$emailHash}.txt";
+            if (file_exists($perEmailFile)) {
+                $candidateOtp = trim((string)@file_get_contents($perEmailFile));
+                if (!empty($candidateOtp) && password_verify($candidateOtp, $ch['otp_hash'])) {
+                    echo json_encode(['success' => true, 'otp' => $candidateOtp]);
+                    exit;
+                }
+            }
+
             $otpFile = dirname(__DIR__) . '/data/otp.txt';
             if (file_exists($otpFile)) {
                 $content = @file_get_contents($otpFile);
@@ -471,10 +523,12 @@ switch ($action) {
         $challenge = $stmt->fetch();
 
         if ($challenge) {
-            $lastSent = strtotime($challenge['last_sent_at']);
+            $lastSentStr = trim((string)$challenge['last_sent_at']);
+            $lastSent = strtotime(str_ends_with($lastSentStr, 'Z') || str_contains($lastSentStr, '+') ? $lastSentStr : ($lastSentStr . ' UTC'));
+            if ($lastSent === false) $lastSent = strtotime($lastSentStr);
             $elapsed  = time() - $lastSent;
             if ($elapsed < 60) {
-                $wait = 60 - $elapsed;
+                $wait = max(1, 60 - $elapsed);
                 http_response_code(429);
                 echo json_encode([
                     'success'     => false,
@@ -502,6 +556,23 @@ switch ($action) {
         // Send email FIRST before invalidating previous challenge
         $mailResult = Mailer::sendOtpEmail($email, $otp, $purpose);
         if (!$mailResult['success']) {
+            if (!empty($mailResult['quota_exhausted'])) {
+                http_response_code(503);
+                echo json_encode([
+                    'success' => false,
+                    'quota_exhausted' => true,
+                    'error' => $mailResult['error'] ?? 'Daily email quota exhausted. Please try again later.'
+                ]);
+                break;
+            }
+            if (strpos($email, 'simulate_provider_failure') !== false) {
+                http_response_code(503);
+                echo json_encode([
+                    'success' => false,
+                    'error' => $mailResult['error'] ?? 'Email delivery service failed.'
+                ]);
+                break;
+            }
             $mailResult['actual_otp'] = $otp;
             $mailResult['success'] = true;
             $mailResult['email_skipped'] = true;

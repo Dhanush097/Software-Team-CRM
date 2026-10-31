@@ -238,8 +238,11 @@ assertTest($delRes['code'] === 200, "Delete test expense returns HTTP 200");
 // TEST 7: REFUNDS & CANCELLED INVOICES DO NOT INFLATE REVENUE
 // -----------------------------------------------------------------------------
 echo "\n--- TEST 7: Cancelled Invoices Exclusion ---\n";
+Database::resetConnection();
+$pdo = Database::getConnection();
+
 // Insert test cancelled invoice
-$pdo->prepare("INSERT INTO crm_cash_ledger (id, invoice_no, type, amount, status, issue_date, transaction_date) VALUES ('inv_cancel_test', 'INV-CANCEL-99', 'income', 99999.00, 'Cancelled', '2026-10-20', NOW())")->execute();
+$pdo->prepare("INSERT INTO crm_cash_ledger (id, invoice_no, title, type, amount, status, issue_date, transaction_date) VALUES ('inv_cancel_test', 'INV-CANCEL-99', 'Cancelled Test Invoice', 'income', 99999.00, 'Cancelled', '2026-10-20', NOW())")->execute();
 
 $summaryAfterCancel = makeReq("$baseUrl/api/reports.php?action=summary&month=2026-10", 'GET', null, $sessionCookie);
 $revenueAfterCancel = (float)$summaryAfterCancel['json']['data']['summary_cards']['total_revenue'];

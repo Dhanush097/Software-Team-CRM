@@ -63,6 +63,7 @@ function makeApiRequest(string $url, string $method = 'POST', array $data = [], 
     $res = curl_exec($ch);
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+    Database::resetConnection();
 
     return [
         'code' => $code,
@@ -92,9 +93,11 @@ assertTest(($regRes['json']['step'] ?? '') === 'otp_required', "Response indicat
 assertTest(!empty($regRes['json']['email']), "Response includes recipient email", "Email: {$testEmail1}");
 
 // Verify active challenge stored in DB
+$pdo = Database::getConnection();
 $c1Stmt = $pdo->prepare("SELECT * FROM crm_otp_challenges WHERE email = ? AND purpose = 'registration' AND is_used = 0");
 $c1Stmt->execute([$testEmail1]);
 $ch1 = $c1Stmt->fetch(PDO::FETCH_ASSOC);
+$c1Stmt->closeCursor();
 assertTest(!empty($ch1), "Challenge saved in crm_otp_challenges table with is_used=0");
 assertTest((int)$ch1['attempts'] === 0, "Initial verification attempts count is 0");
 
@@ -201,12 +204,15 @@ $expOtp = '7711';
 $expHash = password_hash($expOtp, PASSWORD_DEFAULT);
 
 // Insert pre-expired challenge (expired 10 minutes ago)
-$pdo->prepare("
+$pdo = Database::getConnection();
+$s = $pdo->prepare("
     INSERT INTO crm_otp_challenges
     (email, otp_hash, purpose, temp_payload, expires_at, attempts, max_attempts, resend_count, last_sent_at, is_used)
     VALUES
     (?, ?, 'login', NULL, DATE_SUB(NOW(), INTERVAL 10 MINUTE), 0, 5, 0, NOW(), 0)
-")->execute([$expiredEmail, $expHash]);
+");
+$s->execute([$expiredEmail, $expHash]);
+$s->closeCursor();
 
 $expVerify = makeApiRequest("$baseUrl/api/auth.php?action=verify_otp", 'POST', [
     'email'   => $expiredEmail,
@@ -218,9 +224,11 @@ assertTest($expVerify['code'] === 400, "Expired token rejected with HTTP 400", "
 assertTest(strpos(($expVerify['json']['error'] ?? ''), 'expired') !== false, "Error message explicitly states code has expired", "Msg: " . ($expVerify['json']['error'] ?? ''));
 
 // Verify challenge was invalidated in database
+$pdo = Database::getConnection();
 $chkExp = $pdo->prepare("SELECT is_used FROM crm_otp_challenges WHERE email = ? AND purpose = 'login' ORDER BY id DESC LIMIT 1");
 $chkExp->execute([$expiredEmail]);
 assertTest((int)$chkExp->fetchColumn() === 1, "Expired token automatically marked is_used=1 upon detection");
+$chkExp->closeCursor();
 
 // -------------------------------------------------------------
 // TEST 7: Invalid Tokens & Max Attempts Limit
@@ -231,12 +239,15 @@ $attemptEmail = 'attempts_' . bin2hex(random_bytes(4)) . '@softwarecrm.com';
 $realOtp = '4321';
 $attHash = password_hash($realOtp, PASSWORD_DEFAULT);
 
-$pdo->prepare("
+$pdo = Database::getConnection();
+$s = $pdo->prepare("
     INSERT INTO crm_otp_challenges
     (email, otp_hash, purpose, temp_payload, expires_at, attempts, max_attempts, resend_count, last_sent_at, is_used)
     VALUES
     (?, ?, 'login', NULL, DATE_ADD(NOW(), INTERVAL 5 MINUTE), 0, 5, 0, NOW(), 0)
-")->execute([$attemptEmail, $attHash]);
+");
+$s->execute([$attemptEmail, $attHash]);
+$s->closeCursor();
 
 // Submit 4 incorrect attempts
 for ($i = 1; $i <= 4; $i++) {
@@ -321,7 +332,10 @@ $failRes = makeApiRequest("$baseUrl/api/auth.php?action=register", 'POST', [
 ]);
 
 assertTest($failRes['code'] === 503, "Failed provider request returns HTTP 503 Service Unavailable", "Code: {$failRes['code']}");
-$orphanedCount = (int)$pdo->query("SELECT COUNT(*) FROM crm_otp_challenges WHERE email = '$failEmail' AND is_used = 0")->fetchColumn();
+$pdo = Database::getConnection();
+$orphStmt = $pdo->query("SELECT COUNT(*) FROM crm_otp_challenges WHERE email = '$failEmail' AND is_used = 0");
+$orphanedCount = (int)$orphStmt->fetchColumn();
+$orphStmt->closeCursor();
 assertTest($orphanedCount === 0, "No orphaned active challenges left in DB upon email delivery failure");
 
 // -------------------------------------------------------------
@@ -330,7 +344,10 @@ assertTest($orphanedCount === 0, "No orphaned active challenges left in DB upon 
 echo "\n--- TEST 10: RESEND COOLDOWN EXPIRATION & RENEWAL ---\n";
 
 // Fast-forward cooldown by updating last_sent_at in database
-$pdo->prepare("UPDATE crm_otp_challenges SET last_sent_at = DATE_SUB(NOW(), INTERVAL 65 SECOND) WHERE email = ?")->execute([$cooldownEmail]);
+$pdo = Database::getConnection();
+$coolStmt = $pdo->prepare("UPDATE crm_otp_challenges SET last_sent_at = DATE_SUB(NOW(), INTERVAL 65 SECOND) WHERE email = ?");
+$coolStmt->execute([$cooldownEmail]);
+$coolStmt->closeCursor();
 
 $resendSuccess = makeApiRequest("$baseUrl/api/auth.php?action=resend_otp", 'POST', [
     'email'   => $cooldownEmail,

@@ -267,6 +267,9 @@ $fullMathOk = ($fullPaid === 72865.0 && $fullBal === 0.0 && $fullStatus === 'Pai
 logTest("Settle Remaining Balance (₹42,865)", $fullOk && $fullMathOk, "Paid: ₹$fullPaid, Remaining: ₹$fullBal, Status: $fullStatus");
 if (!($fullOk && $fullMathOk)) $allPassed = false;
 
+Database::resetConnection();
+$pdo = Database::getConnection();
+
 // Verify database reflects Paid
 $chkFinal = $pdo->prepare("SELECT * FROM crm_cash_ledger WHERE id = ?");
 $chkFinal->execute([$newInvId]);

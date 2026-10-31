@@ -318,7 +318,7 @@ runTest(12, 'Delete company preserves contacts safely without losing contact rec
     // 2. Create a dummy contact linked to this company
     $cntId = 'cnt_safety_' . time();
     $cntName = 'Safety Contact Test';
-    $pdo->prepare("INSERT INTO crm_contacts (id, name, company, company_id, created_at) VALUES (?, ?, ?, ?, NOW())")->execute([$cntId, $cntName, $cName, $cId]);
+    $pdo->prepare("INSERT INTO crm_contacts (id, name, phone, company, company_id, created_at) VALUES (?, ?, '', ?, ?, NOW())")->execute([$cntId, $cntName, $cName, $cId]);
     
     // 3. Delete company via API
     $delRes = makeRequest('api/companies.php', 'POST', ['action' => 'delete', 'id' => $cId]);

@@ -70,7 +70,7 @@ $ch = curl_init("$baseUrl/api/biometric_auth.php?action=check_support");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $res = curl_exec($ch);
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $data = json_decode($res, true);
 
 assertTest($code === 200, "check_support returns HTTP 200", "HTTP Code: $code");
@@ -100,7 +100,7 @@ foreach ($guardedActions as $act => $method) {
     }
     $res = curl_exec($ch);
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 
     assertTest($code === 401, "Unauthenticated '$act' returns HTTP 401 Unauthorized", "HTTP Code: $code");
 }
@@ -113,7 +113,7 @@ echo "\n--- TEST 4: Establish Authenticated Employee Session ---\n";
 $testEmail = 'suresh@softwarecrm.com';
 $userStmt = $pdo->prepare("SELECT * FROM crm_users WHERE email = ? LIMIT 1");
 $userStmt->execute([$testEmail]);
-$testUser = $userStmt->fetch(PDO::FETCH_ASSOC);
+$testUser = $userStmt->fetch(PDO::FETCH_ASSOC); $userStmt->closeCursor();
 
 if (!$testUser) {
     $pdo->prepare("INSERT INTO crm_users (name, email, password, role, status) VALUES ('Suresh Sharma', ?, ?, 'admin', 'active')")
@@ -142,7 +142,7 @@ curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieFile);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
 $authRes = curl_exec($ch);
 $authCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $authData = json_decode($authRes, true);
 
 assertTest($authCode === 200 && !empty($authData['authenticated']), "Employee session established successfully", "User: " . ($authData['user']['name'] ?? 'none'));
@@ -160,7 +160,7 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
 $regChalRes = curl_exec($ch);
 $regChalCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $regChalData = json_decode($regChalRes, true);
 
 assertTest($regChalCode === 200, "register_challenge returns HTTP 200", "HTTP Code: $regChalCode");
@@ -172,7 +172,7 @@ assertTest(!empty($regChalData['pubKeyCredParams']), "pubKeyCredParams contains 
 // Verify challenge in DB
 $cRow = $pdo->prepare("SELECT * FROM crm_biometric_challenges WHERE challenge = ? AND purpose = 'registration' AND is_used = 0");
 $cRow->execute([$regChalData['challenge']]);
-$dbChal = $cRow->fetch(PDO::FETCH_ASSOC);
+$dbChal = $cRow->fetch(PDO::FETCH_ASSOC); $cRow->closeCursor();
 assertTest(!empty($dbChal), "Challenge recorded in crm_biometric_challenges database table", "Expires: " . ($dbChal['expires_at'] ?? ''));
 
 // -------------------------------------------------------------
@@ -247,7 +247,7 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
 $regRes = curl_exec($ch);
 $regCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $regData = json_decode($regRes, true);
 
 assertTest($regCode === 200 && !empty($regData['success']), "Credential registered successfully on server", "Message: " . ($regData['message'] ?? 'none'));
@@ -255,7 +255,7 @@ assertTest($regCode === 200 && !empty($regData['success']), "Credential register
 // Verify database record
 $savedCredStmt = $pdo->prepare("SELECT * FROM crm_biometric_credentials WHERE credential_id = ?");
 $savedCredStmt->execute([$credIdBase64Url]);
-$savedCred = $savedCredStmt->fetch(PDO::FETCH_ASSOC);
+$savedCred = $savedCredStmt->fetch(PDO::FETCH_ASSOC); $savedCredStmt->closeCursor();
 
 assertTest(!empty($savedCred), "Credential saved in crm_biometric_credentials table", "ID: " . ($savedCred['id'] ?? 'none'));
 assertTest(strpos($savedCred['public_key'], 'BEGIN PUBLIC KEY') !== false, "Public key stored as valid OpenSSL PEM format");
@@ -265,7 +265,7 @@ assertTest($savedCred['status'] === 'active', "Credential status is active");
 // Verify security audit log
 $secLogStmt = $pdo->prepare("SELECT * FROM crm_security_logs WHERE user_id = ? AND event_type = 'biometric_device_registered' ORDER BY id DESC LIMIT 1");
 $secLogStmt->execute([$userId]);
-$secLog = $secLogStmt->fetch(PDO::FETCH_ASSOC);
+$secLog = $secLogStmt->fetch(PDO::FETCH_ASSOC); $secLogStmt->closeCursor();
 assertTest(!empty($secLog), "Audit log recorded in crm_security_logs", "Event: " . ($secLog['event_type'] ?? ''));
 
 // -------------------------------------------------------------
@@ -281,7 +281,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([]));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
 $newChalRes = curl_exec($ch);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $newChalData = json_decode($newChalRes, true);
 
 $dupClientData = json_encode(['type' => 'webauthn.create', 'challenge' => $newChalData['challenge'], 'origin' => 'http://' . $originUrl . ':8000', 'crossOrigin' => false]);
@@ -299,7 +299,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
 $dupRes = curl_exec($ch);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $dupData = json_decode($dupRes, true);
 
 assertTest(strpos(($dupData['message'] ?? ''), 'already registered') !== false, "Duplicate credential recognized and safely acknowledged", "Message: " . ($dupData['message'] ?? ''));
@@ -314,7 +314,7 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
 $listRes = curl_exec($ch);
 $listCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $listData = json_decode($listRes, true);
 
 assertTest($listCode === 200 && !empty($listData['success']), "list_devices returns HTTP 200");
@@ -337,7 +337,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['email' => $testEmail]));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 $loginChalRes = curl_exec($ch);
 $loginChalCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $loginChalData = json_decode($loginChalRes, true);
 
 assertTest($loginChalCode === 200 && !empty($loginChalData['challenge']), "login_challenge returns valid challenge", "Challenge len: " . strlen($loginChalData['challenge'] ?? ''));
@@ -353,7 +353,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['email' => 'nonexistent@nowher
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 $nonRes = curl_exec($ch);
 $nonCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 assertTest($nonCode === 404, "Non-existent email returns HTTP 404 Not Found", "HTTP Code: $nonCode");
 
 // 9C. Active user without registered biometrics
@@ -368,7 +368,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['email' => $noBioEmail]));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 $noBioRes = curl_exec($ch);
 $noBioCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $noBioData = json_decode($noBioRes, true);
 
 assertTest($noBioCode === 400 && !empty($noBioData['no_credentials']), "User without biometrics returns friendly no_credentials flag", "Msg: " . ($noBioData['error'] ?? ''));
@@ -421,7 +421,7 @@ curl_setopt($ch, CURLOPT_COOKIEJAR, $cleanCookie);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cleanCookie);
 $assertRes = curl_exec($ch);
 $assertCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $assertData = json_decode($assertRes, true);
 
 assertTest($assertCode === 200 && !empty($assertData['authenticated']), "Biometric assertion verified and employee authenticated", "User: " . ($assertData['user']['name'] ?? 'none'));
@@ -436,7 +436,7 @@ $ch = curl_init("$baseUrl/api/auth.php?action=check_session");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cleanCookie);
 $sessRes = curl_exec($ch);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $sessData = json_decode($sessRes, true);
 
 assertTest(!empty($sessData['authenticated']) && $sessData['user']['email'] === $testEmail, "Authenticated session active across CRM endpoints", "Session User: " . ($sessData['user']['email'] ?? ''));
@@ -466,7 +466,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 $replayRes = curl_exec($ch);
 $replayCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $replayData = json_decode($replayRes, true);
 
 assertTest($replayCode === 400 && (strpos(($replayData['error'] ?? ''), 'replayed') !== false || strpos(($replayData['error'] ?? ''), 'already been used') !== false), "Replay attack rejected: challenge cannot be reused", "Error: " . ($replayData['error'] ?? ''));
@@ -483,7 +483,7 @@ curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['email' => $testEmail]));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 $tChalRes = curl_exec($ch);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $tChalData = json_decode($tChalRes, true);
 $tChallenge = $tChalData['challenge'];
 
@@ -505,7 +505,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 $tamperRes = curl_exec($ch);
 $tamperCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $tamperData = json_decode($tamperRes, true);
 
 assertTest(in_array($tamperCode, [400, 401]) && strpos(($tamperData['error'] ?? ''), 'verification failed') !== false, "Tampered signature rejected cryptographically with HTTP 400/401", "Error: " . ($tamperData['error'] ?? ''));
@@ -525,7 +525,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['email' => $testEmail]));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 $suspRes = curl_exec($ch);
 $suspCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $suspData = json_decode($suspRes, true);
 
 assertTest($suspCode === 403 && (strpos(($suspData['error'] ?? ''), 'inactive or suspended') !== false || strpos(($suspData['error'] ?? ''), 'suspended') !== false), "Suspended employee cannot initiate biometric login (HTTP 403)", "Msg: " . ($suspData['error'] ?? ''));
@@ -549,7 +549,7 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
 $remRes = curl_exec($ch);
 $remCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $remData = json_decode($remRes, true);
 
 assertTest($remCode === 200 && !empty($remData['success']), "Credential removed successfully", "Msg: " . ($remData['message'] ?? ''));
@@ -586,7 +586,7 @@ $ch = curl_init("$baseUrl/api/biometric_auth.php?action=list_devices");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
 $list2Res = curl_exec($ch);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $list2Data = json_decode($list2Res, true);
 assertTest(count($list2Data['devices'] ?? []) === 2, "Two devices enrolled concurrently", "Count: " . count($list2Data['devices'] ?? []));
 
@@ -601,7 +601,7 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
 $disRes = curl_exec($ch);
 $disCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $disData = json_decode($disRes, true);
 
 assertTest($disCode === 200 && !empty($disData['success']), "disable_biometrics executed successfully", "Msg: " . ($disData['message'] ?? ''));
@@ -652,7 +652,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 $pwdRes = curl_exec($ch);
 $pwdCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+curl_close($ch); Database::resetConnection(); $pdo = Database::getConnection();
 $pwdData = json_decode($pwdRes, true);
 
 assertTest($pwdCode === 200 && !empty($pwdData['authenticated']), "Standard employee authentication functions properly without regressions", "User: " . ($pwdData['user']['name'] ?? 'none'));

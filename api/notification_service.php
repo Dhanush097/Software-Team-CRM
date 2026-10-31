@@ -29,6 +29,19 @@ class NotificationService {
           INDEX `idx_event_link` (`event_type`, `link_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
         $pdo->exec($sql);
+
+        $cols = [
+            'category'     => "TEXT DEFAULT 'system'",
+            'event_type'   => "TEXT DEFAULT 'info'",
+            'link_type'    => "TEXT DEFAULT 'modal'",
+            'link_id'      => "TEXT DEFAULT ''",
+            'action_label' => "TEXT DEFAULT 'View'",
+            'read_at'      => "DATETIME",
+            'metadata'     => "TEXT"
+        ];
+        foreach ($cols as $c => $def) {
+            try { $pdo->exec("ALTER TABLE `crm_notifications` ADD COLUMN `$c` $def"); } catch (Exception $e) {}
+        }
     }
 
     public static function create(
@@ -66,7 +79,9 @@ class NotificationService {
         if (!empty($eventType) && !empty($linkId)) {
             $check = $pdo->prepare("SELECT `id` FROM `crm_notifications` WHERE `event_type` = ? AND `link_id` = ? AND (`user_id` = ? OR (`user_id` IS NULL AND ? IS NULL)) LIMIT 1");
             $check->execute([$eventType, $linkId, $userId, $userId]);
-            if ($check->fetch()) {
+            $exists = $check->fetch();
+            $check->closeCursor();
+            if ($exists) {
                 return null;
             }
         }
@@ -79,8 +94,10 @@ class NotificationService {
             $stmt = $pdo->prepare("INSERT INTO `crm_notifications` (`user_id`, `category`, `event_type`, `title`, `message`, `link_type`, `link_id`, `action_label`, `is_read`, `metadata`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NOW())");
             $stmt->execute([$userId, $category, $eventType, $title, $message, $linkType, $linkId, $actionLabel, $metaJson]);
         }
+        $lastId = (int)$pdo->lastInsertId();
+        $stmt->closeCursor();
 
-        return (int)$pdo->lastInsertId();
+        return $lastId;
     }
 
     /**
@@ -93,8 +110,10 @@ class NotificationService {
         // 1. INVOICE EVENTS (from crm_cash_ledger)
         $invStmt = $pdo->query("SELECT `id`, `invoice_no`, `customer_name`, `amount`, `paid_amount`, `balance_amount`, `status`, `due_date`, `transaction_date` FROM `crm_cash_ledger` ORDER BY `transaction_date` DESC LIMIT 50");
         $now = time();
+        $invoices = $invStmt ? $invStmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        if ($invStmt) $invStmt->closeCursor();
 
-        while ($inv = $invStmt->fetch(PDO::FETCH_ASSOC)) {
+        foreach ($invoices as $inv) {
             $invId = $inv['id'];
             $invNo = $inv['invoice_no'] ?: $invId;
             $customer = $inv['customer_name'] ?: 'Valued Client';
@@ -173,7 +192,10 @@ class NotificationService {
 
         // 2. TASK EVENTS (from crm_tasks)
         $taskStmt = $pdo->query("SELECT `id`, `title`, `project_id`, `project_name`, `assigned_staff`, `completed`, `status`, `due_date`, `created_at` FROM `crm_tasks` ORDER BY `created_at` DESC LIMIT 50");
-        while ($t = $taskStmt->fetch(PDO::FETCH_ASSOC)) {
+        $tasks = $taskStmt ? $taskStmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        if ($taskStmt) $taskStmt->closeCursor();
+
+        foreach ($tasks as $t) {
             $tId = $t['id'];
             $tTitle = $t['title'] ?: 'Untitled Task';
             $pName = $t['project_name'] ?: 'Main Project';
@@ -235,7 +257,10 @@ class NotificationService {
 
         // 3. CLIENT / CONTACT EVENTS (from crm_contacts)
         $cntStmt = $pdo->query("SELECT `id`, `name`, `company`, `email`, `created_at`, `updated_at` FROM `crm_contacts` ORDER BY `created_at` DESC LIMIT 30");
-        while ($c = $cntStmt->fetch(PDO::FETCH_ASSOC)) {
+        $contacts = $cntStmt ? $cntStmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        if ($cntStmt) $cntStmt->closeCursor();
+
+        foreach ($contacts as $c) {
             $cId = $c['id'];
             $cName = $c['name'] ?: 'Contact';
             $cCompany = $c['company'] ? " ({$c['company']})" : '';

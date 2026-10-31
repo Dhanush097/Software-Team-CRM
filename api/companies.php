@@ -94,6 +94,13 @@ if ($method === 'GET') {
             $stmt->execute([':id' => $id, ':name' => $id]);
             $company = $stmt->fetch(PDO::FETCH_ASSOC);
 
+            if (!$company && str_starts_with($id, 'cmp_')) {
+                $slug = substr($id, 4);
+                $stmtSlug = $pdo->prepare("SELECT * FROM crm_companies WHERE LOWER(REPLACE(REPLACE(name, ' ', '_'), '&', 'and')) = LOWER(?) OR LOWER(name) LIKE ? LIMIT 1");
+                $stmtSlug->execute([$slug, '%' . str_replace('_', ' ', $slug) . '%']);
+                $company = $stmtSlug->fetch(PDO::FETCH_ASSOC);
+            }
+
             if (!$company) {
                 sendJson(['status' => 'error', 'message' => 'Company not found'], 404);
             }
@@ -342,6 +349,16 @@ if ($method === 'POST') {
             $stmt = $pdo->prepare("SELECT * FROM crm_companies WHERE id = ?");
             $stmt->execute([$id]);
             $orig = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$orig && str_starts_with($id, 'cmp_')) {
+                $slug = substr($id, 4);
+                $stmtSlug = $pdo->prepare("SELECT * FROM crm_companies WHERE LOWER(REPLACE(REPLACE(name, ' ', '_'), '&', 'and')) = LOWER(?) LIMIT 1");
+                $stmtSlug->execute([$slug]);
+                $orig = $stmtSlug->fetch(PDO::FETCH_ASSOC);
+                if ($orig) {
+                    $id = $orig['id'];
+                }
+            }
 
             if (!$orig) {
                 sendJson(['status' => 'error', 'message' => 'Company not found'], 404);

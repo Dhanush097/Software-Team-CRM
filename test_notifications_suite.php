@@ -87,12 +87,16 @@ if (file_exists($cookieFile)) @unlink($cookieFile);
 // Step 1: Set up valid challenge in crm_otp_challenges for suresh@softwarecrm.com
 $testOtp = '1234';
 $otpHash = password_hash($testOtp, PASSWORD_DEFAULT);
-$pdo->prepare("UPDATE `crm_otp_challenges` SET `is_used` = 1 WHERE `email` = 'suresh@softwarecrm.com'")->execute();
+$upd = $pdo->prepare("UPDATE `crm_otp_challenges` SET `is_used` = 1 WHERE `email` = 'suresh@softwarecrm.com'");
+$upd->execute();
+$upd->closeCursor();
 $insChallenge = $pdo->prepare("INSERT INTO `crm_otp_challenges` (`email`, `otp_hash`, `purpose`, `expires_at`, `attempts`, `max_attempts`, `resend_count`, `last_sent_at`, `is_used`, `temp_payload`) VALUES ('suresh@softwarecrm.com', ?, 'login', DATE_ADD(NOW(), INTERVAL 5 MINUTE), 0, 5, 0, NOW(), 0, ?)");
 $insChallenge->execute([
     $otpHash,
     json_encode(['user_id' => 1, 'name' => 'Suresh Kumar', 'email' => 'suresh@softwarecrm.com', 'role' => 'admin'])
 ]);
+$insChallenge->closeCursor();
+unset($insChallenge, $upd);
 
 // Step 2: Verify OTP to establish authenticated session
 $ch = curl_init("$baseUrl/api/auth.php?action=verify_otp");
@@ -113,8 +117,15 @@ $otpData = json_decode($otpResp, true);
 $authOk = ($otpData && (!empty($otpData['success']) || !empty($otpData['authenticated'])));
 assertTest($authOk, "Authenticated test session established for suresh@softwarecrm.com");
 
+// Refresh connection snapshot after out-of-process HTTP request
+Database::resetConnection();
+$pdo = Database::getConnection();
+
 // Ensure unread notifications exist for testing read/unread
-$pdo->prepare("UPDATE crm_notifications SET is_read = 0 WHERE is_read = 1 LIMIT 5")->execute();
+$updNotifs = $pdo->prepare("UPDATE crm_notifications SET is_read = 0 WHERE is_read = 1 LIMIT 5");
+$updNotifs->execute();
+$updNotifs->closeCursor();
+unset($updNotifs);
 
 // Fetch Notifications: Category = 'all'
 $ch = curl_init('http://127.0.0.1:8000/api/notifications.php?action=get_notifications&category=all');
@@ -211,6 +222,9 @@ $allReadResp = curl_exec($ch);
 curl_close($ch);
 $allReadData = json_decode($allReadResp, true);
 
+Database::resetConnection();
+$pdo = Database::getConnection();
+
 assertTest(isset($allReadData['status']) && $allReadData['status'] === 'success', "mark_all_read API returns success");
 assertTest((int)($allReadData['unread_count'] ?? 1) === 0, "mark_all_read returns unread_count = 0");
 
@@ -222,12 +236,16 @@ assertTest($unreadInDb === 0, "All notifications for user are marked is_read=1 a
 // TEST 7: Privacy & Authorization Check
 // -------------------------------------------------------------
 echo "\n--- TEST 7: Privacy & Authorization Guard ---\n";
+Database::resetConnection();
+$pdo = Database::getConnection();
+
 // Create a private notification belonging strictly to user ID 999
 $pdo->prepare("INSERT INTO crm_notifications (id, user_id, category, event_type, title, message, is_read, created_at) VALUES (888888, 999, 'system', 'private_alert', 'Private to User 999', 'Secret', 0, NOW()) ON DUPLICATE KEY UPDATE is_read=0")->execute();
 
 // Establish session for non-admin employee (User ID 51, role 'member')
 $nonAdminCookie = sys_get_temp_dir() . '/test_notif_nonadmin_cookie.txt';
 if (file_exists($nonAdminCookie)) @unlink($nonAdminCookie);
+$pdo->prepare("INSERT INTO `crm_users` (`id`, `name`, `email`, `role`, `status`, `password_hash`, `created_at`) VALUES (51, 'Ananya Sharma', 'ananya.gmail@gmail.com', 'member', 'active', ?, NOW()) ON DUPLICATE KEY UPDATE `status`='active'")->execute([$otpHash]);
 $insChallenge = $pdo->prepare("INSERT INTO `crm_otp_challenges` (`email`, `otp_hash`, `purpose`, `expires_at`, `attempts`, `max_attempts`, `resend_count`, `last_sent_at`, `is_used`, `temp_payload`) VALUES ('ananya.gmail@gmail.com', ?, 'login', DATE_ADD(NOW(), INTERVAL 5 MINUTE), 0, 5, 0, NOW(), 0, ?)");
 $insChallenge->execute([
     $otpHash,
@@ -288,6 +306,9 @@ $taskResp = curl_exec($ch);
 curl_close($ch);
 $taskData = json_decode($taskResp, true);
 
+Database::resetConnection();
+$pdo = Database::getConnection();
+
 $createdTaskId = $taskData['id'] ?? '';
 $stNotif = $pdo->prepare("SELECT * FROM crm_notifications WHERE category = 'tasks' AND link_id = ?");
 $stNotif->execute([$createdTaskId]);
@@ -307,6 +328,9 @@ if ($createdTaskId) {
     curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
     $toggleResp = curl_exec($ch);
     curl_close($ch);
+
+    Database::resetConnection();
+    $pdo = Database::getConnection();
 
     $stComp = $pdo->prepare("SELECT * FROM crm_notifications WHERE category = 'tasks' AND event_type = 'task_completed' AND link_id = ?");
     $stComp->execute([$createdTaskId]);

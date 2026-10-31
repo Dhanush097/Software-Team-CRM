@@ -69,9 +69,13 @@ class GoogleAuthService {
         }
 
         // Auto-detect based on current server request
-        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
-        $scheme = $isHttps ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+            || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+            || (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on')
+            || str_contains($host, 'onrender.com');
+        $scheme = $isHttps ? 'https' : 'http';
         
         $scriptPath = $_SERVER['SCRIPT_NAME'] ?? '/software_team/api/auth.php';
         $dir = rtrim(str_replace('\\', '/', dirname($scriptPath)), '/');

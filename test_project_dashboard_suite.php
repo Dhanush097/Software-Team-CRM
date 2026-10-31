@@ -52,6 +52,7 @@ function makeRequest($url, $method = 'GET', $data = null, $headers = [], $isMult
     $headerStr = substr($response, 0, $headerSize);
     $body = substr($response, $headerSize);
     curl_close($ch);
+    Database::resetConnection();
 
     $rawHeaders = explode("\r\n", $headerStr);
     $parsedHeaders = [];
@@ -213,7 +214,7 @@ $addTaskRes = makeRequest("$baseUrl/api/tasks.php", 'POST', [
     'assigned_staff' => 'Priya Verma',
     'due_date' => date('Y-m-d', strtotime('+7 days'))
 ]);
-$addTaskOk = ($addTaskRes['code'] === 200 && !empty($addTaskRes['json']['success']) && !empty($addTaskRes['json']['id']));
+$addTaskOk = (in_array($addTaskRes['code'], [200, 201]) && !empty($addTaskRes['json']['success']) && !empty($addTaskRes['json']['id']));
 $newTaskId = $addTaskRes['json']['id'] ?? null;
 logTest("Create Task with project association", $addTaskOk, "Task ID: $newTaskId");
 if (!$addTaskOk) $allPassed = false;

@@ -156,11 +156,14 @@ if (runTest("Create task via API matching Screen 3 and persist to crm_tasks", fu
         'status' => 'To Do'
     ], $cookieJar);
     
-    if ($res['status'] !== 200) return "Expected HTTP 200, got {$res['status']}: {$res['body']}";
+    if ($res['status'] !== 200 && $res['status'] !== 201) return "Expected HTTP 200/201, got {$res['status']}: {$res['body']}";
     if (empty($res['json']['success']) || empty($res['json']['id'])) {
         return "Response did not contain success or task id: {$res['body']}";
     }
     $createdTaskId = $res['json']['id'];
+    
+    Database::resetConnection();
+    $pdo = Database::getConnection();
     
     // Verify in MySQL
     $chk = $pdo->prepare("SELECT * FROM crm_tasks WHERE id = ?");

@@ -27,6 +27,7 @@ function apiPost($endpoint, $payload = []) {
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+    Database::resetConnection();
     return ['code' => $httpCode, 'data' => json_decode($response, true), 'raw' => $response];
 }
 
@@ -40,6 +41,7 @@ function apiGet($endpoint) {
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+    Database::resetConnection();
     return ['code' => $httpCode, 'data' => json_decode($response, true), 'raw' => $response];
 }
 
@@ -132,9 +134,11 @@ $createdId = $resCreate['data']['data']['id'] ?? '';
 assertTest('Created contact received unique ID', !empty($createdId), 'Contact ID is missing');
 
 // Verify DB persistence of all fields
+$pdo = Database::getConnection();
 $stmt = $pdo->prepare("SELECT * FROM crm_contacts WHERE id = ?");
 $stmt->execute([$createdId]);
 $dbRow = $stmt->fetch(PDO::FETCH_ASSOC);
+$stmt->closeCursor();
 
 assertTest('Name persisted in DB', $dbRow && $dbRow['name'] === $newContactData['name'], 'Name mismatch');
 assertTest('Company persisted in DB', $dbRow && $dbRow['company'] === $newContactData['company'], 'Company mismatch');
@@ -148,9 +152,11 @@ assertTest('Tags persisted in DB', $dbRow && strpos($dbRow['tags'], 'Enterprise'
 assertTest('Notes persisted in DB', $dbRow && $dbRow['notes'] === $newContactData['notes'], 'Notes mismatch');
 
 // Verify initial history note logged in crm_history
+$pdo = Database::getConnection();
 $histStmt = $pdo->prepare("SELECT * FROM crm_history WHERE contact_id = ?");
 $histStmt->execute([$createdId]);
 $histRow = $histStmt->fetch(PDO::FETCH_ASSOC);
+$histStmt->closeCursor();
 assertTest('Initial note logged in crm_history', $histRow && !empty($histRow['note_text']), 'History note not logged on create');
 
 // 1E. Duplicate Prevention: Attempt creating with duplicate phone
@@ -180,8 +186,11 @@ $updateData = [
 $resEdit = apiPost('api/pocket_api.php?action=save_contact', $updateData);
 assertTest('Edit contact succeeds with HTTP 200', $resEdit['code'] === 200 && ($resEdit['data']['status'] ?? '') === 'success', 'Edit contact failed');
 
+$pdo = Database::getConnection();
+$stmt = $pdo->prepare("SELECT * FROM crm_contacts WHERE id = ?");
 $stmt->execute([$createdId]);
 $updatedRow = $stmt->fetch(PDO::FETCH_ASSOC);
+$stmt->closeCursor();
 assertTest('Contact name updated in DB', $updatedRow && $updatedRow['name'] === 'Vikram Singhania (Updated)');
 assertTest('Contact location updated in DB', $updatedRow && $updatedRow['address'] === 'Bangalore & London');
 assertTest('No duplicate contact row created', (int)$pdo->query("SELECT COUNT(*) FROM crm_contacts WHERE id = '$createdId'")->fetchColumn() === 1);
@@ -193,8 +202,11 @@ assertTest('Duplicate contact API succeeds', $resDuplicate['code'] === 200 && ($
 $dupId = $resDuplicate['data']['data']['id'] ?? '';
 assertTest('Duplicate received a different unique ID', !empty($dupId) && $dupId !== $createdId, 'Duplicate ID identical or missing');
 
+$pdo = Database::getConnection();
+$stmt = $pdo->prepare("SELECT * FROM crm_contacts WHERE id = ?");
 $stmt->execute([$dupId]);
 $dupRow = $stmt->fetch(PDO::FETCH_ASSOC);
+$stmt->closeCursor();
 assertTest('Duplicate name contains (Copy)', $dupRow && strpos($dupRow['name'], '(Copy)') !== false, 'Copy suffix not found');
 assertTest('Duplicate preserves company', $dupRow && $dupRow['company'] === $updatedRow['company']);
 
@@ -241,12 +253,14 @@ echo "\n--- TEST 6: INVOICE DETAILS & RECORD PAYMENT ---\n";
 // Create a test invoice in crm_cash_ledger for our contact
 $invId = 'INV_TEST_' . time();
 $invNo = 'INV-2026-' . rand(100, 999);
-$pdo->prepare("
+$pdo = Database::getConnection();
+$invIns = $pdo->prepare("
     INSERT INTO crm_cash_ledger 
     (id, invoice_no, client_id, customer_name, title, amount, paid_amount, balance_amount, status, due_date, transaction_date)
     VALUES 
     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-")->execute([
+");
+$invIns->execute([
     $invId,
     $invNo,
     $createdId,
@@ -259,6 +273,7 @@ $pdo->prepare("
     date('Y-m-d', strtotime('+15 days')),
     date('Y-m-d')
 ]);
+$invIns->closeCursor();
 
 // Record a payment of $2500 against this invoice
 $resPay = apiPost('api/ledger.php?action=record_payment', [
@@ -274,17 +289,21 @@ $resPay = apiPost('api/ledger.php?action=record_payment', [
 assertTest('Record payment API succeeds', $resPay['code'] === 200 && ($resPay['data']['status'] ?? '') === 'success', 'Payment failed: ' . $resPay['raw']);
 
 // Verify ledger balance updated
+$pdo = Database::getConnection();
 $invStmt = $pdo->prepare("SELECT * FROM crm_cash_ledger WHERE id = ?");
 $invStmt->execute([$invId]);
 $invRow = $invStmt->fetch(PDO::FETCH_ASSOC);
+$invStmt->closeCursor();
 assertTest('Invoice paid_amount updated to 3500.00', (float)$invRow['paid_amount'] === 3500.00, 'Paid amount is: ' . $invRow['paid_amount']);
 assertTest('Invoice balance_amount updated to 1500.00', (float)$invRow['balance_amount'] === 1500.00, 'Balance is: ' . $invRow['balance_amount']);
 assertTest('Invoice status remains Pending while balance > 0', $invRow['status'] === 'Pending');
 
 // Verify payment record in crm_payments
+$pdo = Database::getConnection();
 $payStmt = $pdo->prepare("SELECT * FROM crm_payments WHERE invoice_id = ?");
 $payStmt->execute([$invId]);
 $payRow = $payStmt->fetch(PDO::FETCH_ASSOC);
+$payStmt->closeCursor();
 assertTest('Payment recorded in crm_payments table', $payRow && (float)$payRow['amount'] === 2500.00, 'crm_payments record missing');
 
 // TEST 7: FINAL PAYMENT SETTLEMENT
@@ -298,8 +317,11 @@ $resPayFull = apiPost('api/ledger.php?action=record_payment', [
 ]);
 assertTest('Final settlement payment succeeds', $resPayFull['code'] === 200);
 
+$pdo = Database::getConnection();
+$invStmt = $pdo->prepare("SELECT * FROM crm_cash_ledger WHERE id = ?");
 $invStmt->execute([$invId]);
 $settledRow = $invStmt->fetch(PDO::FETCH_ASSOC);
+$invStmt->closeCursor();
 assertTest('Invoice balance reduced to 0.00', (float)$settledRow['balance_amount'] === 0.00);
 assertTest('Invoice status automatically updated to Paid', $settledRow['status'] === 'Paid', 'Status is: ' . $settledRow['status']);
 
