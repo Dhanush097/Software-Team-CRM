@@ -43,11 +43,15 @@ class SQLitePDO extends PDO {
         // ON DUPLICATE KEY UPDATE -> ON CONFLICT
         if (preg_match('/\bON\s+DUPLICATE\s+KEY\s+UPDATE\b/i', $sql)) {
             $conflictCol = 'id';
-            if (preg_match('/INSERT\s+INTO\s+[`\'"]?crm_user_settings[`\'"]?/i', $sql)) {
+            if (preg_match('/INSERT\s+INTO\s+[`\'"]?crm_system_settings[`\'"]?/i', $sql)) {
+                $conflictCol = 'setting_key';
+            } elseif (preg_match('/INSERT\s+INTO\s+[`\'"]?crm_user_settings[`\'"]?/i', $sql)) {
                 $conflictCol = 'user_id';
             } elseif (preg_match('/INSERT\s+INTO\s+[`\'"]?([a-zA-Z0-9_]+)[`\'"]?\s*\(([^)]+)\)/i', $sql, $tblM)) {
                 $colsList = array_map('trim', explode(',', str_replace('`', '', $tblM[2])));
-                if (in_array('user_id', $colsList, true) && !in_array('id', $colsList, true)) {
+                if (in_array('setting_key', $colsList, true) && !in_array('id', $colsList, true)) {
+                    $conflictCol = 'setting_key';
+                } elseif (in_array('user_id', $colsList, true) && !in_array('id', $colsList, true)) {
                     $conflictCol = 'user_id';
                 }
             }
@@ -889,12 +893,30 @@ class Database {
                 'compact_mode'            => "INTEGER DEFAULT 0",
                 'updated_at'              => "DATETIME"
             ],
+            'crm_users' => [
+                'employee_id'   => 'TEXT',
+                'password_hash' => "TEXT NOT NULL DEFAULT ''",
+                'role'          => "TEXT NOT NULL DEFAULT 'Superadmin'",
+                'status'        => "TEXT NOT NULL DEFAULT 'active'",
+                'auth_provider' => "TEXT DEFAULT 'email'",
+                'google_id'     => 'TEXT',
+                'avatar_url'    => 'TEXT',
+                'created_at'    => 'DATETIME',
+                'updated_at'    => 'DATETIME',
+                'last_login_at' => 'DATETIME'
+            ],
             'crm_team_staff' => [
                 'company'     => "TEXT DEFAULT 'ABC Tech Solutions'",
                 'location'    => "TEXT DEFAULT 'Bangalore, India'",
                 'website'     => "TEXT DEFAULT 'www.abctech.com'",
                 'bio'         => "TEXT DEFAULT ''",
-                'skills'      => "TEXT DEFAULT ''"
+                'skills'      => "TEXT DEFAULT ''",
+                'initials'    => 'TEXT',
+                'color_class' => "TEXT DEFAULT 'bg-blue-600'",
+                'status'      => "TEXT DEFAULT 'active'",
+                'avatar_url'  => 'TEXT',
+                'created_at'  => 'DATETIME',
+                'updated_at'  => 'DATETIME'
             ]
         ];
 

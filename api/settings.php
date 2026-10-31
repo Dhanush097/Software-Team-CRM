@@ -274,6 +274,39 @@ switch ($action) {
             exit;
         }
 
+        $syncMode = trim((string)($params['mode'] ?? ''));
+
+        // If local database synchronization explicitly requested
+        if ($syncMode === 'local' || $syncMode === 'database') {
+            $staffList = $pdo->query("SELECT `id`, `name`, `email`, `role`, `status` FROM `crm_team_staff`")->fetchAll(PDO::FETCH_ASSOC);
+            $localSynced = 0;
+            foreach ($staffList as $stf) {
+                $stfEmail = strtolower(trim((string)$stf['email']));
+                if (empty($stfEmail)) continue;
+                $checkUser = $pdo->prepare("SELECT `id` FROM `crm_users` WHERE LOWER(`email`) = ? LIMIT 1");
+                $checkUser->execute([$stfEmail]);
+                $u = $checkUser->fetch(PDO::FETCH_ASSOC);
+                $stfStatus = (strtolower(trim($stf['status'] ?? '')) === 'inactive') ? 'suspended' : 'active';
+                if ($u) {
+                    $pdo->prepare("UPDATE `crm_users` SET `name` = ?, `role` = ?, `status` = ?, `employee_id` = ?, `updated_at` = NOW() WHERE `id` = ?")
+                        ->execute([$stf['name'], $stf['role'] ?? 'member', $stfStatus, $stf['id'], $u['id']]);
+                }
+                $localSynced++;
+            }
+            $nowStr = date('Y-m-d H:i:s');
+            $pdo->prepare("INSERT INTO `crm_system_settings` (`setting_key`, `setting_value`, `updated_at`) VALUES ('last_synced_at', ?, NOW()) ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`), `updated_at` = NOW()")->execute([$nowStr]);
+            $pdo->prepare("INSERT INTO `crm_system_settings` (`setting_key`, `setting_value`, `updated_at`) VALUES ('last_sync_status', 'success', NOW()) ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`), `updated_at` = NOW()")->execute();
+
+            echo json_encode([
+                'success'        => true,
+                'mode'           => 'database',
+                'synced_count'   => $localSynced,
+                'last_synced_at' => date('M j, Y g:i A', strtotime($nowStr)),
+                'message'        => "Employee registry synchronized successfully from internal database ({$localSynced} staff records active)."
+            ]);
+            exit;
+        }
+
         // 1. Fetch fresh employee records from Google Sheets
         $fetchRes = GoogleSheetsAuthService::fetchEmployeeRecords(true);
 
@@ -334,10 +367,9 @@ switch ($action) {
                 $updatedStaff++;
             } else {
                 // Insert new staff member
-                $newId = 'staff_' . bin2hex(random_bytes(6));
                 $initials = strtoupper(substr($name, 0, 1) . (strpos($name, ' ') !== false ? substr(explode(' ', $name)[1], 0, 1) : ''));
-                $insStaff = $pdo->prepare("INSERT INTO `crm_team_staff` (`id`, `name`, `role`, `email`, `company`, `department`, `location`, `status`, `initials`, `created_at`, `updated_at`) VALUES (?, ?, ?, ?, 'ABC Tech Solutions', 'Engineering', 'Bangalore, India', ?, ?, NOW(), NOW())");
-                $insStaff->execute([$newId, $name, ucfirst($role), $email, $status, $initials]);
+                $insStaff = $pdo->prepare("INSERT INTO `crm_team_staff` (`name`, `role`, `email`, `company`, `department`, `location`, `status`, `initials`, `created_at`, `updated_at`) VALUES (?, ?, ?, 'ABC Tech Solutions', 'Engineering', 'Bangalore, India', ?, ?, NOW(), NOW())");
+                $insStaff->execute([$name, ucfirst($role), $email, $status, $initials]);
                 $insertedStaff++;
             }
 
@@ -414,10 +446,9 @@ switch ($action) {
             $updStaff = $pdo->prepare("UPDATE `crm_team_staff` SET `name` = ?, `phone` = ?, `company` = ?, `department` = ?, `location` = ?, `bio` = ?, `updated_at` = NOW() WHERE `id` = ?");
             $updStaff->execute([$name, $phone, $company, $dept, $location, $bio, $existingStaff['id']]);
         } else {
-            $newId = 'staff_' . bin2hex(random_bytes(6));
             $initials = strtoupper(substr($name, 0, 1) . (strpos($name, ' ') !== false ? substr(explode(' ', $name)[1], 0, 1) : ''));
-            $insStaff = $pdo->prepare("INSERT INTO `crm_team_staff` (`id`, `name`, `role`, `email`, `phone`, `company`, `department`, `location`, `bio`, `initials`, `status`, `created_at`, `updated_at`) VALUES (?, ?, 'Member', ?, ?, ?, ?, ?, ?, ?, 'Active', NOW(), NOW())");
-            $insStaff->execute([$newId, $name, $userEmail, $phone, $company, $dept, $location, $bio, $initials]);
+            $insStaff = $pdo->prepare("INSERT INTO `crm_team_staff` (`name`, `role`, `email`, `phone`, `company`, `department`, `location`, `bio`, `initials`, `status`, `created_at`, `updated_at`) VALUES (?, 'Member', ?, ?, ?, ?, ?, ?, ?, 'Active', NOW(), NOW())");
+            $insStaff->execute([$name, $userEmail, $phone, $company, $dept, $location, $bio, $initials]);
         }
 
         // Update session name

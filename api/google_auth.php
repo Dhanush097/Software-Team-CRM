@@ -335,15 +335,39 @@ class GoogleAuthService {
             ];
         }
 
+        try {
+            Database::ensureSchema($pdo, Database::getEngine());
+        } catch (Throwable $e) {}
+
         // 1. Look up in crm_users (by google_id OR case-insensitive email)
-        $userStmt = $pdo->prepare("SELECT `id`, `name`, `email`, `employee_id`, `role`, `status`, `google_id`, `avatar_url` FROM `crm_users` WHERE (`google_id` = ? AND `google_id` != '') OR LOWER(`email`) = ? LIMIT 1");
-        $userStmt->execute([$googleId, $email]);
-        $crmUser = $userStmt->fetch(PDO::FETCH_ASSOC);
+        $crmUser = null;
+        try {
+            $userStmt = $pdo->prepare("SELECT `id`, `name`, `email`, `employee_id`, `role`, `status`, `google_id`, `avatar_url` FROM `crm_users` WHERE (`google_id` = ? AND `google_id` != '') OR LOWER(`email`) = ? LIMIT 1");
+            $userStmt->execute([$googleId, $email]);
+            $crmUser = $userStmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            Database::ensureSchema($pdo, Database::getEngine());
+            try {
+                $userStmt = $pdo->prepare("SELECT `id`, `name`, `email`, `employee_id`, `role`, `status`, `google_id`, `avatar_url` FROM `crm_users` WHERE (`google_id` = ? AND `google_id` != '') OR LOWER(`email`) = ? LIMIT 1");
+                $userStmt->execute([$googleId, $email]);
+                $crmUser = $userStmt->fetch(PDO::FETCH_ASSOC);
+            } catch (Throwable $e2) {}
+        }
 
         // 2. Look up in employee registry (crm_team_staff)
-        $staffStmt = $pdo->prepare("SELECT `id`, `name`, `role`, `email`, `status`, `avatar_url` FROM `crm_team_staff` WHERE LOWER(`email`) = ? LIMIT 1");
-        $staffStmt->execute([$email]);
-        $staff = $staffStmt->fetch(PDO::FETCH_ASSOC);
+        $staff = null;
+        try {
+            $staffStmt = $pdo->prepare("SELECT `id`, `name`, `role`, `email`, `status`, `avatar_url` FROM `crm_team_staff` WHERE LOWER(`email`) = ? LIMIT 1");
+            $staffStmt->execute([$email]);
+            $staff = $staffStmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            Database::ensureSchema($pdo, Database::getEngine());
+            try {
+                $staffStmt = $pdo->prepare("SELECT `id`, `name`, `role`, `email`, `status`, `avatar_url` FROM `crm_team_staff` WHERE LOWER(`email`) = ? LIMIT 1");
+                $staffStmt->execute([$email]);
+                $staff = $staffStmt->fetch(PDO::FETCH_ASSOC);
+            } catch (Throwable $e2) {}
+        }
 
         // 3. User Registry Authorization & Auto-Provisioning Check
         if (!$crmUser) {
@@ -468,15 +492,39 @@ class GoogleAuthService {
             return ['success' => false, 'error' => 'Invalid email address returned by Google.'];
         }
 
+        try {
+            Database::ensureSchema($pdo, Database::getEngine());
+        } catch (Throwable $e) {}
+
         // 1. Look up in crm_users (by google_id OR case-insensitive email)
-        $userStmt = $pdo->prepare("SELECT `id`, `name`, `email`, `employee_id`, `role`, `status`, `google_id`, `avatar_url` FROM `crm_users` WHERE (`google_id` = ? AND `google_id` != '') OR LOWER(`email`) = ? LIMIT 1");
-        $userStmt->execute([$googleId, $email]);
-        $crmUser = $userStmt->fetch(PDO::FETCH_ASSOC);
+        $crmUser = null;
+        try {
+            $userStmt = $pdo->prepare("SELECT `id`, `name`, `email`, `employee_id`, `role`, `status`, `google_id`, `avatar_url` FROM `crm_users` WHERE (`google_id` = ? AND `google_id` != '') OR LOWER(`email`) = ? LIMIT 1");
+            $userStmt->execute([$googleId, $email]);
+            $crmUser = $userStmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            Database::ensureSchema($pdo, Database::getEngine());
+            try {
+                $userStmt = $pdo->prepare("SELECT `id`, `name`, `email`, `employee_id`, `role`, `status`, `google_id`, `avatar_url` FROM `crm_users` WHERE (`google_id` = ? AND `google_id` != '') OR LOWER(`email`) = ? LIMIT 1");
+                $userStmt->execute([$googleId, $email]);
+                $crmUser = $userStmt->fetch(PDO::FETCH_ASSOC);
+            } catch (Throwable $e2) {}
+        }
 
         // 2. Look up in employee registry (crm_team_staff)
-        $staffStmt = $pdo->prepare("SELECT `id`, `name`, `role`, `email`, `status`, `avatar_url` FROM `crm_team_staff` WHERE LOWER(`email`) = ? LIMIT 1");
-        $staffStmt->execute([$email]);
-        $staff = $staffStmt->fetch(PDO::FETCH_ASSOC);
+        $staff = null;
+        try {
+            $staffStmt = $pdo->prepare("SELECT `id`, `name`, `role`, `email`, `status`, `avatar_url` FROM `crm_team_staff` WHERE LOWER(`email`) = ? LIMIT 1");
+            $staffStmt->execute([$email]);
+            $staff = $staffStmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            Database::ensureSchema($pdo, Database::getEngine());
+            try {
+                $staffStmt = $pdo->prepare("SELECT `id`, `name`, `role`, `email`, `status`, `avatar_url` FROM `crm_team_staff` WHERE LOWER(`email`) = ? LIMIT 1");
+                $staffStmt->execute([$email]);
+                $staff = $staffStmt->fetch(PDO::FETCH_ASSOC);
+            } catch (Throwable $e2) {}
+        }
 
         // 3. User Registry Authorization & Auto-Provisioning Check
         if (!$crmUser) {

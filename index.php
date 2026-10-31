@@ -7845,11 +7845,20 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                   <div class="min-w-0 flex-1">
                     <p class="font-bold text-xs" x-text="syncFeedback.message"></p>
                     <template x-if="syncFeedback.instructions && syncFeedback.instructions.length > 0">
-                      <ul class="mt-2 space-y-1 text-[11px] list-disc list-inside text-amber-800">
-                        <template x-for="(inst, idx) in syncFeedback.instructions" :key="idx">
-                          <li x-text="inst"></li>
-                        </template>
-                      </ul>
+                      <div>
+                        <ul class="mt-2 space-y-1 text-[11px] list-disc list-inside text-amber-800">
+                          <template x-for="(inst, idx) in syncFeedback.instructions" :key="idx">
+                            <li x-text="inst"></li>
+                          </template>
+                        </ul>
+                        <div class="mt-2.5 pt-2 border-t border-amber-200/60 flex items-center gap-2">
+                          <button type="button" @click="syncData('local')" class="px-2.5 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded-lg text-[11px] font-semibold transition inline-flex items-center gap-1.5 shadow-xs">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span>Sync from Internal Database</span>
+                          </button>
+                          <span class="text-[10px] text-amber-700">Refresh team registry using local database</span>
+                        </div>
+                      </div>
                     </template>
                   </div>
                   <button type="button" @click="syncFeedback = null" class="text-slate-400 hover:text-slate-600 p-1 touch-press">
@@ -8116,6 +8125,9 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                   <template x-if="settingsDiagnostics?.google_sheets?.connection_status === 'CONNECTED'">
                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800" x-text="settingsDiagnostics?.google_sheets?.permission_level === 'Editor' ? 'Connected (Editor)' : 'Connected (Viewer)'">Connected</span>
                   </template>
+                  <template x-if="settingsDiagnostics?.google_sheets?.connection_status === 'MISSING_CREDENTIALS'">
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-100 text-blue-800" title="Operating on Local Database. Set GOOGLE_SERVICE_ACCOUNT_KEY in environment to link live Google Sheets.">Database Mode (Active)</span>
+                  </template>
                   <template x-if="settingsDiagnostics?.google_sheets?.connection_status === 'AUTHENTICATION_FAILED'">
                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-100 text-rose-800" title="Google rejected service account JWT assertion">Auth Failed</span>
                   </template>
@@ -8134,16 +8146,16 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                   <template x-if="settingsDiagnostics?.google_sheets?.connection_status === 'CONFIGURATION_ERROR'">
                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-200 text-slate-700" title="Missing credentials or spreadsheet ID">Config Error</span>
                   </template>
-                  <template x-if="!['CONNECTED','AUTHENTICATION_FAILED','PERMISSION_DENIED','SPREADSHEET_NOT_FOUND','WORKSHEET_NOT_FOUND','API_NOT_ENABLED','CONFIGURATION_ERROR'].includes(settingsDiagnostics?.google_sheets?.connection_status)">
+                  <template x-if="!['CONNECTED','MISSING_CREDENTIALS','AUTHENTICATION_FAILED','PERMISSION_DENIED','SPREADSHEET_NOT_FOUND','WORKSHEET_NOT_FOUND','API_NOT_ENABLED','CONFIGURATION_ERROR'].includes(settingsDiagnostics?.google_sheets?.connection_status)">
                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800" x-text="settingsDiagnostics?.google_sheets?.connection_status || 'Checking...'">Checking...</span>
                   </template>
                 </div>
                 <div class="space-y-1 text-[10px] text-slate-500 font-mono">
                   <p>Spreadsheet: <span class="text-slate-800 font-bold" x-text="settingsDiagnostics?.google_sheets?.spreadsheet_id ? (settingsDiagnostics.google_sheets.spreadsheet_id.substring(0, 16) + '...') : '1eC09oWaqhe2T...'"></span> (Sheet2)</p>
                   <p>Target Range: <span class="text-slate-800 font-semibold" x-text="settingsDiagnostics?.google_sheets?.target_range || 'Sheet2!A1:Z1000'"></span></p>
-                  <p>Service Account: <span class="text-slate-700 font-semibold truncate block max-w-full" x-text="settingsDiagnostics?.google_sheets?.service_account_email || 'Configured via JSON Key'"></span></p>
+                  <p>Service Account: <span class="text-slate-700 font-semibold truncate block max-w-full" x-text="settingsDiagnostics?.google_sheets?.service_account_email && settingsDiagnostics.google_sheets.service_account_email !== 'None configured' ? settingsDiagnostics.google_sheets.service_account_email : 'Database Registry (Optional Google Sheets)'"></span></p>
                 </div>
-                <template x-if="settingsDiagnostics?.google_sheets?.error">
+                <template x-if="settingsDiagnostics?.google_sheets?.error && settingsDiagnostics?.google_sheets?.connection_status !== 'MISSING_CREDENTIALS'">
                   <div class="mt-1 p-2 rounded bg-rose-50 border border-rose-100 text-[10px] text-rose-700">
                     <p class="font-bold flex items-center gap-1">
                       <svg class="w-3 h-3 text-rose-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
@@ -14209,18 +14221,22 @@ function softwareCRMApp(serverUser) {
           }
         },
 
-        async syncData() {
+        async syncData(mode = null) {
           if (this.isSyncing) return;
           this.isSyncing = true;
           this.syncFeedback = null;
           try {
+            const bodyPayload = { csrf_token: this.csrfToken };
+            if (mode) {
+              bodyPayload.mode = mode;
+            }
             const res = await fetch('api/settings.php?action=sync', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': this.csrfToken
               },
-              body: JSON.stringify({ csrf_token: this.csrfToken })
+              body: JSON.stringify(bodyPayload)
             });
             const data = await res.json();
             if (data && data.success) {

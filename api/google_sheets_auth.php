@@ -108,12 +108,26 @@ class GoogleSheetsAuthService {
 
         $configuredPath = trim((string)(getenv('GOOGLE_SERVICE_ACCOUNT_JSON') ?: ($_ENV['GOOGLE_SERVICE_ACCOUNT_JSON'] ?? '')));
         $rawJson = trim((string)(getenv('GOOGLE_SERVICE_ACCOUNT_KEY') ?: ($_ENV['GOOGLE_SERVICE_ACCOUNT_KEY'] ?? '')));
+        $b64Json = trim((string)(getenv('GOOGLE_SERVICE_ACCOUNT_B64') ?: ($_ENV['GOOGLE_SERVICE_ACCOUNT_B64'] ?? '')));
 
-        // If raw JSON string was supplied in env
-        if (!empty($rawJson) && str_starts_with($rawJson, '{')) {
-            $parsed = json_decode($rawJson, true);
-            if (is_array($parsed) && !empty($parsed['client_email']) && !empty($parsed['private_key'])) {
-                return $parsed;
+        if (empty($rawJson) && !empty($b64Json)) {
+            $rawJson = $b64Json;
+        }
+
+        // If raw JSON string or Base64 was supplied in env
+        if (!empty($rawJson)) {
+            if (str_starts_with($rawJson, '{')) {
+                $parsed = json_decode($rawJson, true);
+                if (is_array($parsed) && !empty($parsed['client_email']) && !empty($parsed['private_key'])) {
+                    return $parsed;
+                }
+            }
+            $decoded = base64_decode($rawJson, true);
+            if ($decoded && str_starts_with(trim($decoded), '{')) {
+                $parsed = json_decode($decoded, true);
+                if (is_array($parsed) && !empty($parsed['client_email']) && !empty($parsed['private_key'])) {
+                    return $parsed;
+                }
             }
         }
 

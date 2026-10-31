@@ -25,7 +25,8 @@ if (!$pdo) {
     die("Database connection failed.\n");
 }
 
-// Setup authenticated admin session
+// Setup authenticated admin session and ensure baseline password
+$pdo->prepare("UPDATE `crm_users` SET `password_hash` = ? WHERE `id` = 1")->execute([password_hash('Password@123', PASSWORD_DEFAULT)]);
 $_SESSION['auth_user'] = [
     'id'          => 1,
     'name'        => 'Suresh Kumar',
