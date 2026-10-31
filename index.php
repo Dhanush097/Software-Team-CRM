@@ -2421,13 +2421,6 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               <span x-show="!sidebarCollapsed" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#E9D5C2] text-[#651717] dark:bg-[#2B1317] dark:text-[#E9D5C2]" x-text="invoices.length"></span>
             </button>
 
-            <!-- 8. Documents & Folders -->
-            <button @click="openGlobalFolders()" 
-              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-[#655A54] dark:text-[#D9C0AB] hover:bg-[#F1E7D9] dark:hover:bg-[#2B1317] hover:text-[#25211F] dark:hover:text-white"
-              :title="sidebarCollapsed ? 'Documents & Folders' : ''">
-              <svg class="w-4 h-4 shrink-0 text-[#8A7D73]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-              <span x-show="!sidebarCollapsed" class="whitespace-nowrap">Documents & Folders</span>
-            </button>
 
             <!-- 9. Team -->
             <button @click="navigateTo('team')" 
@@ -2880,12 +2873,6 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                   <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300" x-text="invoices.length">15</span>
                 </button>
 
-                <!-- 8. Documents / Media Folders -->
-                <button @click="openGlobalFolders(); sideDrawerOpen = false" 
-                  class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                  <span>Documents & Folders</span>
-                </button>
 
                 <!-- 9. Team -->
                 <button @click="navigateTo('team'); sideDrawerOpen = false" 
