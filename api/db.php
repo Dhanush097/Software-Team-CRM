@@ -542,10 +542,13 @@ class Database {
                 `title`       TEXT NOT NULL,
                 `event_date`  DATE NOT NULL,
                 `event_time`  TEXT DEFAULT '10:00 AM',
+                `end_time`    TEXT DEFAULT '',
                 `category`    TEXT DEFAULT 'Meeting',
                 `color`       TEXT DEFAULT '#2563eb',
+                `location`    TEXT DEFAULT '',
                 `description` TEXT,
-                `created_at`  DATETIME DEFAULT CURRENT_TIMESTAMP
+                `created_at`  DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`  DATETIME DEFAULT CURRENT_TIMESTAMP
             )",
             "CREATE TABLE IF NOT EXISTS `crm_notifications` (
                 `id`           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -917,6 +920,13 @@ class Database {
                 'avatar_url'  => 'TEXT',
                 'created_at'  => 'DATETIME',
                 'updated_at'  => 'DATETIME'
+            ],
+            'crm_calendar_events' => [
+                'end_time'    => "TEXT DEFAULT ''",
+                'location'    => "TEXT DEFAULT ''",
+                'color'       => "TEXT DEFAULT '#2563eb'",
+                'description' => "TEXT DEFAULT ''",
+                'updated_at'  => "DATETIME"
             ]
         ];
 

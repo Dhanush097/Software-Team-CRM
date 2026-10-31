@@ -17224,7 +17224,7 @@ function softwareCRMApp(serverUser) {
               await this.loadCalendarEvents();
               this.selectCalendarDate(this.eventForm.event_date);
             } else {
-              this.showToast(result.message || 'Failed to save event', 'error');
+              this.showToast((result && (result.message || result.error)) || 'Failed to save event', 'error');
             }
           } catch (e) {
             this.showToast('Network error saving event', 'error');
