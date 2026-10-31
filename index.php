@@ -2700,11 +2700,30 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               </button>
             </template>
 
-            <!-- Screen 4: Contact detail Three dots menu -->
+            <!-- Screen 4: Contact detail: Add Member, Delete Member & Three dots menu -->
             <template x-if="!bulkMode && currentView === 'contact_detail'">
-              <button @click="openContactActionMenu(activeContact)" class="p-1.5 text-slate-500 hover:text-slate-800 touch-press">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
-              </button>
+              <div class="flex items-center gap-1 sm:gap-1.5">
+                <!-- Add Member Button -->
+                <button type="button" @click="openAddContactModal()" 
+                  class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 touch-press transition" 
+                  title="Add Member">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                  <span class="text-[11px] font-bold">Add Member</span>
+                </button>
+
+                <!-- Delete Member Button -->
+                <button type="button" @click="openDeleteContactModal(activeContact)" 
+                  class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 font-bold text-xs flex items-center gap-1.5 touch-press transition" 
+                  title="Delete Member">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  <span class="text-[11px] font-bold">Delete</span>
+                </button>
+
+                <!-- Three dots action menu -->
+                <button type="button" @click="openContactActionMenu(activeContact)" class="p-1.5 text-slate-500 hover:text-slate-800 touch-press rounded-lg" title="More Options">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                </button>
+              </div>
             </template>
 
             <!-- Screen 5B: Project Details Three dots menu -->
@@ -2721,11 +2740,30 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               </button>
             </template>
 
-            <!-- Screen 2: Team Member Details Three dots menu (Screen 2 Reference) -->
+            <!-- Screen 2: Team Member Details: Add Member, Delete Member & Three dots menu -->
             <template x-if="!bulkMode && currentView === 'team_detail'">
-              <button @click="openMemberActionMenu(activeTeamMember)" class="p-1.5 text-slate-500 hover:text-slate-800 touch-press" title="Member Actions">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
-              </button>
+              <div class="flex items-center gap-1 sm:gap-1.5">
+                <!-- Add Member Button -->
+                <button type="button" @click="openAddTeamMemberModal()" 
+                  class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 touch-press transition" 
+                  title="Add Member">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                  <span class="text-[11px] font-bold">Add Member</span>
+                </button>
+
+                <!-- Delete Member Button -->
+                <button type="button" @click="deleteTeamMember(activeTeamMember)" 
+                  class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 font-bold text-xs flex items-center gap-1.5 touch-press transition" 
+                  title="Delete Member">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  <span class="text-[11px] font-bold">Delete</span>
+                </button>
+
+                <!-- Three dots menu -->
+                <button type="button" @click="openMemberActionMenu(activeTeamMember)" class="p-1.5 text-slate-500 hover:text-slate-800 touch-press rounded-lg" title="Member Actions">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                </button>
+              </div>
             </template>
           </div>
         </header>
@@ -8591,6 +8629,12 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
         </div>
 
         <div class="space-y-1 text-xs font-bold text-slate-700">
+          <!-- Add Member -->
+          <button @click="openAddContactModal(); modalContactMenuOpen = false;" class="w-full py-2.5 px-3 rounded-xl hover:bg-blue-50 text-blue-600 flex items-center gap-3 text-left touch-press font-bold">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            <span>Add Member</span>
+          </button>
+
           <!-- View Details -->
           <template x-if="currentView !== 'contact_detail'">
             <button @click="viewContactDetail(actionContact); modalContactMenuOpen = false;" class="w-full py-2.5 px-3 rounded-xl hover:bg-slate-50 flex items-center gap-3 text-left touch-press">
@@ -8669,6 +8713,10 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
           <button @click="modalContactMoreActionsOpen = false" class="text-slate-400 hover:text-slate-700 text-lg font-bold">&times;</button>
         </div>
         <div class="space-y-1 text-xs font-bold text-slate-700">
+          <button @click="openAddContactModal(); modalContactMoreActionsOpen = false;" class="w-full py-2.5 px-3 rounded-xl hover:bg-blue-50 text-blue-600 flex items-center gap-3 text-left font-bold">
+            <span class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">➕</span>
+            <span>Add Member</span>
+          </button>
           <button @click="triggerCallAction(activeContact); modalContactMoreActionsOpen = false;" class="w-full py-2.5 px-3 rounded-xl hover:bg-slate-50 flex items-center gap-3 text-left">
             <span class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">📞</span>
             <span>Make Phone Call</span>
@@ -9484,6 +9532,12 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
         </div>
 
         <div class="space-y-1 text-xs font-bold text-slate-700">
+          <!-- Add Member -->
+          <button @click="openAddTeamMemberModal(); modalMemberMenuOpen = false;" class="w-full py-2.5 px-3 rounded-xl hover:bg-blue-50 text-blue-600 flex items-center gap-3 text-left touch-press font-bold">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            <span>Add Member</span>
+          </button>
+
           <!-- Edit Profile -->
           <button @click="openEditMemberModal(activeTeamMember); modalMemberMenuOpen = false;" class="w-full py-2.5 px-3 rounded-xl hover:bg-slate-50 flex items-center gap-3 text-left touch-press">
             <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
