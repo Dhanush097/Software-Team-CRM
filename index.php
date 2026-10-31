@@ -1676,15 +1676,8 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
             </div>
           </div>
 
-          <!-- Top Right Controls: Enter CRM, Animation Video & Theme Toggle -->
+          <!-- Top Right Controls: Enter CRM & Theme Toggle -->
           <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <!-- Animation Video Toggle Button -->
-            <button type="button" @click="playIntroVideo()"
-              title="Watch Animation Video"
-              class="px-2.5 sm:px-3 py-1.5 rounded-xl border border-[#D7C4B5] bg-[#E9D5C2]/70 hover:bg-[#E9D5C2] text-[#651717] dark:bg-[#781B1B]/40 dark:text-[#E9D5C2] dark:hover:bg-[#781B1B]/70 text-xs font-bold flex items-center gap-1.5 shadow-xs transition touch-press">
-              <span>🎬 Video</span>
-            </button>
-
             <!-- Enter CRM Button -->
             <button type="button" @click="enterCRM()"
               class="px-3 sm:px-4 py-1.5 rounded-xl border border-[#D7C4B5] bg-[#781B1B] hover:bg-[#922626] active:bg-[#551414] text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-[#781B1B]/25 transition touch-press focus:outline-none focus:ring-2 focus:ring-[#781B1B]">
@@ -1806,20 +1799,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                 <span class="text-[10px] sm:text-xs font-extrabold text-[#651717] dark:text-[#E9D5C2] tracking-wide truncate">ENTERPRISE TEAM COLLABORATION</span>
               </div>
 
-              <!-- Segmented View Mode Toggle: Live Preview vs Animation Video -->
-              <div class="inline-flex items-center p-0.5 rounded-xl bg-[#F8F4EC] dark:bg-[#2B1317] border border-[#E8DDD1] text-[10px] font-bold shrink-0" @click.stop>
-                <button type="button" @click="showAnimationVideo = false"
-                  class="px-2.5 py-1 rounded-lg transition"
-                  :class="!showAnimationVideo ? 'bg-[#781B1B] text-white shadow-xs' : 'text-[#655A54] dark:text-[#D9C0AB] hover:text-[#25211F]'">
-                  <span>📊 Live Preview</span>
-                </button>
-                <button type="button" @click="playIntroVideo()"
-                  class="px-2.5 py-1 rounded-lg transition flex items-center gap-1.5"
-                  :class="showAnimationVideo ? 'bg-[#781B1B] text-white shadow-xs' : 'text-[#655A54] dark:text-[#D9C0AB] hover:text-[#25211F]'">
-                  <span>🎬 Animation Video</span>
-                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                </button>
-              </div>
+
 
               <!-- Team Avatars -->
               <div class="hidden md:flex items-center gap-1.5 shrink-0">
@@ -1833,64 +1813,8 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               </div>
             </div>
 
-            <!-- MODE 1: ANIMATION VIDEO PLAYER -->
-            <div data-component="CRMAnimationVideoPlayer"
-              x-show="showAnimationVideo"
-              x-transition:enter="transition ease-out duration-300"
-              x-transition:enter-start="opacity-0 scale-98"
-              x-transition:enter-end="opacity-100 scale-100"
-              class="w-full mt-3 sm:mt-4 rounded-xl sm:rounded-2xl overflow-hidden border border-[#E8DDD1] dark:border-[#3D1C21] bg-black relative shadow-lg group/video"
-              @click.stop>
-              
-              <video id="crmWelcomeIntroVideo"
-                autoplay
-                loop
-                muted
-                playsinline
-                class="w-full h-44 sm:h-64 md:h-72 object-cover bg-black cursor-pointer"
-                @click="toggleVideoPlay()"
-                @timeupdate="onVideoTimeUpdate($event)">
-                <source src="data/crm_intro_animation.webm" type="video/webm">
-                Your browser does not support HTML5 video.
-              </video>
-
-              <!-- Video Overlay Badge -->
-              <div class="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold pointer-events-none">
-                <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
-                <span>SOFTWARE CRM ANIMATION VIDEO</span>
-              </div>
-
-              <!-- Custom Video Controls Overlay -->
-              <div class="absolute inset-x-0 bottom-0 p-2 sm:p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-center justify-between text-white text-xs gap-2 select-none">
-                <!-- Play/Pause -->
-                <button type="button" @click.stop="toggleVideoPlay()" class="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition touch-press" :title="isVideoPlaying ? 'Pause' : 'Play'">
-                  <svg x-show="isVideoPlaying" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                  <svg x-show="!isVideoPlaying" style="display:none;" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
-                </button>
-
-                <!-- Video Timeline Scrubber Bar -->
-                <div class="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden cursor-pointer" @click.stop="seekVideo($event)">
-                  <div class="h-full bg-gradient-to-r from-[#781B1B] to-[#E9D5C2]" :style="'width: ' + videoProgress + '%'"></div>
-                </div>
-
-                <!-- Time indicator -->
-                <span class="text-[10px] font-mono text-white/90 shrink-0" x-text="videoTimeText">0:00 / 0:05</span>
-
-                <!-- Mute / Unmute Button -->
-                <button type="button" @click.stop="toggleVideoMute()" class="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition touch-press" :title="isVideoMuted ? 'Unmute' : 'Mute'">
-                  <svg x-show="!isVideoMuted" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.763L4.707 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.707l3.676-3.763a1 1 0 011.000-.161zM14.657 5.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-2.929 6.657 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-2.343-5.243 1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                  <svg x-show="isVideoMuted" style="display:none;" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.763L4.707 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.707l3.676-3.763a1 1 0 011.000-.161zm6.91 3.217a1 1 0 010 1.414L14.414 9.586l1.879 1.879a1 1 0 11-1.414 1.414L13 11l-1.879 1.879a1 1 0 01-1.414-1.414l1.879-1.879-1.879-1.879a1 1 0 011.414-1.414L13 8.172l1.879-1.879a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                </button>
-
-                <!-- Enter CRM CTA inside Video Controls -->
-                <button type="button" @click.stop="enterCRM()" class="px-2.5 py-1 rounded-md bg-[#781B1B] hover:bg-[#922626] text-white text-[10px] font-bold shrink-0 transition">
-                  Enter CRM &rarr;
-                </button>
-              </div>
-            </div>
-
-            <!-- MODE 2: 2-COLUMN GRID LIVE WORKSPACE PREVIEW -->
-            <div x-show="!showAnimationVideo" class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mt-3 sm:mt-4 items-center">
+            <!-- 2-COLUMN GRID LIVE WORKSPACE PREVIEW -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mt-3 sm:mt-4 items-center">
               
               <!-- Left Column: Animated Dashboard Preview -->
               <div data-component="DashboardPreview"
@@ -2284,30 +2208,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                   </div>
                 </template>
 
-                <!-- Instant OTP autofill helper -->
-                <div class="mt-2 text-center" x-data="{ fetchingOtp: false }">
-                  <button type="button" @click="
-                    fetchingOtp = true;
-                    fetch('api/auth.php?action=get_latest_otp&email=' + encodeURIComponent(otpState.email))
-                      .then(r => r.json())
-                      .then(d => {
-                        fetchingOtp = false;
-                        if (d.success && d.otp) {
-                          const chars = d.otp.split('');
-                          for (let i = 0; i < 4; i++) { otpState.digits[i] = chars[i] || ''; }
-                          submitVerifyOtp();
-                        } else {
-                          otpState.errorMessage = d.error || 'Please check your email inbox for the 4-digit code.';
-                        }
-                      })
-                      .catch(e => {
-                        fetchingOtp = false;
-                        otpState.errorMessage = 'Please check your email inbox for the code.';
-                      });
-                  " class="text-[11px] text-[#781B1B] font-semibold hover:underline inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#E8DDD1]">
-                    <span x-text="fetchingOtp ? 'Checking...' : 'Instant OTP Autofill'"></span>
-                  </button>
-                </div>
+
               </div>
 
               <!-- OTP Success Banner -->
@@ -12377,7 +12278,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
         showPassword: false,
 
         // Animation Video Player State
-        showAnimationVideo: true,
+        showAnimationVideo: false,
         isVideoPlaying: true,
         isVideoMuted: true,
         videoProgress: 0,
