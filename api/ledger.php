@@ -208,6 +208,20 @@ if ($method === 'GET') {
         $payStmt->execute([$inv['id'], $inv['invoice_no']]);
         $payments = $payStmt->fetchAll(PDO::FETCH_ASSOC);
 
+        $amt = (float)$inv['amount'];
+        $paid = (float)($inv['paid_amount'] ?? 0);
+        $bal = (float)($inv['balance_amount'] ?? 0);
+        $st = strtolower(trim($inv['status'] ?? 'pending'));
+        if ($st === 'paid') {
+            $paid = ($paid > 0) ? $paid : $amt;
+            $bal = 0.0;
+        } else {
+            if ($bal <= 0 && $paid < $amt) {
+                $bal = max(0.0, round($amt - $paid, 2));
+            }
+        }
+        $inv['paid_amount'] = $paid;
+        $inv['balance_amount'] = $bal;
         $inv['items'] = $items;
         $inv['payments'] = $payments;
 
@@ -235,9 +249,23 @@ if ($method === 'GET') {
             $stmt->execute($params);
             $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Populate items array for each record
+            // Populate items array for each record & normalize balance
             foreach ($records as &$r) {
                 $r['items'] = getInvoiceItems($pdo, $r);
+                $amt = (float)$r['amount'];
+                $paid = (float)($r['paid_amount'] ?? 0);
+                $bal = (float)($r['balance_amount'] ?? 0);
+                $st = strtolower(trim($r['status'] ?? 'pending'));
+                if ($st === 'paid') {
+                    $paid = ($paid > 0) ? $paid : $amt;
+                    $bal = 0.0;
+                } else {
+                    if ($bal <= 0 && $paid < $amt) {
+                        $bal = max(0.0, round($amt - $paid, 2));
+                    }
+                }
+                $r['paid_amount'] = $paid;
+                $r['balance_amount'] = $bal;
             }
             unset($r);
 
@@ -334,7 +362,12 @@ if ($method === 'POST') {
 
             $curPaid = (float)($inv['paid_amount'] ?? 0);
             $totalAmt = (float)$inv['amount'];
-            $curBalance = (float)($inv['balance_amount'] ?? max(0, $totalAmt - $curPaid));
+            $curBalance = (float)($inv['balance_amount'] ?? 0);
+            if ($curBalance <= 0 && $curPaid < $totalAmt) {
+                $curBalance = max(0.0, round($totalAmt - $curPaid, 2));
+            } elseif ($curBalance <= 0 && strtolower(trim($inv['status'] ?? '')) === 'paid') {
+                $curBalance = $totalAmt;
+            }
 
             if ($amount > ($curBalance + 0.05)) {
                 sendJson([
@@ -653,6 +686,214 @@ if ($method === 'POST') {
                     'status' => $status,
                     'issue_date' => $issueDate,
                     'due_date' => $dueDate,
+                    'items' => $sanitizedItems
+                ]
+            ]);
+        } catch (Exception $e) {
+            if ($pdo && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // 2.5 UPDATE INVOICE (ITEMIZED & RECALCULATED ON SERVER)
+    // ---------------------------------------------------------------------
+    if ($action === 'update' || $action === 'update_invoice') {
+        $id = trim($input['id'] ?? ($input['invoice_id'] ?? ($_GET['id'] ?? '')));
+        if (empty($id)) {
+            sendJson(['status' => 'error', 'message' => 'Invoice ID required for update'], 400);
+        }
+
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM crm_cash_ledger WHERE id = ? OR invoice_no = ?");
+            $stmt->execute([$id, $id]);
+            $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$existing) {
+                sendJson(['status' => 'error', 'message' => 'Invoice not found'], 404);
+            }
+
+            $actualId = $existing['id'];
+            $invNo = !empty($input['invoice_no']) ? trim($input['invoice_no']) : $existing['invoice_no'];
+            $customerName = trim($input['customer_name'] ?? ($input['client_name'] ?? $existing['customer_name']));
+            $title = trim($input['title'] ?? $existing['title']);
+            if (empty($customerName)) {
+                sendJson(['status' => 'error', 'message' => 'Client / Customer name cannot be empty'], 400);
+            }
+
+            $items = $input['items'] ?? null;
+            $subtotal = 0.0;
+            $sanitizedItems = [];
+
+            if (is_array($items) && !empty($items)) {
+                foreach ($items as $idx => $it) {
+                    $desc = trim($it['description'] ?? '');
+                    if (empty($desc)) continue;
+                    $qty = max(0.01, (float)($it['quantity'] ?? 1));
+                    $rate = max(0, (float)($it['rate'] ?? 0));
+                    $lineAmt = round($qty * $rate, 2);
+                    $subtotal += $lineAmt;
+                    $sanitizedItems[] = [
+                        'description' => $desc,
+                        'quantity' => $qty,
+                        'rate' => $rate,
+                        'amount' => $lineAmt,
+                        'sort_order' => $idx + 1
+                    ];
+                }
+            }
+
+            if (empty($sanitizedItems)) {
+                $rawAmt = (float)($input['amount'] ?? $existing['amount']);
+                if ($rawAmt <= 0) $rawAmt = 1.0;
+                $subtotal = $rawAmt;
+                $sanitizedItems[] = [
+                    'description' => $title ?: 'Services & Deliverables',
+                    'quantity' => 1,
+                    'rate' => $rawAmt,
+                    'amount' => $rawAmt,
+                    'sort_order' => 1
+                ];
+            }
+
+            // Financial recalculations
+            $discountPercent = isset($input['discount_percent']) ? max(0, min(100, (float)$input['discount_percent'])) : (float)($existing['discount_percent'] ?? 0);
+            $discountAmount = round($subtotal * ($discountPercent / 100), 2);
+            $taxable = max(0, $subtotal - $discountAmount);
+
+            $taxPercent = isset($input['tax_percent']) ? max(0, min(100, (float)$input['tax_percent'])) : (float)($existing['tax_percent'] ?? 0);
+            $taxAmount = round($taxable * ($taxPercent / 100), 2);
+
+            $finalAmount = round($taxable + $taxAmount, 2);
+
+            // Paid amount tracking
+            $curPaid = (float)($existing['paid_amount'] ?? 0);
+            if (isset($input['paid_amount'])) {
+                $curPaid = (float)$input['paid_amount'];
+            }
+
+            $balanceAmount = max(0, round($finalAmount - $curPaid, 2));
+
+            // Status logic
+            $status = isset($input['status']) ? ucfirst(strtolower(trim($input['status']))) : $existing['status'];
+            if ($balanceAmount <= 0.01 && $curPaid > 0) {
+                $status = 'Paid';
+            } elseif ($curPaid > 0 && $balanceAmount > 0) {
+                $status = 'Partially Paid';
+            } elseif ($status === 'Paid' && $balanceAmount > 0) {
+                $status = 'Pending';
+            }
+
+            $issueDate = trim($input['issue_date'] ?? ($existing['issue_date'] ?? date('d M Y')));
+            $dueDate = trim($input['due_date'] ?? ($existing['due_date'] ?? date('d M Y', strtotime('+14 days'))));
+            $notes = isset($input['notes']) ? trim($input['notes']) : $existing['notes'];
+            $terms = isset($input['terms']) ? trim($input['terms']) : $existing['terms'];
+            $clientId = isset($input['client_id']) ? trim($input['client_id']) : ($existing['client_id'] ?? '');
+            $projectId = isset($input['project_id']) ? trim($input['project_id']) : ($existing['project_id'] ?? '');
+            $category = trim($input['category'] ?? ($existing['category'] ?? 'Development'));
+            $paymentMode = trim($input['payment_mode'] ?? ($existing['payment_mode'] ?? 'Online Transfer'));
+            $customerPhone = trim($input['customer_phone'] ?? ($existing['customer_phone'] ?? ''));
+
+            $pdo->beginTransaction();
+
+            $upd = $pdo->prepare("
+                UPDATE crm_cash_ledger SET
+                    invoice_no = :invoice_no,
+                    customer_name = :customer_name,
+                    customer_phone = :customer_phone,
+                    title = :title,
+                    category = :category,
+                    payment_mode = :payment_mode,
+                    status = :status,
+                    due_date = :due_date,
+                    client_id = :client_id,
+                    project_id = :project_id,
+                    issue_date = :issue_date,
+                    subtotal = :subtotal,
+                    discount_percent = :discount_percent,
+                    discount_amount = :discount_amount,
+                    tax_percent = :tax_percent,
+                    tax_amount = :tax_amount,
+                    amount = :amount,
+                    paid_amount = :paid_amount,
+                    balance_amount = :balance_amount,
+                    notes = :notes,
+                    terms = :terms,
+                    items_json = :items_json
+                WHERE id = :id
+            ");
+
+            $upd->execute([
+                ':id' => $actualId,
+                ':invoice_no' => $invNo,
+                ':customer_name' => $customerName,
+                ':customer_phone' => $customerPhone,
+                ':title' => $title,
+                ':category' => $category,
+                ':payment_mode' => $paymentMode,
+                ':status' => $status,
+                ':due_date' => $dueDate,
+                ':client_id' => $clientId,
+                ':project_id' => $projectId,
+                ':issue_date' => $issueDate,
+                ':subtotal' => $subtotal,
+                ':discount_percent' => $discountPercent,
+                ':discount_amount' => $discountAmount,
+                ':tax_percent' => $taxPercent,
+                ':tax_amount' => $taxAmount,
+                ':amount' => $finalAmount,
+                ':paid_amount' => $curPaid,
+                ':balance_amount' => $balanceAmount,
+                ':notes' => $notes,
+                ':terms' => $terms,
+                ':items_json' => json_encode($sanitizedItems, JSON_UNESCAPED_UNICODE)
+            ]);
+
+            // Replace line items in crm_invoice_items
+            $delItems = $pdo->prepare("DELETE FROM crm_invoice_items WHERE invoice_id = ?");
+            $delItems->execute([$actualId]);
+
+            $insItem = $pdo->prepare("
+                INSERT INTO crm_invoice_items 
+                (invoice_id, description, quantity, rate, amount, sort_order, created_at)
+                VALUES 
+                (:invoice_id, :description, :quantity, :rate, :amount, :sort_order, CURRENT_TIMESTAMP)
+            ");
+            foreach ($sanitizedItems as $si) {
+                $insItem->execute([
+                    ':invoice_id' => $actualId,
+                    ':description' => $si['description'],
+                    ':quantity' => $si['quantity'],
+                    ':rate' => $si['rate'],
+                    ':amount' => $si['amount'],
+                    ':sort_order' => $si['sort_order']
+                ]);
+            }
+
+            $pdo->commit();
+
+            sendJson([
+                'status' => 'success',
+                'success' => true,
+                'message' => 'Invoice updated successfully',
+                'id' => $actualId,
+                'invoice_no' => $invNo,
+                'data' => [
+                    'id' => $actualId,
+                    'invoice_no' => $invNo,
+                    'customer_name' => $customerName,
+                    'amount' => $finalAmount,
+                    'subtotal' => $subtotal,
+                    'discount_amount' => $discountAmount,
+                    'tax_amount' => $taxAmount,
+                    'paid_amount' => $curPaid,
+                    'balance_amount' => $balanceAmount,
+                    'status' => $status,
+                    'issue_date' => $issueDate,
+                    'due_date' => $dueDate,
+                    'notes' => $notes,
+                    'terms' => $terms,
                     'items' => $sanitizedItems
                 ]
             ]);

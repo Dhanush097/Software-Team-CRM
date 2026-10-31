@@ -1066,6 +1066,12 @@ class Database {
                 }
             } catch (Exception $e) {}
         }
+
+        // Auto-heal invoice balances in crm_cash_ledger
+        try {
+            $pdo->exec("UPDATE crm_cash_ledger SET paid_amount = amount, balance_amount = 0 WHERE LOWER(status) = 'paid' AND (paid_amount IS NULL OR paid_amount = 0)");
+            $pdo->exec("UPDATE crm_cash_ledger SET balance_amount = ROUND(amount - COALESCE(paid_amount, 0), 2) WHERE LOWER(status) != 'paid' AND (balance_amount IS NULL OR balance_amount = 0) AND amount != COALESCE(paid_amount, 0)");
+        } catch (Exception $e) {}
     }
 
     private static function seedBaselineData(PDO $pdo): void {
@@ -1208,13 +1214,13 @@ class Database {
             $ledgerCount = (int)$pdo->query("SELECT COUNT(*) FROM crm_cash_ledger")->fetchColumn();
             if ($ledgerCount === 0) {
                 $invoices = [
-                    ["inv_1", "INV-2024-001", "income", 2500.00, "Website Development Milestone 1", "Development", "Online Transfer", "Admin", "ABC Tech Solutions", "+91 98765 43210", "Paid", "10 Aug 2024"],
-                    ["inv_2", "INV-2024-002", "income", 1200.00, "Mobile App UI Design Phase", "Design", "Bank Wire", "Admin", "Verma Solutions", "+91 98765 43211", "Pending", "12 Aug 2024"],
-                    ["inv_3", "INV-2024-003", "income", 3000.00, "Brand Identity & Design System", "Branding", "Cheque", "Admin", "Kapoor Designs", "+91 98765 43213", "Overdue", "05 Aug 2024"],
-                    ["inv_4", "INV-2024-004", "income", 800.00, "Architecture & Cloud Consultation", "Consulting", "UPI", "Admin", "Patel & Co.", "+91 98765 43212", "Paid", "28 Jul 2024"],
-                    ["inv_5", "INV-2024-005", "income", 4950.00, "ERP Integration & Module Delivery", "Enterprise", "Online Transfer", "Admin", "Apex Industrial Works", "+91 98765 43216", "Paid", "15 Jul 2024"]
+                    ["inv_1", "INV-2024-001", "income", 2500.00, 2500.00, 0.00, "Website Development Milestone 1", "Development", "Online Transfer", "Admin", "ABC Tech Solutions", "+91 98765 43210", "Paid", "10 Aug 2024"],
+                    ["inv_2", "INV-2024-002", "income", 1200.00, 0.00, 1200.00, "Mobile App UI Design Phase", "Design", "Bank Wire", "Admin", "Verma Solutions", "+91 98765 43211", "Pending", "12 Aug 2024"],
+                    ["inv_3", "INV-2024-003", "income", 3000.00, 0.00, 3000.00, "Brand Identity & Design System", "Branding", "Cheque", "Admin", "Kapoor Designs", "+91 98765 43213", "Overdue", "05 Aug 2024"],
+                    ["inv_4", "INV-2024-004", "income", 800.00, 800.00, 0.00, "Architecture & Cloud Consultation", "Consulting", "UPI", "Admin", "Patel & Co.", "+91 98765 43212", "Paid", "28 Jul 2024"],
+                    ["inv_5", "INV-2024-005", "income", 4950.00, 4950.00, 0.00, "ERP Integration & Module Delivery", "Enterprise", "Online Transfer", "Admin", "Apex Industrial Works", "+91 98765 43216", "Paid", "15 Jul 2024"]
                 ];
-                $insInv = $pdo->prepare("INSERT OR IGNORE INTO crm_cash_ledger (id, invoice_no, type, amount, title, category, payment_mode, handled_by, customer_name, customer_phone, status, due_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
+                $insInv = $pdo->prepare("INSERT OR IGNORE INTO crm_cash_ledger (id, invoice_no, type, amount, paid_amount, balance_amount, title, category, payment_mode, handled_by, customer_name, customer_phone, status, due_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
                 foreach ($invoices as $iv) {
                     $insInv->execute($iv);
                 }

@@ -267,8 +267,10 @@ logTest("Test 11: Duplicate click & submit prevention", $hasDisabledAttr, "Butto
 if (!$hasDisabledAttr) $allPassed = false;
 
 // Clean up test invoice created during test suite
-$pdo->prepare("DELETE FROM crm_invoice_items WHERE invoice_id = ?")->execute([$newInvId]);
-$pdo->prepare("DELETE FROM crm_cash_ledger WHERE id = ?")->execute([$newInvId]);
+makeReq("$baseUrl/api/ledger.php", 'POST', [
+    'action' => 'delete_invoice',
+    'id' => $newInvId
+]);
 echo "\nTest cleanup complete.\n";
 
 echo "\n=================================================================\n";

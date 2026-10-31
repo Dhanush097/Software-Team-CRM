@@ -5333,9 +5333,17 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                         <div class="text-xs text-slate-500 font-semibold truncate mt-0.5" x-text="activeInvoice.customer_name || 'Valued Client'"></div>
                       </div>
                     </div>
-                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold shrink-0"
-                      :class="getInvoiceStatusClass(activeInvoice)"
-                      x-text="getInvoiceEffectiveStatus(activeInvoice)"></span>
+                    <div class="flex items-center gap-2">
+                      <button @click="openEditInvoiceModal(activeInvoice)" 
+                        class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs touch-press transition"
+                        title="Edit Invoice Details">
+                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span>Edit</span>
+                      </button>
+                      <span class="px-3 py-1 rounded-full text-[10px] font-extrabold shrink-0"
+                        :class="getInvoiceStatusClass(activeInvoice)"
+                        x-text="getInvoiceEffectiveStatus(activeInvoice)"></span>
+                    </div>
                   </div>
 
                   <!-- Two Date Grid: Issue Date & Due Date -->
@@ -5451,16 +5459,21 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
 
                 <!-- 5. Action Buttons -->
                 <div class="space-y-2.5 pt-1">
-                  <!-- Row 1: Download PDF & Share Invoice -->
-                  <div class="flex gap-2">
+                  <!-- Row 1: Edit Invoice, Download PDF & Share Invoice -->
+                  <div class="grid grid-cols-3 gap-2">
+                    <button @click="openEditInvoiceModal(activeInvoice)" 
+                      class="py-2.5 bg-white border border-amber-200 hover:bg-amber-50/70 text-amber-900 font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 touch-press transition">
+                      <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                      <span>Edit Invoice</span>
+                    </button>
                     <button @click="downloadInvoicePdf(activeInvoice)" 
-                      class="flex-1 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 touch-press">
-                      <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                      class="py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 touch-press transition">
+                      <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                       <span>Download PDF</span>
                     </button>
                     <button @click="shareInvoice(activeInvoice)" 
-                      class="flex-1 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 touch-press">
-                      <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                      class="py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 touch-press transition">
+                      <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                       <span>Share Invoice</span>
                     </button>
                   </div>
@@ -9083,8 +9096,11 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
             </button>
           </template>
           <div class="flex gap-2">
+            <button @click="modalInvoiceDetailOpen = false; openEditInvoiceModal(activeInvoice);" class="flex-1 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs rounded-xl touch-press flex items-center justify-center gap-1.5">
+              <span>✏️ Edit</span>
+            </button>
             <button @click="window.print()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl touch-press">
-              Print / Save PDF
+              Print / PDF
             </button>
             <button @click="modalInvoiceDetailOpen = false" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl touch-press">
               Close
@@ -10592,10 +10608,13 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
         
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 sticky top-0 bg-white z-10">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-xs">INV</div>
+            <div class="w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs transition"
+                 :class="isEditingInvoice ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'">
+              <span x-text="isEditingInvoice ? 'EDIT' : 'INV'"></span>
+            </div>
             <div>
-              <h3 class="text-sm font-black text-slate-900">New Invoice</h3>
-              <p class="text-[10px] text-slate-400">Create itemized bill for client</p>
+              <h3 class="text-sm font-black text-slate-900" x-text="isEditingInvoice ? ('Edit Invoice ' + (invoiceForm.invoice_no || invoiceForm.id)) : 'New Invoice'"></h3>
+              <p class="text-[10px] text-slate-400" x-text="isEditingInvoice ? 'Update invoice details, rates and line items' : 'Create itemized bill for client'"></p>
             </div>
           </div>
           <button @click="modalInvoiceOpen = false" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
@@ -10754,7 +10773,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               <template x-if="isCreatingInvoice">
                 <svg class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
               </template>
-              <span>Save & Issue Invoice</span>
+              <span x-text="isEditingInvoice ? 'Save Changes' : 'Save & Issue Invoice'"></span>
             </button>
           </div>
         </form>
@@ -10782,6 +10801,11 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
             <span>Record Payment</span>
           </button>
         </template>
+
+        <button @click="modalInvoiceActionMenuOpen = false; openEditInvoiceModal(activeInvoice);" class="w-full p-2.5 text-left text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl flex items-center gap-2.5 touch-press">
+          <span class="text-amber-600">✏️</span>
+          <span>Edit Invoice</span>
+        </button>
 
         <button @click="modalInvoiceActionMenuOpen = false; downloadInvoicePdf(activeInvoice);" class="w-full p-2.5 text-left text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl flex items-center gap-2.5 touch-press">
           <span class="text-blue-600">📄</span>
@@ -13849,6 +13873,7 @@ function softwareCRMApp(serverUser) {
         actionProject: null,
         modalInvoiceOpen: false,
         isCreatingInvoice: false,
+        isEditingInvoice: false,
         invoiceSearchQuery: '',
         activePaymentReceipt: null,
         modalInvoiceActionMenuOpen: false,
@@ -15565,65 +15590,6 @@ function softwareCRMApp(serverUser) {
           this.modalInvoiceDetailOpen = true;
         },
 
-        openRecordPaymentModal(inv) {
-          if (!inv) inv = this.activeInvoice;
-          if (!inv) return;
-          const total = Number(inv.amount) || 0;
-          const paid = Number(inv.paid_amount) || (inv.status === 'Paid' ? total : 0);
-          const balance = Math.max(0, total - paid);
-          this.recordPaymentForm = {
-            invoice_id: inv.id,
-            invoice_no: inv.invoice_no || inv.id,
-            customer_name: inv.customer_name || (this.activeContact ? this.activeContact.name : ''),
-            amount: balance > 0 ? balance : total,
-            balance_amount: balance,
-            payment_date: new Date().toISOString().split('T')[0],
-            payment_method: 'Bank Transfer',
-            transaction_id: 'TXN-' + Math.floor(100000 + Math.random() * 900000),
-            notes: 'Payment received for ' + (inv.invoice_no || inv.id)
-          };
-          this.modalRecordPaymentOpen = true;
-        },
-
-        async submitRecordPayment() {
-          if (!this.recordPaymentForm.amount || Number(this.recordPaymentForm.amount) <= 0) {
-            this.showToast('Please enter a valid payment amount', 'error');
-            return;
-          }
-          this.isSubmittingPayment = true;
-          try {
-            const res = await fetch('api/ledger.php', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action: 'record_payment',
-                invoice_id: this.recordPaymentForm.invoice_id,
-                amount: Number(this.recordPaymentForm.amount),
-                payment_date: this.recordPaymentForm.payment_date,
-                payment_method: this.recordPaymentForm.payment_method,
-                transaction_id: this.recordPaymentForm.transaction_id,
-                notes: this.recordPaymentForm.notes
-              })
-            });
-            const data = await res.json();
-            if (data.status === 'success' || data.success) {
-              this.modalRecordPaymentOpen = false;
-              this.showToast('Payment recorded successfully!');
-              await this.loadAllData();
-              if (this.activeInvoice) {
-                const refreshed = this.invoices.find(x => x.id === this.activeInvoice.id);
-                if (refreshed) this.activeInvoice = refreshed;
-              }
-            } else {
-              this.showToast(data.message || 'Failed to record payment', 'error');
-            }
-          } catch (e) {
-            this.showToast('Network error recording payment', 'error');
-          } finally {
-            this.isSubmittingPayment = false;
-          }
-        },
-
         openLogNoteModal() {
           this.noteInputText = '';
           this.modalNoteOpen = true;
@@ -16161,6 +16127,7 @@ function softwareCRMApp(serverUser) {
         },
 
         openAddInvoiceModal() {
+          this.isEditingInvoice = false;
           this.invoiceForm = {
             id: '',
             title: 'Website & Platform Engineering',
@@ -16183,6 +16150,61 @@ function softwareCRMApp(serverUser) {
             ],
             notes: "• Complete website development as per scope\n• Source code and documentation will be provided\n• 3 months of post-launch support",
             terms: "50% advance, 50% on project completion."
+          };
+          this.modalInvoiceOpen = true;
+        },
+
+        openEditInvoiceModal(inv) {
+          if (!inv) inv = this.activeInvoice;
+          if (!inv) return;
+          this.isEditingInvoice = true;
+
+          // Normalize line items
+          let items = [];
+          if (inv.items && Array.isArray(inv.items) && inv.items.length > 0) {
+            items = inv.items.map(it => ({
+              description: it.description || '',
+              quantity: Number(it.quantity) || 1,
+              rate: Number(it.rate) || 0,
+              amount: Number(it.amount) || Math.round((Number(it.quantity) || 1) * (Number(it.rate) || 0) * 100) / 100
+            }));
+          } else {
+            items = [
+              {
+                description: inv.title || 'Professional Services',
+                quantity: 1,
+                rate: Number(inv.amount) || 1000,
+                amount: Number(inv.amount) || 1000
+              }
+            ];
+          }
+
+          const toYMD = (dStr) => {
+            if (!dStr) return new Date().toISOString().split('T')[0];
+            const d = new Date(dStr);
+            if (!isNaN(d.getTime())) {
+              return d.toISOString().split('T')[0];
+            }
+            return new Date().toISOString().split('T')[0];
+          };
+
+          this.invoiceForm = {
+            id: inv.id,
+            invoice_no: inv.invoice_no || inv.id,
+            title: inv.title || 'Website & Platform Engineering',
+            client_id: inv.client_id || '',
+            customer_name: inv.customer_name || '',
+            project_id: inv.project_id || '',
+            project_name: inv.project_name || '',
+            issue_date: toYMD(inv.issue_date),
+            due_date: toYMD(inv.due_date),
+            status: inv.status || 'Pending',
+            category: inv.category || 'Development',
+            discount_percent: Number(inv.discount_percent) || 0,
+            tax_percent: Number(inv.tax_percent) || 0,
+            items: items,
+            notes: inv.notes || '',
+            terms: inv.terms || ''
           };
           this.modalInvoiceOpen = true;
         },
@@ -16227,8 +16249,11 @@ function softwareCRMApp(serverUser) {
           }
           this.isCreatingInvoice = true;
           try {
+            const isEdit = Boolean(this.isEditingInvoice && this.invoiceForm.id);
             const payload = {
-              action: 'create_invoice',
+              action: isEdit ? 'update_invoice' : 'create_invoice',
+              id: this.invoiceForm.id,
+              invoice_id: this.invoiceForm.id,
               customer_name: this.invoiceForm.customer_name.trim(),
               title: this.invoiceForm.title.trim(),
               client_id: this.invoiceForm.client_id,
@@ -16251,33 +16276,44 @@ function softwareCRMApp(serverUser) {
             const data = await res.json();
             if (data.status === 'success' || data.success) {
               this.modalInvoiceOpen = false;
-              this.showToast('Invoice created successfully!');
+              this.showToast(isEdit ? 'Invoice updated successfully!' : 'Invoice created successfully!');
               await this.loadAllData();
-              if (data.id) {
-                const created = this.invoices.find(x => x.id === data.id);
-                if (created) this.openInvoiceDetail(created);
+              const targetId = isEdit ? this.invoiceForm.id : data.id;
+              if (targetId) {
+                const refreshed = this.invoices.find(x => x.id === targetId || x.invoice_no === targetId);
+                if (refreshed) {
+                  await this.openInvoiceDetail(refreshed);
+                }
               }
             } else {
-              this.showToast(data.message || 'Failed to create invoice', 'error');
+              this.showToast(data.message || (isEdit ? 'Failed to update invoice' : 'Failed to create invoice'), 'error');
             }
           } catch (e) {
-            this.showToast('Network error creating invoice', 'error');
+            this.showToast('Network error saving invoice', 'error');
           } finally {
             this.isCreatingInvoice = false;
           }
         },
 
         openRecordPaymentModal(inv) {
+          if (!inv) inv = this.activeInvoice;
           if (!inv) return;
           const total = Number(inv.amount) || 0;
           const paid = Number(inv.paid_amount) || 0;
-          const bal = Number(inv.balance_amount);
-          const balance = (!isNaN(bal) && bal !== null) ? bal : Math.max(0, total - paid);
+          let bal = Number(inv.balance_amount);
+          if (isNaN(bal) || (bal <= 0 && inv.status !== 'Paid' && total > paid)) {
+            bal = Math.max(0, total - paid);
+          } else if (bal <= 0 && inv.status === 'Paid') {
+            bal = 0;
+          }
+          const balance = Math.max(0, isNaN(bal) ? (total - paid) : bal);
+          const defaultAmt = balance > 0 ? balance : total;
+
           this.recordPaymentForm = {
             invoice_id: inv.id,
             invoice_no: inv.invoice_no || inv.id,
-            customer_name: inv.customer_name || 'Client',
-            amount: balance > 0 ? balance : total,
+            customer_name: inv.customer_name || (this.activeContact ? this.activeContact.name : 'Valued Client'),
+            amount: defaultAmt,
             balance_amount: balance,
             invoice_total: total,
             total_paid: paid,
@@ -16296,8 +16332,11 @@ function softwareCRMApp(serverUser) {
             this.showToast('Please enter a valid payment amount', 'error');
             return;
           }
-          if (amt > (Number(this.recordPaymentForm.balance_amount) + 0.05)) {
-            this.showToast('Payment amount exceeds remaining balance', 'error');
+          const curBal = Number(this.recordPaymentForm.balance_amount);
+          const invTot = Number(this.recordPaymentForm.invoice_total) || amt;
+          const ceiling = (curBal > 0) ? curBal : invTot;
+          if (amt > (ceiling + 0.05)) {
+            this.showToast('Payment amount exceeds remaining balance ($' + ceiling.toFixed(2) + ')', 'error');
             return;
           }
           this.isSubmittingPayment = true;
@@ -16321,6 +16360,13 @@ function softwareCRMApp(serverUser) {
               this.modalRecordPaymentOpen = false;
               this.showToast('Payment recorded successfully!');
               await this.loadAllData();
+
+              if (this.activeInvoice && (this.activeInvoice.id === this.recordPaymentForm.invoice_id || this.activeInvoice.invoice_no === this.recordPaymentForm.invoice_no)) {
+                const refreshed = this.invoices.find(x => x.id === this.activeInvoice.id || x.invoice_no === this.activeInvoice.invoice_no);
+                if (refreshed) {
+                  this.activeInvoice = refreshed;
+                }
+              }
 
               // Open Screen 3 Payment Receipt with real payment data!
               const payRecord = data.payment || (data.data && data.data.payment) || {
