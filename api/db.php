@@ -1072,11 +1072,22 @@ class Database {
             }
 
             // Dhanush (Superadmin)
+            $dhanushPasswordHash = password_hash('Dhanush123@', PASSWORD_DEFAULT);
             $stmtD = $pdo->prepare("SELECT id FROM crm_users WHERE LOWER(email) = 'vangaridhanush09@gmail.com' LIMIT 1");
             $stmtD->execute();
-            if (!$stmtD->fetch()) {
+            $rowD = $stmtD->fetch();
+            if (!$rowD) {
                 $insD = $pdo->prepare("INSERT INTO crm_users (name, email, password_hash, employee_id, role, status, auth_provider, created_at, updated_at) VALUES ('Dhanush', 'vangaridhanush09@gmail.com', ?, 'EMP-000', 'Superadmin', 'active', 'email', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
-                $insD->execute([$defaultPasswordHash]);
+                $insD->execute([$dhanushPasswordHash]);
+            } else {
+                $pdo->prepare("UPDATE crm_users SET password_hash = ?, status = 'active', role = 'Superadmin' WHERE id = ?")->execute([$dhanushPasswordHash, $rowD['id']]);
+            }
+
+            // Ensure Dhanush exists in crm_team_staff
+            $stmtStaffD = $pdo->prepare("SELECT id FROM crm_team_staff WHERE LOWER(email) = 'vangaridhanush09@gmail.com' LIMIT 1");
+            $stmtStaffD->execute();
+            if (!$stmtStaffD->fetch()) {
+                $pdo->prepare("INSERT INTO crm_team_staff (name, email, phone, role, department, initials, color_class, status, created_at) VALUES ('Dhanush', 'vangaridhanush09@gmail.com', '+91 98765 00000', 'Superadmin', 'Leadership', 'DH', 'bg-purple-600', 'active', CURRENT_TIMESTAMP)")->execute();
             }
         } catch (Exception $e) {}
 
