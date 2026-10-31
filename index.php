@@ -2047,7 +2047,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                     <input type="checkbox" x-model="loginForm.rememberMe" class="rounded text-[#781B1B] focus:ring-[#781B1B] border-[#D7C4B5] w-3.5 h-3.5">
                     <span>Remember me</span>
                   </label>
-                  <a href="#" @click.prevent="errorMessage = 'To reset your password, contact support at security@softwarecrm.com'" class="text-[#781B1B] font-bold hover:underline">Forgot password?</a>
+                  <button type="button" @click="openForgotPasswordView()" class="text-[#781B1B] font-bold hover:underline">Forgot password?</button>
                 </div>
 
                 <!-- Sign In Button -->
@@ -2265,6 +2265,142 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               <div class="mt-3 text-center">
                 <button type="button" @click="authMode = 'login'; errorMessage = ''" class="text-xs font-bold text-[#655A54] hover:text-[#25211F]">
                   &larr; Return to Sign In
+                </button>
+              </div>
+            </div>
+
+            <!-- ===================================================================
+                 VIEW D: FORGOT PASSWORD & EMAIL OTP RESET
+                 =================================================================== -->
+            <div x-show="authMode === 'forgot'" style="display:none;">
+              <div class="text-left mb-4">
+                <div class="w-10 h-10 rounded-2xl bg-[#E9D5C2] text-[#781B1B] flex items-center justify-center mb-2 shadow-xs">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                </div>
+                <h2 class="text-2xl font-black text-[#651717] tracking-tight" x-text="forgotStep === 'email' ? 'Forgot Password?' : 'Reset Password'"></h2>
+                <p class="text-xs text-[#655A54] mt-0.5 leading-relaxed" x-show="forgotStep === 'email'">
+                  Enter your registered email address to receive a 4-digit verification code.
+                </p>
+                <p class="text-xs text-[#655A54] mt-0.5 leading-relaxed" x-show="forgotStep === 'reset'">
+                  Enter the 4-digit code sent to <strong class="text-[#25211F]" x-text="forgotForm.email"></strong> and choose a new password.
+                </p>
+              </div>
+
+              <!-- Success Banner -->
+              <div x-show="forgotSuccessMessage" x-transition class="mb-3.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2">
+                <svg class="w-4 h-4 shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span x-text="forgotSuccessMessage"></span>
+              </div>
+
+              <!-- Error Banner -->
+              <div x-show="forgotErrorMessage" x-transition class="mb-3.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                <svg class="w-4 h-4 shrink-0 text-rose-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                <span x-text="forgotErrorMessage"></span>
+              </div>
+
+              <!-- Step 1: Request OTP Form -->
+              <div x-show="forgotStep === 'email'">
+                <form @submit.prevent="submitForgotPassword()" class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-bold text-[#655A54] mb-1">Email Address</label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8A7D73]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
+                      </div>
+                      <input type="email" x-model="forgotForm.email" required placeholder="name@company.com"
+                        :disabled="isForgotSending"
+                        class="w-full pl-10 pr-3.5 py-2.5 bg-[#FAF7F2] border border-[#E8DDD1] rounded-xl text-xs text-[#25211F] placeholder-[#8A7D73] focus:bg-[#FFFEFC] focus:outline-none focus:ring-2 focus:ring-[#781B1B]/20 focus:border-[#781B1B] transition"/>
+                    </div>
+                  </div>
+
+                  <button type="submit" :disabled="isForgotSending || !forgotForm.email"
+                    class="w-full py-2.5 rounded-xl bg-[#781B1B] hover:bg-[#922626] active:bg-[#551414] disabled:bg-[#8A7D73] disabled:cursor-not-allowed text-white font-bold text-xs shadow-md shadow-[#781B1B]/25 transition touch-press flex items-center justify-center gap-2">
+                    <span x-show="!isForgotSending">Send Reset Code</span>
+                    <span x-show="isForgotSending" style="display:none;" class="flex items-center gap-2">
+                      <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      <span>Sending Code...</span>
+                    </span>
+                  </button>
+                </form>
+              </div>
+
+              <!-- Step 2: Enter OTP & New Password -->
+              <div x-show="forgotStep === 'reset'">
+                <form @submit.prevent="submitResetPassword()" class="space-y-3">
+                  <!-- 4 OTP Input Boxes -->
+                  <div>
+                    <label class="block text-center text-xs font-bold text-[#655A54] mb-1.5">Enter 4-Digit Code</label>
+                    <div class="flex items-center justify-center gap-2.5 my-2">
+                      <template x-for="(d, idx) in forgotOtpDigits" :key="'f_otp_' + idx">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
+                          :id="'forgot_otp_box_' + idx"
+                          :value="forgotOtpDigits[idx]"
+                          @input="handleForgotOtpInput($event, idx)"
+                          @keydown="handleForgotOtpKeyDown($event, idx)"
+                          @paste="handleForgotOtpPaste($event)"
+                          class="w-12 h-12 text-center text-xl font-mono font-black bg-[#FAF7F2] border-2 rounded-xl transition outline-none focus:bg-[#FFFEFC] touch-press"
+                          :class="forgotOtpDigits[idx] ? 'border-[#781B1B] text-[#781B1B] bg-[#E9D5C2]/20' : 'border-[#E8DDD1] text-[#25211F] focus:border-[#781B1B]'"/>
+                      </template>
+                    </div>
+                  </div>
+
+                  <!-- New Password -->
+                  <div>
+                    <label class="block text-xs font-bold text-[#655A54] mb-1">New Password (min 8 chars)</label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8A7D73]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                      </div>
+                      <input :type="showForgotNewPassword ? 'text' : 'password'" x-model="forgotForm.new_password" required minlength="8" placeholder="New Password"
+                        class="w-full pl-10 pr-10 py-2.5 bg-[#FAF7F2] border border-[#E8DDD1] rounded-xl text-xs text-[#25211F] placeholder-[#8A7D73] focus:bg-[#FFFEFC] focus:outline-none focus:ring-2 focus:ring-[#781B1B]/20 focus:border-[#781B1B] transition"/>
+                      <button type="button" @click="showForgotNewPassword = !showForgotNewPassword" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#8A7D73] hover:text-[#25211F]">
+                        <svg x-show="!showForgotNewPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <svg x-show="showForgotNewPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Confirm New Password -->
+                  <div>
+                    <label class="block text-xs font-bold text-[#655A54] mb-1">Confirm New Password</label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8A7D73]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                      </div>
+                      <input :type="showForgotNewPassword ? 'text' : 'password'" x-model="forgotForm.confirm_password" required minlength="8" placeholder="Confirm New Password"
+                        class="w-full pl-10 pr-3.5 py-2.5 bg-[#FAF7F2] border border-[#E8DDD1] rounded-xl text-xs text-[#25211F] placeholder-[#8A7D73] focus:bg-[#FFFEFC] focus:outline-none focus:ring-2 focus:ring-[#781B1B]/20 focus:border-[#781B1B] transition"/>
+                    </div>
+                  </div>
+
+                  <!-- Submit Reset Button -->
+                  <button type="submit" :disabled="isResettingPassword || forgotOtpDigits.join('').length < 4 || !forgotForm.new_password"
+                    class="w-full py-2.5 rounded-xl bg-[#781B1B] hover:bg-[#922626] active:bg-[#551414] disabled:bg-[#8A7D73] disabled:cursor-not-allowed text-white font-bold text-xs shadow-md shadow-[#781B1B]/25 transition touch-press flex items-center justify-center gap-2">
+                    <span x-show="!isResettingPassword">Reset Password & Sign In</span>
+                    <span x-show="isResettingPassword" style="display:none;" class="flex items-center gap-2">
+                      <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      <span>Updating Password...</span>
+                    </span>
+                  </button>
+
+                  <!-- Resend in Reset Step -->
+                  <div class="pt-2 flex items-center justify-between text-xs">
+                    <span class="text-[#8A7D73]">Didn't get code?</span>
+                    <template x-if="forgotCooldown > 0">
+                      <span class="text-[#8A7D73] font-mono text-[11px] font-semibold" x-text="'Resend in ' + forgotCooldown + 's'"></span>
+                    </template>
+                    <template x-if="forgotCooldown === 0">
+                      <button type="button" @click="resendForgotOtp()" :disabled="isForgotSending" class="font-bold text-[#781B1B] hover:underline">
+                        Resend Code
+                      </button>
+                    </template>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Return to Login Link -->
+              <div class="mt-4 text-center">
+                <button type="button" @click="authMode = 'login'; errorMessage = ''; forgotErrorMessage = ''; forgotSuccessMessage = ''" class="text-xs font-bold text-[#655A54] hover:text-[#25211F]">
+                  &larr; Back to Sign In
                 </button>
               </div>
             </div>
@@ -7785,16 +7921,21 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               </div>
 
               <!-- Action Buttons for Account Profile -->
-              <div class="grid grid-cols-2 gap-2 pt-1">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
                 <button type="button" @click="openEditProfileModal()" 
                   class="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] flex items-center justify-center gap-1.5 touch-press transition">
                   <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                   <span>Edit Profile</span>
                 </button>
-                <button type="button" @click="openChangePasswordModal()" 
+                <button type="button" @click="openChangePasswordModal('change')" 
                   class="w-full py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] flex items-center justify-center gap-1.5 touch-press transition">
                   <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                   <span>Change Password</span>
+                </button>
+                <button type="button" @click="openResetPasswordViaOtpModal()" 
+                  class="w-full py-2 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[11px] flex items-center justify-center gap-1.5 touch-press transition">
+                  <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                  <span>Forgot Password?</span>
                 </button>
               </div>
             </div>
@@ -7904,6 +8045,30 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                 <p class="text-[10px] text-blue-700 leading-relaxed">
                   Every sign-in attempt requires two factors: your credentials or biometric passkey, plus a one-time cryptographic code sent to your registered email.
                 </p>
+              </div>
+
+              <!-- Password & Recovery Sub-Card -->
+              <div class="pt-2 border-t border-slate-100 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold text-slate-700">Password & Security</span>
+                  <span class="text-[10px] font-bold text-slate-400">Account Credentials</span>
+                </div>
+                <div class="p-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 flex items-center justify-between gap-2">
+                  <div class="min-w-0">
+                    <div class="font-bold text-slate-800 text-[11px]">Account Password</div>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Change current password or reset via email OTP if forgotten</p>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button" @click="openChangePasswordModal('change')" 
+                      class="py-1 px-2.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-[10px] touch-press transition">
+                      Change
+                    </button>
+                    <button type="button" @click="openResetPasswordViaOtpModal()" 
+                      class="py-1 px-2.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[10px] touch-press transition">
+                      Forgot Password?
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <!-- Security Information Callout -->
@@ -11360,7 +11525,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
     </div>
 
     <!-- =========================================================================
-         MODAL: CHANGE PASSWORD
+         MODAL / DRAWER: CHANGE / RESET PASSWORD (Screen Reference)
          ========================================================================= -->
     <div x-show="modalChangePasswordOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs" x-cloak>
       <div @click.away="modalChangePasswordOpen = false" class="bg-white rounded-3xl border border-slate-200 p-6 w-full max-w-sm shadow-sheet space-y-4 text-left">
@@ -11370,7 +11535,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
             </div>
             <div>
-              <h3 class="text-sm font-extrabold text-slate-900">Change Password</h3>
+              <h3 class="text-sm font-extrabold text-slate-900" x-text="passwordModalTab === 'change' ? 'Change Password' : 'Forgot Password'"></h3>
               <p class="text-[10px] text-slate-400">Update security credentials</p>
             </div>
           </div>
@@ -11379,35 +11544,141 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
           </button>
         </div>
 
-        <form @submit.prevent="savePassword()" class="space-y-3 text-xs">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-700 mb-1">Current Password *</label>
-            <input type="password" x-model="changePasswordForm.current_password" required placeholder="••••••••"
-              class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-600 focus:outline-none text-xs text-slate-800" />
-          </div>
+        <!-- Mode Switcher Tabs -->
+        <div class="flex p-1 bg-slate-100 rounded-xl text-xs font-bold">
+          <button type="button" @click="passwordModalTab = 'change'" 
+            class="flex-1 py-1.5 rounded-lg transition"
+            :class="passwordModalTab === 'change' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'">
+            Change Password
+          </button>
+          <button type="button" @click="passwordModalTab = 'otp'" 
+            class="flex-1 py-1.5 rounded-lg transition"
+            :class="passwordModalTab === 'otp' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-800'">
+            Forgot Password?
+          </button>
+        </div>
 
-          <div>
-            <label class="block text-[11px] font-bold text-slate-700 mb-1">New Password (min 8 chars) *</label>
-            <input type="password" x-model="changePasswordForm.new_password" required minlength="8" placeholder="••••••••"
-              class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-600 focus:outline-none text-xs text-slate-800" />
-          </div>
+        <!-- TAB 1: STANDARD CHANGE (WITH CURRENT PASSWORD) -->
+        <div x-show="passwordModalTab === 'change'">
+          <form @submit.prevent="savePassword()" class="space-y-3 text-xs">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Current Password *</label>
+              <input type="password" x-model="changePasswordForm.current_password" required placeholder="••••••••"
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-600 focus:outline-none text-xs text-slate-800" />
+              <div class="mt-1 text-right">
+                <button type="button" @click="passwordModalTab = 'otp'" class="text-[10.5px] font-bold text-blue-600 hover:underline">
+                  Forgot current password? Reset via Email OTP &rarr;
+                </button>
+              </div>
+            </div>
 
-          <div>
-            <label class="block text-[11px] font-bold text-slate-700 mb-1">Confirm New Password *</label>
-            <input type="password" x-model="changePasswordForm.confirm_password" required minlength="8" placeholder="••••••••"
-              class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-600 focus:outline-none text-xs text-slate-800" />
-          </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">New Password (min 8 chars) *</label>
+              <input type="password" x-model="changePasswordForm.new_password" required minlength="8" placeholder="••••••••"
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-600 focus:outline-none text-xs text-slate-800" />
+            </div>
 
-          <div class="grid grid-cols-2 gap-2 pt-2">
-            <button type="button" @click="modalChangePasswordOpen = false" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl touch-press">
-              Cancel
-            </button>
-            <button type="submit" :disabled="isChangingPassword" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 touch-press">
-              <svg x-show="isChangingPassword" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              <span>Update Password</span>
-            </button>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Confirm New Password *</label>
+              <input type="password" x-model="changePasswordForm.confirm_password" required minlength="8" placeholder="••••••••"
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-600 focus:outline-none text-xs text-slate-800" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-2">
+              <button type="button" @click="modalChangePasswordOpen = false" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl touch-press">
+                Cancel
+              </button>
+              <button type="submit" :disabled="isChangingPassword" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 touch-press">
+                <svg x-show="isChangingPassword" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span>Update Password</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 2: RESET VIA EMAIL OTP (WHEN USER FORGOT CURRENT PASSWORD) -->
+        <div x-show="passwordModalTab === 'otp'">
+          <div class="space-y-3 text-xs">
+            <!-- Account Email Info Banner -->
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span class="text-[10px] text-slate-400 font-semibold block">Registered Email</span>
+              <span class="text-xs font-bold text-slate-800 truncate block" x-text="currentUser.email || settingsData.profile?.email"></span>
+            </div>
+
+            <!-- Pre-dispatch screen -->
+            <div x-show="!internalOtpSent" class="space-y-3">
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Click below to send a secure 4-digit verification code to your email. You can reset your password immediately without entering your old password.
+              </p>
+
+              <button type="button" @click="sendInternalPasswordResetOtp()" :disabled="isInternalOtpSending"
+                class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 touch-press">
+                <span x-show="!isInternalOtpSending">Send 4-Digit Reset Code</span>
+                <span x-show="isInternalOtpSending" style="display:none;" class="flex items-center gap-2">
+                  <svg class="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  <span>Sending Code...</span>
+                </span>
+              </button>
+            </div>
+
+            <!-- Post-dispatch screen (Enter OTP + New Password) -->
+            <div x-show="internalOtpSent" class="space-y-3">
+              <form @submit.prevent="savePasswordViaOtp()" class="space-y-3">
+                <div>
+                  <label class="block text-center text-[11px] font-bold text-slate-700 mb-1">Enter 4-Digit Code</label>
+                  <div class="flex items-center justify-center gap-2 my-1.5">
+                    <template x-for="(d, idx) in internalOtpDigits" :key="'int_otp_' + idx">
+                      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
+                        :id="'internal_otp_box_' + idx"
+                        :value="internalOtpDigits[idx]"
+                        @input="handleInternalOtpInput($event, idx)"
+                        @keydown="handleInternalOtpKeyDown($event, idx)"
+                        @paste="handleInternalOtpPaste($event)"
+                        class="w-11 h-11 text-center text-lg font-mono font-black bg-slate-50 border-2 rounded-xl transition outline-none focus:bg-white touch-press"
+                        :class="internalOtpDigits[idx] ? 'border-blue-600 text-blue-600 bg-blue-50/30' : 'border-slate-200 text-slate-800 focus:border-blue-600'"/>
+                    </template>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-700 mb-1">New Password (min 8 chars) *</label>
+                  <input type="password" x-model="internalResetForm.new_password" required minlength="8" placeholder="••••••••"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-600 focus:outline-none text-xs text-slate-800" />
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-700 mb-1">Confirm New Password *</label>
+                  <input type="password" x-model="internalResetForm.confirm_password" required minlength="8" placeholder="••••••••"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-600 focus:outline-none text-xs text-slate-800" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-2">
+                  <button type="button" @click="modalChangePasswordOpen = false" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl touch-press">
+                    Cancel
+                  </button>
+                  <button type="submit" :disabled="isInternalResetting || internalOtpDigits.join('').length < 4 || !internalResetForm.new_password"
+                    class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 touch-press">
+                    <svg x-show="isInternalResetting" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>Reset & Update</span>
+                  </button>
+                </div>
+
+                <div class="pt-1 flex items-center justify-between text-xs">
+                  <span class="text-slate-400">Didn't get code?</span>
+                  <template x-if="internalOtpCooldown > 0">
+                    <span class="text-slate-400 font-mono text-[11px] font-semibold" x-text="'Resend in ' + internalOtpCooldown + 's'"></span>
+                  </template>
+                  <template x-if="internalOtpCooldown === 0">
+                    <button type="button" @click="sendInternalPasswordResetOtp()" :disabled="isInternalOtpSending" class="font-bold text-blue-600 hover:underline">
+                      Resend Code
+                    </button>
+                  </template>
+                </div>
+              </form>
+            </div>
           </div>
-        </form>
+        </div>
+
       </div>
     </div>
 
@@ -12285,12 +12556,26 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
         introProgressTimer: null,
         logoStageTimer: null,
 
-        authMode: 'login', // 'login' | 'register' | 'otp'
+        authMode: 'login', // 'login' | 'register' | 'otp' | 'forgot'
         loginForm: {
           email: '',
           password: '',
           rememberMe: true
         },
+        forgotStep: 'email', // 'email' | 'reset'
+        forgotForm: {
+          email: '',
+          new_password: '',
+          confirm_password: ''
+        },
+        forgotOtpDigits: ['', '', '', ''],
+        isForgotSending: false,
+        isResettingPassword: false,
+        forgotErrorMessage: '',
+        forgotSuccessMessage: '',
+        forgotCooldown: 0,
+        forgotTimer: null,
+        showForgotNewPassword: false,
         registerForm: {
           name: '',
           email: '',
@@ -13022,6 +13307,172 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
           }, 1000);
         },
 
+        openForgotPasswordView() {
+          this.authMode = 'forgot';
+          this.forgotStep = 'email';
+          this.forgotErrorMessage = '';
+          this.forgotSuccessMessage = '';
+          this.forgotOtpDigits = ['', '', '', ''];
+          this.forgotForm.new_password = '';
+          this.forgotForm.confirm_password = '';
+          // Prefill email if entered in loginForm
+          if (this.loginForm.email) {
+            this.forgotForm.email = this.loginForm.email;
+          }
+        },
+
+        async submitForgotPassword() {
+          if (!this.forgotForm.email || this.isForgotSending) return;
+          this.isForgotSending = true;
+          this.forgotErrorMessage = '';
+          this.forgotSuccessMessage = '';
+
+          try {
+            const res = await fetch('api/auth.php?action=forgot_password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: this.forgotForm.email })
+            });
+            const data = await res.json();
+            this.isForgotSending = false;
+
+            if (data && data.success) {
+              this.forgotStep = 'reset';
+              this.forgotSuccessMessage = data.message || 'Verification code sent to your email.';
+              this.startForgotCooldown(data.resend_cooldown || 60);
+              this.$nextTick(() => {
+                const box = document.getElementById('forgot_otp_box_0');
+                if (box) box.focus();
+              });
+            } else {
+              this.forgotErrorMessage = (data && data.error) ? data.error : 'Failed to send reset code.';
+            }
+          } catch (e) {
+            this.isForgotSending = false;
+            this.forgotErrorMessage = 'Network error while requesting password reset.';
+          }
+        },
+
+        startForgotCooldown(sec = 60) {
+          if (this.forgotTimer) clearInterval(this.forgotTimer);
+          this.forgotCooldown = sec;
+          this.forgotTimer = setInterval(() => {
+            if (this.forgotCooldown > 0) {
+              this.forgotCooldown--;
+            } else {
+              clearInterval(this.forgotTimer);
+              this.forgotTimer = null;
+            }
+          }, 1000);
+        },
+
+        async resendForgotOtp() {
+          if (this.forgotCooldown > 0 || this.isForgotSending) return;
+          this.isForgotSending = true;
+          this.forgotErrorMessage = '';
+
+          try {
+            const res = await fetch('api/auth.php?action=resend_otp', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: this.forgotForm.email, purpose: 'password_reset' })
+            });
+            const data = await res.json();
+            this.isForgotSending = false;
+            if (data && data.success) {
+              this.forgotSuccessMessage = 'A fresh verification code has been dispatched.';
+              this.startForgotCooldown(data.resend_cooldown || 60);
+            } else {
+              this.forgotErrorMessage = (data && data.error) ? data.error : 'Failed to resend code.';
+            }
+          } catch (e) {
+            this.isForgotSending = false;
+            this.forgotErrorMessage = 'Network error resending code.';
+          }
+        },
+
+        handleForgotOtpInput(event, idx) {
+          const val = event.target.value.replace(/[^0-9]/g, '');
+          this.forgotOtpDigits[idx] = val ? val.slice(-1) : '';
+          if (val && idx < 3) {
+            const next = document.getElementById('forgot_otp_box_' + (idx + 1));
+            if (next) next.focus();
+          }
+        },
+
+        handleForgotOtpKeyDown(event, idx) {
+          if (event.key === 'Backspace' && !this.forgotOtpDigits[idx] && idx > 0) {
+            const prev = document.getElementById('forgot_otp_box_' + (idx - 1));
+            if (prev) {
+              prev.focus();
+              this.forgotOtpDigits[idx - 1] = '';
+            }
+          }
+        },
+
+        handleForgotOtpPaste(event) {
+          event.preventDefault();
+          const pasted = (event.clipboardData || window.clipboardData).getData('text').trim().replace(/[^0-9]/g, '');
+          if (pasted.length >= 4) {
+            for (let i = 0; i < 4; i++) {
+              this.forgotOtpDigits[i] = pasted[i];
+            }
+            const last = document.getElementById('forgot_otp_box_3');
+            if (last) last.focus();
+          }
+        },
+
+        async submitResetPassword() {
+          const otp = this.forgotOtpDigits.join('');
+          if (otp.length !== 4) {
+            this.forgotErrorMessage = 'Please enter the 4-digit code.';
+            return;
+          }
+          if (!this.forgotForm.new_password || this.forgotForm.new_password.length < 8) {
+            this.forgotErrorMessage = 'Password must be at least 8 characters long.';
+            return;
+          }
+          if (this.forgotForm.new_password !== this.forgotForm.confirm_password) {
+            this.forgotErrorMessage = 'Passwords do not match.';
+            return;
+          }
+
+          this.isResettingPassword = true;
+          this.forgotErrorMessage = '';
+          this.forgotSuccessMessage = '';
+
+          try {
+            const res = await fetch('api/auth.php?action=reset_password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: this.forgotForm.email,
+                otp: otp,
+                new_password: this.forgotForm.new_password,
+                confirm_password: this.forgotForm.confirm_password
+              })
+            });
+            const data = await res.json();
+            this.isResettingPassword = false;
+
+            if (data && data.success) {
+              this.successMessage = 'Password reset successfully! Please sign in with your new password.';
+              this.loginForm.email = this.forgotForm.email;
+              this.loginForm.password = '';
+              this.authMode = 'login';
+              this.forgotStep = 'email';
+              this.forgotOtpDigits = ['', '', '', ''];
+              this.forgotForm.new_password = '';
+              this.forgotForm.confirm_password = '';
+            } else {
+              this.forgotErrorMessage = (data && data.error) ? data.error : 'Failed to reset password.';
+            }
+          } catch (e) {
+            this.isResettingPassword = false;
+            this.forgotErrorMessage = 'Network error while resetting password.';
+          }
+        },
+
         socialLoginNotice(provider) {
           if (provider === 'Google') {
             this.startGoogleLogin();
@@ -13503,7 +13954,15 @@ function softwareCRMApp(serverUser) {
         editProfileForm: { name: '', phone: '', company: '', department: '', location: '', bio: '' },
         modalChangePasswordOpen: false,
         isChangingPassword: false,
+        passwordModalTab: 'change', // 'change' | 'otp'
         changePasswordForm: { current_password: '', new_password: '', confirm_password: '' },
+        internalOtpDigits: ['', '', '', ''],
+        internalOtpSent: false,
+        isInternalOtpSending: false,
+        internalOtpCooldown: 0,
+        internalOtpTimer: null,
+        internalResetForm: { new_password: '', confirm_password: '' },
+        isInternalResetting: false,
         isRevokingSessions: false,
 
         // Reports & Financial Analytics State
@@ -13851,9 +14310,142 @@ function softwareCRMApp(serverUser) {
           }
         },
 
-        openChangePasswordModal() {
+        openChangePasswordModal(tab = 'change') {
+          this.passwordModalTab = tab;
           this.changePasswordForm = { current_password: '', new_password: '', confirm_password: '' };
+          this.internalResetForm = { new_password: '', confirm_password: '' };
+          this.internalOtpDigits = ['', '', '', ''];
+          this.internalOtpSent = false;
           this.modalChangePasswordOpen = true;
+        },
+
+        openResetPasswordViaOtpModal() {
+          this.openChangePasswordModal('otp');
+        },
+
+        async sendInternalPasswordResetOtp() {
+          if (this.isInternalOtpSending || this.internalOtpCooldown > 0) return;
+          this.isInternalOtpSending = true;
+
+          try {
+            const res = await fetch('api/settings.php?action=request_password_reset_otp', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': this.csrfToken
+              },
+              body: JSON.stringify({ csrf_token: this.csrfToken })
+            });
+            const data = await res.json();
+            this.isInternalOtpSending = false;
+
+            if (data && data.success) {
+              this.internalOtpSent = true;
+              this.showToast(data.message || 'Verification code sent to your email.', 'success');
+              this.startInternalOtpCooldown(data.resend_cooldown || 60);
+              this.$nextTick(() => {
+                const box = document.getElementById('internal_otp_box_0');
+                if (box) box.focus();
+              });
+            } else {
+              this.showToast((data && data.error) || 'Failed to send reset code.', 'error');
+            }
+          } catch (e) {
+            this.isInternalOtpSending = false;
+            this.showToast('Network error sending reset code.', 'error');
+          }
+        },
+
+        startInternalOtpCooldown(sec = 60) {
+          if (this.internalOtpTimer) clearInterval(this.internalOtpTimer);
+          this.internalOtpCooldown = sec;
+          this.internalOtpTimer = setInterval(() => {
+            if (this.internalOtpCooldown > 0) {
+              this.internalOtpCooldown--;
+            } else {
+              clearInterval(this.internalOtpTimer);
+              this.internalOtpTimer = null;
+            }
+          }, 1000);
+        },
+
+        handleInternalOtpInput(event, idx) {
+          const val = event.target.value.replace(/[^0-9]/g, '');
+          this.internalOtpDigits[idx] = val ? val.slice(-1) : '';
+          if (val && idx < 3) {
+            const next = document.getElementById('internal_otp_box_' + (idx + 1));
+            if (next) next.focus();
+          }
+        },
+
+        handleInternalOtpKeyDown(event, idx) {
+          if (event.key === 'Backspace' && !this.internalOtpDigits[idx] && idx > 0) {
+            const prev = document.getElementById('internal_otp_box_' + (idx - 1));
+            if (prev) {
+              prev.focus();
+              this.internalOtpDigits[idx - 1] = '';
+            }
+          }
+        },
+
+        handleInternalOtpPaste(event) {
+          event.preventDefault();
+          const pasted = (event.clipboardData || window.clipboardData).getData('text').trim().replace(/[^0-9]/g, '');
+          if (pasted.length >= 4) {
+            for (let i = 0; i < 4; i++) {
+              this.internalOtpDigits[i] = pasted[i];
+            }
+            const last = document.getElementById('internal_otp_box_3');
+            if (last) last.focus();
+          }
+        },
+
+        async savePasswordViaOtp() {
+          const otp = this.internalOtpDigits.join('');
+          if (otp.length !== 4) {
+            this.showToast('Please enter the 4-digit verification code', 'error');
+            return;
+          }
+          if (!this.internalResetForm.new_password || this.internalResetForm.new_password.length < 8) {
+            this.showToast('New password must be at least 8 characters long', 'error');
+            return;
+          }
+          if (this.internalResetForm.new_password !== this.internalResetForm.confirm_password) {
+            this.showToast('Passwords do not match', 'error');
+            return;
+          }
+
+          this.isInternalResetting = true;
+          try {
+            const res = await fetch('api/settings.php?action=reset_password_otp', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': this.csrfToken
+              },
+              body: JSON.stringify({
+                csrf_token: this.csrfToken,
+                otp: otp,
+                new_password: this.internalResetForm.new_password,
+                confirm_password: this.internalResetForm.confirm_password
+              })
+            });
+            const data = await res.json();
+            this.isInternalResetting = false;
+
+            if (data && data.success) {
+              this.showToast(data.message || 'Password reset and updated successfully!', 'success');
+              this.modalChangePasswordOpen = false;
+              this.internalResetForm = { new_password: '', confirm_password: '' };
+              this.internalOtpDigits = ['', '', '', ''];
+              this.internalOtpSent = false;
+            } else {
+              this.showToast((data && data.error) || 'Failed to reset password.', 'error');
+            }
+          } catch (e) {
+            this.isInternalResetting = false;
+            this.showToast('Network error resetting password.', 'error');
+          }
         },
 
         async savePassword() {

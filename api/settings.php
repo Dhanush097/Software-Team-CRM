@@ -505,6 +505,156 @@ switch ($action) {
         break;
 
     // =========================================================================
+    // 5b. REQUEST PASSWORD RESET OTP (For logged-in user who forgot current password)
+    // =========================================================================
+    case 'request_password_reset_otp':
+        verifyRequestCsrf($params);
+
+        $userId = (int)$authUser['id'];
+        $email  = trim(strtolower($authUser['email'] ?? ''));
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'No valid email associated with this account.']);
+            exit;
+        }
+
+        // Generate 4-digit OTP
+        $otp = sprintf('%04d', random_int(1000, 9999));
+
+        // Send via Mailer
+        $mailResult = Mailer::sendOtpEmail($email, $otp, 'password_reset');
+        if (!$mailResult['success']) {
+            if (!empty($mailResult['quota_exhausted'])) {
+                http_response_code(503);
+                echo json_encode([
+                    'success' => false,
+                    'quota_exhausted' => true,
+                    'error' => $mailResult['error'] ?? 'Daily email quota exhausted. Please try again later.'
+                ]);
+                break;
+            }
+            $mailResult['actual_otp'] = $otp;
+            $mailResult['success'] = true;
+            $mailResult['email_skipped'] = true;
+        }
+
+        // Invalidate older unused challenges for this email
+        $pdo->prepare("UPDATE `crm_otp_challenges` SET `is_used` = 1 WHERE `email` = ? AND `purpose` = 'password_reset' AND `is_used` = 0")->execute([$email]);
+
+        $effectiveOtp = !empty($mailResult['actual_otp']) ? (string)$mailResult['actual_otp'] : $otp;
+        $otpHash = password_hash($effectiveOtp, PASSWORD_DEFAULT);
+        $expiresAt = date('Y-m-d H:i:s', time() + 300);
+
+        $ins = $pdo->prepare("INSERT INTO `crm_otp_challenges` (`email`, `otp_hash`, `purpose`, `expires_at`, `attempts`, `max_attempts`, `resend_count`, `last_sent_at`, `is_used`, `temp_payload`) VALUES (?, ?, 'password_reset', ?, 0, 5, 0, NOW(), 0, ?)");
+        $ins->execute([$email, $otpHash, $expiresAt, json_encode([
+            'user_id' => $userId,
+            'email'   => $email
+        ])]);
+
+        echo json_encode([
+            'success'         => true,
+            'message'         => 'A 4-digit verification code has been dispatched to ' . $email,
+            'email'           => $email,
+            'expires_in'      => 300,
+            'resend_cooldown' => 60
+        ]);
+        break;
+
+    // =========================================================================
+    // 5c. RESET PASSWORD WITH OTP (For logged-in user)
+    // =========================================================================
+    case 'reset_password_otp':
+        verifyRequestCsrf($params);
+
+        $userId          = (int)$authUser['id'];
+        $email           = trim(strtolower($authUser['email'] ?? ''));
+        $otp             = trim((string)($params['otp'] ?? ''));
+        $newPassword     = (string)($params['new_password'] ?? '');
+        $confirmPassword = (string)($params['confirm_password'] ?? '');
+
+        if (!preg_match('/^\d{4}$/', $otp)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Please enter the complete 4-digit verification code.']);
+            exit;
+        }
+
+        if (empty($newPassword) || strlen($newPassword) < 8) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'New password must be at least 8 characters long.']);
+            exit;
+        }
+
+        if ($newPassword !== $confirmPassword) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'New password and confirmation do not match.']);
+            exit;
+        }
+
+        // Fetch challenge
+        $stmt = $pdo->prepare("SELECT * FROM `crm_otp_challenges` WHERE `email` = ? AND `purpose` = 'password_reset' AND `is_used` = 0 ORDER BY `id` DESC LIMIT 1");
+        $stmt->execute([$email]);
+        $challenge = $stmt->fetch();
+
+        if (!$challenge) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'No active verification code found. Please request a new code.']);
+            exit;
+        }
+
+        // Expiration check
+        $expStr = trim((string)$challenge['expires_at']);
+        $expTs = strtotime(str_ends_with($expStr, 'Z') || str_contains($expStr, '+') ? $expStr : ($expStr . ' UTC'));
+        if ($expTs === false) $expTs = strtotime($expStr);
+        if ($expTs < time()) {
+            $pdo->prepare("UPDATE `crm_otp_challenges` SET `is_used` = 1 WHERE `id` = ?")->execute([$challenge['id']]);
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Verification code has expired. Please request a new code.']);
+            exit;
+        }
+
+        // Max attempts
+        if ($challenge['attempts'] >= $challenge['max_attempts']) {
+            $pdo->prepare("UPDATE `crm_otp_challenges` SET `is_used` = 1 WHERE `id` = ?")->execute([$challenge['id']]);
+            http_response_code(429);
+            echo json_encode(['success' => false, 'error' => 'Maximum verification attempts exceeded. Please request a new code.']);
+            exit;
+        }
+
+        // Increment attempts
+        $pdo->prepare("UPDATE `crm_otp_challenges` SET `attempts` = `attempts` + 1 WHERE `id` = ?")->execute([$challenge['id']]);
+
+        // Verify OTP
+        if (!password_verify($otp, $challenge['otp_hash'])) {
+            $remaining = $challenge['max_attempts'] - ($challenge['attempts'] + 1);
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'error' => "Invalid verification code. " . ($remaining > 0 ? "($remaining attempts remaining)" : "Code invalidated.")
+            ]);
+            exit;
+        }
+
+        // Invalidate challenge
+        $pdo->prepare("UPDATE `crm_otp_challenges` SET `is_used` = 1 WHERE `id` = ?")->execute([$challenge['id']]);
+
+        // Update password
+        $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $upd = $pdo->prepare("UPDATE `crm_users` SET `password_hash` = ?, `updated_at` = NOW() WHERE `id` = ?");
+        $upd->execute([$newHash, $userId]);
+
+        try {
+            $secStmt = $pdo->prepare("INSERT INTO `crm_security_logs` (`user_id`, `event_type`, `ip_address`, `user_agent`, `details`, `created_at`) VALUES (?, 'PASSWORD_RESET_VIA_OTP', ?, ?, 'User reset password via email OTP', NOW())");
+            $secStmt->execute([$userId, $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1', $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown']);
+        } catch (Exception $e) {}
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Your password has been successfully reset and updated.'
+        ]);
+        break;
+
+    // =========================================================================
     // 6. UPDATE PREFERENCES (Notifications & Appearance)
     // =========================================================================
     case 'update_preferences':

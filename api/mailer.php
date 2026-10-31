@@ -136,12 +136,19 @@ class Mailer {
             ];
         }
 
-        $purposeTitle = $purpose === 'registration' ? 'Complete Your Account Registration' : 'Sign In Verification Code';
+        $purposeTitle = $purpose === 'registration' 
+            ? 'Complete Your Account Registration' 
+            : ($purpose === 'password_reset' ? 'Password Reset Verification Code' : 'Sign In Verification Code');
+
         $purposeDesc  = $purpose === 'registration' 
             ? 'Thank you for registering with Software CRM. Please use the 4-digit verification code below to verify your email and activate your account:'
-            : 'A sign in attempt was initiated for your Software CRM account. Please enter the 4-digit verification code below to complete your sign in:';
+            : ($purpose === 'password_reset'
+                ? 'A password reset request was initiated for your Software CRM account. Please use the 4-digit verification code below to reset and set your new password:'
+                : 'A sign in attempt was initiated for your Software CRM account. Please enter the 4-digit verification code below to complete your sign in:');
 
-        $subject = "Software CRM - Your Verification Code: {$otpCode}";
+        $subject = $purpose === 'password_reset' 
+            ? "Software CRM - Password Reset Code: {$otpCode}" 
+            : "Software CRM - Your Verification Code: {$otpCode}";
 
         $htmlBody = <<<HTML
 <!DOCTYPE html>
