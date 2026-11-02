@@ -26,6 +26,13 @@ try {
     // Check default user
     $userCount = (int)$pdo->query("SELECT COUNT(*) FROM crm_users")->fetchColumn();
     echo "Active CRM users: $userCount\n";
+
+    // Synchronize authentic real client dataset from Google Sheet / seed data
+    $syncScript = dirname(__DIR__) . '/sync_and_replace_real_members.php';
+    if (file_exists($syncScript)) {
+        echo "Running sync_and_replace_real_members.php...\n";
+        require_once $syncScript;
+    }
 } catch (Exception $e) {
     echo "[WARN] Could not list tables: " . $e->getMessage() . "\n";
 }

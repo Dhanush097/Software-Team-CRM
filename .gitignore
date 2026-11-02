@@ -8,6 +8,7 @@ config/google_service_account.json
 *.json
 !package.json
 !composer.json
+!config/past_clients_seed.json
 
 # Data directory (contains DB, logs, private emails, sensitive data)
 data/

@@ -1175,19 +1175,25 @@ class Database {
         try {
             $cntCount = (int)$pdo->query("SELECT COUNT(*) FROM crm_contacts")->fetchColumn();
             if ($cntCount === 0) {
-                $contacts = [
-                    ["CNT_REF_01", "Rahul Sharma", "+91 98765 43210", "", "rahul@example.com", "ABC Tech Solutions", "cmp_abc_tech_solutions", "Founder", "Client", "Mumbai, India", "Website", "Key client for web development and digital marketing projects. Interested in long-term partnership.", "https://www.abctech.com", "$15,000", "Paid", "100", "Important, Long Term", 1],
-                    ["CNT_REF_02", "Priya Verma", "+91 98765 43211", "", "priya@example.com", "Verma Solutions", "cmp_verma_solutions", "Director", "Lead", "Delhi, India", "Referral", "Mobile application design inquiry for fintech system.", "https://verma-solutions.com", "$22,000", "Pending", "40", "Mobile, Fintech", 1],
-                    ["CNT_REF_03", "Amit Patel", "+91 98765 43212", "", "amit@example.com", "Patel & Co.", "cmp_3", "Managing Director", "Client", "Ahmedabad, India", "LinkedIn", "ERP and accounting automation contract.", "https://patelco.in", "$18,500", "Partially Paid", "50", "ERP, Retainer", 0],
-                    ["CNT_REF_04", "Sneha Kapoor", "+91 98765 43213", "", "sneha@example.com", "Kapoor Designs", "cmp_4", "Creative Head", "Prospect", "Bengaluru, India", "Campaign", "Brand identity and design system revamps.", "https://kapoordesigns.com", "$6,500", "Pending", "0", "Design, Branding", 0],
-                    ["CNT_REF_05", "Vikram Singh", "+91 98765 43214", "", "vikram@example.com", "Singh Enterprises", "", "Owner", "Client", "Jaipur, India", "Direct", "Supply chain tracking and GPS logistics portal.", "https://singhenterprises.in", "$12,000", "Paid", "100", "Logistics, GPS", 1],
-                    ["CNT_REF_06", "Neha Gupta", "+91 98765 43215", "", "neha@example.com", "Gupta Media", "", "Editor-in-Chief", "Lead", "Pune, India", "Instagram", "Publishing CMS and creator subscription platform.", "https://guptamedia.com", "$9,000", "Pending", "20", "CMS, Media", 0],
-                    ["CNT_REF_07", "Karan Mehta", "+91 98765 43216", "", "karan@example.com", "Mehta Industries", "cmp_6", "Operations VP", "Client", "Surat, India", "Trade Fair", "Factory SCADA dashboard and sensor telemetry system.", "https://mehtaind.com", "$28,000", "Paid", "80", "Industry, SCADA", 1],
-                    ["CNT_REF_08", "Anjali Rao", "+91 98765 43217", "", "anjali@example.com", "Rao Creations", "", "Principal Architect", "Prospect", "Hyderabad, India", "Google Ads", "Architecture 3D rendering and VR walkthrough gallery.", "https://raocreations.in", "$14,000", "Pending", "0", "3D, VR", 0]
-                ];
-                $insCnt = $pdo->prepare("INSERT OR IGNORE INTO crm_contacts (id, name, phone, phone2, email, company, company_id, occupation, category, address, lead_from, notes, website_link, budget, amount_status, amount_percentage_paid, specifications, is_starred, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
-                foreach ($contacts as $c) {
-                    $insCnt->execute($c);
+                $seedFile = dirname(__DIR__) . '/config/past_clients_seed.json';
+                if (file_exists($seedFile)) {
+                    $seedData = json_decode(file_get_contents($seedFile), true);
+                    if (!empty($seedData['contacts'])) {
+                        $insCnt = $pdo->prepare("REPLACE INTO crm_contacts (id, name, phone, phone2, email, company, company_id, occupation, category, address, lead_from, notes, whatsapp_notes, drive_link, website_link, creds_server, creds_social, budget, amount_status, amount_percentage_paid, specifications, is_starred, is_blocked, last_contact, tags, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+                        foreach ($seedData['contacts'] as $c) {
+                            $insCnt->execute([
+                                $c['id'], $c['name'], $c['phone'], $c['phone2'] ?? '', $c['email'] ?? '',
+                                $c['company'] ?? '', $c['company_id'] ?? null, $c['occupation'] ?? 'Business Client',
+                                $c['category'] ?? 'Client', $c['address'] ?? 'Jaipur, Rajasthan, India',
+                                $c['lead_from'] ?? 'Google Sheet', $c['notes'] ?? '', $c['whatsapp_notes'] ?? '',
+                                $c['drive_link'] ?? '', $c['website_link'] ?? '', $c['creds_server'] ?? '',
+                                $c['creds_social'] ?? '', $c['budget'] ?? '', $c['amount_status'] ?? 'Pending',
+                                $c['amount_percentage_paid'] ?? '0', $c['specifications'] ?? '',
+                                $c['is_starred'] ?? 0, $c['is_blocked'] ?? 0, $c['last_contact'] ?? 'Recent',
+                                $c['tags'] ?? 'Imported Client'
+                            ]);
+                        }
+                    }
                 }
             }
         } catch (Exception $e) {}

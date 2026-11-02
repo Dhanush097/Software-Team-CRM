@@ -107,17 +107,27 @@ foreach ($databases as $dbName => $db) {
 
 echo "\n=== 3. READING GOOGLE SHEET EXPORT ===\n";
 $csvFile = __DIR__ . '/sheet_export.csv';
-if (!file_exists($csvFile)) {
-    die("Error: sheet_export.csv not found!\n");
-}
+$seedJsonFile = __DIR__ . '/config/past_clients_seed.json';
 
-$f = fopen($csvFile, 'r');
-$header = fgetcsv($f);
-
-$seenIds = [];
 $parsedContacts = [];
 $mediaRecords = [];
 $historyRecords = [];
+
+if (!file_exists($csvFile)) {
+    // Attempt download from Google Sheets
+    $csvUrl = "https://docs.google.com/spreadsheets/d/1lmZRMJqDVLKDQVcz4Wj9J8frSCQm0TLSA1fMkRa3HpM/export?format=csv";
+    $ctx = stream_context_create(['http' => ['timeout' => 5, 'follow_location' => 1]]);
+    $downloaded = @file_get_contents($csvUrl, false, $ctx);
+    if (!empty($downloaded) && strpos($downloaded, 'Ajay Kumar Mishra') !== false) {
+        file_put_contents($csvFile, $downloaded);
+        echo "Downloaded fresh sheet_export.csv from Google Sheets.\n";
+    }
+}
+
+if (file_exists($csvFile)) {
+    $f = fopen($csvFile, 'r');
+    $header = fgetcsv($f);
+    $seenIds = [];
 
 while (($row = fgetcsv($f)) !== false) {
     $rawId = trim($row[0] ?? '');
@@ -238,7 +248,19 @@ while (($row = fgetcsv($f)) !== false) {
         ];
     }
 }
-fclose($f);
+if (isset($f) && is_resource($f)) {
+    fclose($f);
+}
+
+if (empty($parsedContacts) && file_exists($seedJsonFile)) {
+    $seedData = json_decode(file_get_contents($seedJsonFile), true);
+    if (!empty($seedData['contacts'])) {
+        $parsedContacts = $seedData['contacts'];
+        $mediaRecords = $seedData['media'] ?? [];
+        $historyRecords = $seedData['history'] ?? [];
+        echo "Loaded " . count($parsedContacts) . " real client records from config/past_clients_seed.json.\n";
+    }
+}
 
 echo "Extracted " . count($parsedContacts) . " real client records from Google Sheet.\n";
 echo "Extracted " . count($mediaRecords) . " media images.\n";
