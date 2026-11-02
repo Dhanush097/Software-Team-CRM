@@ -829,9 +829,10 @@ class Database {
                 'details' => "TEXT DEFAULT ''"
             ],
             'crm_tasks' => [
+                'description' => 'TEXT',
                 'client_name' => "TEXT DEFAULT 'Customer'",
                 'project_id' => "TEXT DEFAULT 'proj_1'",
-                'project_name' => "TEXT DEFAULT 'E-commerce Website'",
+                'project_name' => "TEXT DEFAULT 'Enterprise Software Platform'",
                 'phone' => "TEXT DEFAULT ''",
                 'location' => "TEXT DEFAULT ''",
                 'assigned_staff' => "TEXT DEFAULT 'Akash Dev'",
@@ -842,7 +843,9 @@ class Database {
                 'priority' => "TEXT DEFAULT 'Medium'",
                 'category' => "TEXT DEFAULT 'general'",
                 'domain' => "TEXT DEFAULT 'software.local'",
-                'icon' => "TEXT DEFAULT 'layout'"
+                'icon' => "TEXT DEFAULT 'layout'",
+                'created_by' => 'TEXT',
+                'updated_at' => 'DATETIME'
             ],
             'crm_companies' => [
                 'logo_url' => 'TEXT',
@@ -1160,10 +1163,11 @@ class Database {
                 ['cmp_abc_tech_solutions', 'ABC Tech Solutions', 'Technology & Services', 'https://www.abctech.com', 'contact@abctech.com', '+91 98765 43210', 'Mumbai, India', 'Key enterprise software client'],
                 ['cmp_verma_solutions', 'Verma Solutions', 'Fintech & Mobile', 'https://verma-solutions.com', 'info@verma.com', '+91 98765 43211', 'Delhi, India', 'Fintech application design & dev'],
                 ['cmp_test_automation_corp', 'Test Automation Corp', 'QA & Automation', 'https://testautomation.corp', 'qa@testautomation.corp', '+91 98765 43218', 'Bengaluru, India', 'Enterprise QA automation'],
-                ['cmp_3', 'Patel & Co.', 'ERP & Industrial', 'https://patelco.in', 'hello@patelco.in', '+91 98765 43212', 'Ahmedabad, India', 'ERP and accounting automation contract'],
-                ['cmp_4', 'Kapoor Designs', 'Creative & Media', 'https://kapoordesigns.com', 'design@kapoor.com', '+91 98765 43213', 'Bengaluru, India', 'Brand identity and design system revamps'],
-                ['cmp_5', 'Sheopur Univ', 'Education & Public', 'https://sheopur.edu.in', 'it@sheopur.edu.in', '+91 98765 43214', 'Madhya Pradesh, India', 'Cloud campus ERP and student portal'],
-                ['cmp_6', 'Apex Industrial Works', 'Manufacturing & IoT', 'https://apexworks.in', 'ops@apexworks.in', '+91 98765 43215', 'Pune, India', 'Factory SCADA telemetry & sensor dashboards']
+                ['cmp_babbar_properties', 'Babbar properties', 'Real Estate & Construction', 'https://babbarproperties.in', 'contact@babbarproperties.in', '+91 94507 48901', 'Jaipur, Rajasthan', 'Real estate development & property portal'],
+                ['cmp_dnd_silver', 'DND silver_jewellery', 'Jewellery & Retail', 'https://dndsilver.com', 'davendra@dndsilver.com', '+91 94507 48902', 'Jaipur, Rajasthan', 'E-commerce jewellery catalog & custom designs'],
+                ['cmp_krishna_travels', 'Krishna Travels', 'Travel & Tourism', 'https://krishnatravels.in', 'manish@krishnatravels.in', '+91 94507 48903', 'Jaipur, Rajasthan', 'Fleet booking and tour management systems'],
+                ['cmp_himalaya_projects', 'Himalaya Projects', 'Enterprise Solutions', 'https://himalayaprojects.in', 'himalaya@gmail.com', '+91 94507 48904', 'Jaipur, Rajasthan', 'Enterprise client operations & management'],
+                ['cmp_bclds_ngo', 'BCLDS NGO', 'Non-Profit & Social', 'https://bclds.org', 'contact@bclds.org', '+91 94507 48905', 'Jaipur, Rajasthan', 'Non-profit management and donation portal']
             ];
             $insComp = $pdo->prepare("INSERT OR IGNORE INTO crm_companies (id, name, industry, website, email, phone, address, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
             foreach ($companies as $c) {
@@ -1203,12 +1207,12 @@ class Database {
             $projCount = (int)$pdo->query("SELECT COUNT(*) FROM crm_projects")->fetchColumn();
             if ($projCount === 0) {
                 $projects = [
-                    ["proj_1", "E-commerce Website", "ABC Tech Solutions", "cmp_1", "Web & App", "In Progress", 70, "$15,000", "2024-06-01", "10 Aug 2024", "Rahul S., Akash D., Priya V.", "layout", "purple"],
-                    ["proj_2", "Mobile App Development", "Verma Solutions", "cmp_2", "Mobile App", "In Progress", 40, "$22,000", "2024-07-15", "25 Sep 2024", "Priya V., Liam C., Sophia B.", "smartphone", "indigo"],
-                    ["proj_3", "Brand Identity Design", "Kapoor Designs", "cmp_4", "Design", "Completed", 100, "$6,500", "2024-05-10", "10 Aug 2024", "Sneha K., Emma W.", "feather", "emerald"],
-                    ["proj_4", "CRM System", "Patel & Co.", "cmp_3", "SaaS Enterprise", "On Hold", 25, "$18,500", "2024-07-01", "15 Nov 2024", "Amit P., Akash D.", "database", "amber"],
-                    ["proj_5", "Cloud ERP Integration", "Sheopur Univ", "cmp_5", "Cloud & DevOps", "In Progress", 85, "$30,000", "2024-04-12", "05 Sep 2024", "Rohit S., Vikram S.", "cloud", "blue"],
-                    ["proj_6", "Factory IoT SCADA", "Apex Industrial Works", "cmp_6", "IoT Telemetry", "In Progress", 60, "$25,000", "2024-05-20", "30 Oct 2024", "Karan M., Akash D.", "cpu", "cyan"]
+                    ["proj_1", "Enterprise Software Platform", "Surrender Kumar kasana", "cmp_abc_tech_solutions", "Web & App", "In Progress", 70, "$15,000", "2024-06-01", "10 Aug 2024", "Dhanush, Suresh Kumar, Akash Dev", "layout", "purple"],
+                    ["proj_2", "Real Estate Portal & Mobile App", "Babbar properties", "cmp_babbar_properties", "Mobile App", "In Progress", 40, "$22,000", "2024-07-15", "25 Sep 2024", "Akash Dev, Suresh Kumar", "smartphone", "indigo"],
+                    ["proj_3", "Himalaya Client Management System", "Himalaya", "cmp_himalaya_projects", "Design", "Completed", 100, "$6,500", "2024-05-10", "10 Aug 2024", "Dhanush, Akash Dev", "feather", "emerald"],
+                    ["proj_4", "DND Silver Jewellery E-Commerce Portal", "Davendra Soni", "cmp_dnd_silver", "SaaS Enterprise", "In Progress", 65, "$18,500", "2024-07-01", "15 Nov 2024", "Suresh Kumar, Akash Dev", "database", "amber"],
+                    ["proj_5", "Dangi E-Commerce Web Store", "Kuldeep Dangi", "cmp_abc_tech_solutions", "Cloud & DevOps", "In Progress", 85, "$30,000", "2024-04-12", "05 Sep 2024", "Dhanush, Suresh Kumar", "cloud", "blue"],
+                    ["proj_6", "Digital Business Suite", "Akash Jaisawat", "cmp_apex_global_technologies", "IoT Telemetry", "In Progress", 60, "$25,000", "2024-05-20", "30 Oct 2024", "Akash Dev, Dhanush", "cpu", "cyan"]
                 ];
                 $insProj = $pdo->prepare("INSERT OR IGNORE INTO crm_projects (id, title, client_name, company_id, category, status, progress, budget, start_date, deadline, team_members, icon, color, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
                 foreach ($projects as $pr) {
@@ -1222,14 +1226,14 @@ class Database {
             $taskCount = (int)$pdo->query("SELECT COUNT(*) FROM crm_tasks")->fetchColumn();
             if ($taskCount === 0) {
                 $tasks = [
-                    ["tsk_1", "Design Homepage", "ABC Tech Solutions", "proj_1", "E-commerce Website", "", "", "Akash Dev", "Today", "High", "Design", "software.local", "layout", 0],
-                    ["tsk_2", "Client Meeting - ABC Ltd", "ABC Tech Solutions", "proj_1", "E-commerce Website", "", "", "Suresh Kumar", "Tomorrow", "Medium", "Meeting", "software.local", "users", 0],
-                    ["tsk_3", "Prepare Proposal", "Verma Solutions", "proj_1", "E-commerce Website", "", "", "Akash Dev", "14 Aug", "Low", "Sales", "software.local", "file-text", 0],
-                    ["tsk_4", "Review UI Design", "Kapoor Designs", "proj_1", "E-commerce Website", "", "", "Emma Wilson", "16 Aug", "High", "Design", "software.local", "eye", 0],
-                    ["tsk_5", "Update Project Documentation", "Patel & Co.", "proj_1", "E-commerce Website", "", "", "Liam C.", "18 Aug", "Medium", "Docs", "software.local", "book", 0],
-                    ["tsk_6", "Database Optimization", "Sheopur Univ", "proj_1", "E-commerce Website", "", "", "Akash Dev", "20 Aug", "Low", "Database", "software.local", "database", 1],
-                    ["tsk_7", "API Security Audit", "Apex Industrial Works", "proj_1", "E-commerce Website", "", "", "Akash Dev", "22 Aug", "High", "Security", "software.local", "shield", 1],
-                    ["tsk_8", "Configure Production SSL", "ABC Tech Solutions", "proj_1", "E-commerce Website", "", "", "Akash Dev", "24 Aug", "Medium", "DevOps", "software.local", "lock", 1]
+                    ["tsk_1", "Design Homepage & Architecture", "Surrender Kumar kasana", "proj_1", "Enterprise Software Platform", "", "", "Akash Dev", "Today", "High", "Design", "software.local", "layout", 0],
+                    ["tsk_2", "Client Strategy & Workflow Sync", "Surrender Kumar kasana", "proj_1", "Enterprise Software Platform", "", "", "Suresh Kumar", "Tomorrow", "Medium", "Meeting", "software.local", "users", 0],
+                    ["tsk_3", "Real Estate Portal Wireframes", "Babbar properties", "proj_1", "Enterprise Software Platform", "", "", "Akash Dev", "14 Aug", "Low", "Sales", "software.local", "file-text", 0],
+                    ["tsk_4", "Jewellery Catalog & Order Workflow", "Davendra Soni", "proj_1", "Enterprise Software Platform", "", "", "Dhanush", "16 Aug", "High", "Design", "software.local", "eye", 0],
+                    ["tsk_5", "NGO Membership & Donation Flow", "BCLDS NGO", "proj_1", "Enterprise Software Platform", "", "", "Suresh Kumar", "18 Aug", "Medium", "Docs", "software.local", "book", 0],
+                    ["tsk_6", "Database Optimization & Scalability", "Himalaya", "proj_1", "Enterprise Software Platform", "", "", "Akash Dev", "20 Aug", "Low", "Database", "software.local", "database", 1],
+                    ["tsk_7", "API Security Audit & Cloud Deploy", "Akash Jaisawat", "proj_1", "Enterprise Software Platform", "", "", "Akash Dev", "22 Aug", "High", "Security", "software.local", "shield", 1],
+                    ["tsk_8", "Configure Production SSL & CDN", "Surrender Kumar kasana", "proj_1", "Enterprise Software Platform", "", "", "Akash Dev", "24 Aug", "Medium", "DevOps", "software.local", "lock", 1]
                 ];
                 $insTask = $pdo->prepare("INSERT OR IGNORE INTO crm_tasks (id, title, client_name, project_id, project_name, phone, location, assigned_staff, due_time, priority, category, domain, icon, completed, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
                 foreach ($tasks as $tk) {
@@ -1243,13 +1247,13 @@ class Database {
             $ledgerCount = (int)$pdo->query("SELECT COUNT(*) FROM crm_cash_ledger")->fetchColumn();
             if ($ledgerCount === 0) {
                 $invoices = [
-                    ["inv_1", "INV-2024-001", "income", 2500.00, 2500.00, 0.00, "Website Development Milestone 1", "Development", "Online Transfer", "Admin", "ABC Tech Solutions", "+91 98765 43210", "Paid", "10 Aug 2024"],
-                    ["inv_2", "INV-2024-002", "income", 1200.00, 0.00, 1200.00, "Mobile App UI Design Phase", "Design", "Bank Wire", "Admin", "Verma Solutions", "+91 98765 43211", "Pending", "12 Aug 2024"],
-                    ["inv_3", "INV-2024-003", "income", 3000.00, 0.00, 3000.00, "Brand Identity & Design System", "Branding", "Cheque", "Admin", "Kapoor Designs", "+91 98765 43213", "Overdue", "05 Aug 2024"],
-                    ["inv_4", "INV-2024-004", "income", 800.00, 800.00, 0.00, "Architecture & Cloud Consultation", "Consulting", "UPI", "Admin", "Patel & Co.", "+91 98765 43212", "Paid", "28 Jul 2024"],
-                    ["inv_5", "INV-2024-005", "income", 4950.00, 4950.00, 0.00, "ERP Integration & Module Delivery", "Enterprise", "Online Transfer", "Admin", "Apex Industrial Works", "+91 98765 43216", "Paid", "15 Jul 2024"]
+                    ["inv_1", "INV-2024-001", "income", 2500.00, 2500.00, 0.00, "Enterprise Software Platform Milestone 1", "Development", "Online Transfer", "Admin", "Surrender Kumar kasana", "+91 94507 48909", "Paid", "10 Aug 2024"],
+                    ["inv_2", "INV-2024-002", "income", 1200.00, 0.00, 1200.00, "Real Estate Portal UI Design Phase", "Design", "Bank Wire", "Admin", "Babbar properties", "+91 94507 48901", "Pending", "12 Aug 2024"],
+                    ["inv_3", "INV-2024-003", "income", 3000.00, 0.00, 3000.00, "DND Silver Jewellery E-Commerce System", "Branding", "Cheque", "Admin", "Davendra Soni", "+91 94507 48902", "Overdue", "05 Aug 2024"],
+                    ["inv_4", "INV-2024-004", "income", 800.00, 800.00, 0.00, "Client Management & Cloud Consultation", "Consulting", "UPI", "Admin", "Himalaya", "+91 94507 48904", "Paid", "28 Jul 2024"],
+                    ["inv_5", "INV-2024-005", "income", 4950.00, 4950.00, 0.00, "Digital Business Suite Delivery", "Enterprise", "Online Transfer", "Admin", "Akash Jaisawat", "+91 94507 48906", "Paid", "15 Jul 2024"]
                 ];
-                $insInv = $pdo->prepare("INSERT OR IGNORE INTO crm_cash_ledger (id, invoice_no, type, amount, paid_amount, balance_amount, title, category, payment_mode, handled_by, customer_name, customer_phone, status, due_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
+                $insInv = $pdo->prepare("INSERT OR IGNORE INTO crm_cash_ledger (id, invoice_no, type, amount, paid_amount, balance_amount, title, category, payment_mode, handled_by, customer_name, customer_phone, status, due_date, transaction_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
                 foreach ($invoices as $iv) {
                     $insInv->execute($iv);
                 }
@@ -1279,8 +1283,8 @@ class Database {
             $payCount = (int)$pdo->query("SELECT COUNT(*) FROM crm_payments")->fetchColumn();
             if ($payCount === 0) {
                 $payments = [
-                    ['pay_seed_1', 'REC-2026-001', 'inv_1', 'INV-2024-001', 'ABC Tech Solutions', 2500.00, '2026-10-15', 'Online Transfer', 'Bank Transfer', 'TXN-901', 'Full payment for invoice 1', 'Advance payment', 'Suresh Kumar', 'Suresh Kumar', 'Paid', '2026-10-15 10:00:00'],
-                    ['pay_seed_2', 'REC-2026-002', 'inv_2', 'INV-2024-002', 'Verma Solutions', 1200.00, '2026-10-18', 'Online Transfer', 'Bank Transfer', 'TXN-902', 'Milestone 1 payment', 'Online transfer', 'Suresh Kumar', 'Suresh Kumar', 'Paid', '2026-10-18 14:30:00']
+                    ['pay_seed_1', 'REC-2026-001', 'inv_1', 'INV-2024-001', 'Surrender Kumar kasana', 2500.00, '2026-10-15', 'Online Transfer', 'Bank Transfer', 'TXN-901', 'Full payment for invoice 1', 'Advance payment', 'Suresh Kumar', 'Suresh Kumar', 'Paid', '2026-10-15 10:00:00'],
+                    ['pay_seed_2', 'REC-2026-002', 'inv_2', 'INV-2024-002', 'Babbar properties', 1200.00, '2026-10-18', 'Online Transfer', 'Bank Transfer', 'TXN-902', 'Milestone 1 payment', 'Online transfer', 'Suresh Kumar', 'Suresh Kumar', 'Paid', '2026-10-18 14:30:00']
                 ];
                 $insPay = $pdo->prepare("INSERT OR IGNORE INTO crm_payments (id, receipt_no, invoice_id, invoice_no, customer_name, amount, payment_date, payment_method, payment_mode, transaction_id, reference, notes, recorded_by, received_by, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 foreach ($payments as $p) {
@@ -1294,11 +1298,11 @@ class Database {
             $calCount = (int)$pdo->query("SELECT COUNT(*) FROM crm_calendar_events")->fetchColumn();
             if ($calCount === 0) {
                 $events = [
-                    ["Client Meeting", "2026-08-07", "10:00 AM", "Meeting", "#10b981", "Client meeting with ABC Tech Solutions team"],
-                    ["Project Review", "2026-08-09", "02:30 PM", "Review", "#3b82f6", "Sprint 3 deliverables review"],
-                    ["Design Deadline", "2026-08-14", "06:00 PM", "Deadline", "#ef4444", "Final Figma approval & handover"],
-                    ["Team Meeting", "2026-08-21", "11:00 AM", "Meeting", "#6366f1", "Bi-weekly engineering sync"],
-                    ["Invoice Due", "2026-08-26", "05:00 PM", "Billing", "#f59e0b", "Payment reminder for INV-2024-002"]
+                    ["Client Strategy Session", "2026-08-07", "10:00 AM", "Meeting", "#10b981", "Client meeting with Surrender Kumar kasana (ABC Tech Solutions)"],
+                    ["Sprint 3 Deliverables Review", "2026-08-09", "02:30 PM", "Review", "#3b82f6", "Sprint 3 deliverables review with Babbar properties"],
+                    ["Jewellery Catalog Approval", "2026-08-14", "06:00 PM", "Deadline", "#ef4444", "Final catalog and payment approval with Davendra Soni"],
+                    ["Engineering Architecture Sync", "2026-08-21", "11:00 AM", "Meeting", "#6366f1", "Bi-weekly engineering sync with core software team"],
+                    ["Payment Follow-up", "2026-08-26", "05:00 PM", "Billing", "#f59e0b", "Payment reminder for INV-2024-002"]
                 ];
                 $insCal = $pdo->prepare("INSERT INTO crm_calendar_events (title, event_date, event_time, category, color, description, created_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
                 foreach ($events as $ev) {

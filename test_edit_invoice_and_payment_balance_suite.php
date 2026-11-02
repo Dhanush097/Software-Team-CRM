@@ -194,7 +194,7 @@ logTest("Invoice Modal adapts dynamically to Edit state", $hasModalEditState, "i
 if (!$hasModalEditState) $allPassed = false;
 
 // 6. Reset INV-2024-003 to clean state for subsequent runs
-$pdo->prepare("UPDATE crm_cash_ledger SET customer_name = 'Kapoor Designs', title = 'Brand Identity & Design System', amount = 3000.00, subtotal = 3000.00, discount_percent = 0, tax_percent = 0, paid_amount = 0.00, balance_amount = 3000.00, status = 'Overdue' WHERE invoice_no = 'INV-2024-003'")->execute();
+$pdo->prepare("UPDATE crm_cash_ledger SET customer_name = 'Davendra Soni', title = 'DND Silver Jewellery E-Commerce System', amount = 3000.00, subtotal = 3000.00, discount_percent = 0, tax_percent = 0, paid_amount = 0.00, balance_amount = 3000.00, status = 'Overdue' WHERE invoice_no = 'INV-2024-003'")->execute();
 $pdo->prepare("DELETE FROM crm_payments WHERE invoice_no = 'INV-2024-003'")->execute();
 $pdo->prepare("DELETE FROM crm_invoice_items WHERE invoice_id = 'inv_3'")->execute();
 

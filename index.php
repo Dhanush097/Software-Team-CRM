@@ -3168,47 +3168,31 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               </div>
 
               <div class="divide-y divide-[#E8D2B5]/30 dark:divide-[#29181C] mt-1">
-                <!-- Activity 1 -->
-                <div class="py-2.5 flex items-start justify-between gap-2.5">
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-7 h-7 rounded-full bg-[#E8D2B5]/50 text-[#590907] dark:bg-[#590907]/30 dark:text-[#E8D2B5] flex items-center justify-center text-xs font-bold shrink-0">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <template x-for="(act, idx) in recentActivities" :key="idx">
+                  <div class="py-2.5 flex items-start justify-between gap-2.5">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <div class="w-7 h-7 rounded-full bg-[#E8D2B5]/50 text-[#590907] dark:bg-[#590907]/30 dark:text-[#E8D2B5] flex items-center justify-center text-xs font-bold shrink-0">
+                        <template x-if="act.type === 'contact'">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        </template>
+                        <template x-if="act.type === 'project'">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                        </template>
+                        <template x-if="act.type === 'invoice'">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                        </template>
+                        <template x-if="act.type === 'task'">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        </template>
+                      </div>
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate" x-text="act.title"></div>
+                        <div class="text-[11px] text-slate-500 dark:text-[#A5A79B] truncate" x-text="act.subtitle"></div>
+                      </div>
                     </div>
-                    <div class="min-w-0">
-                      <div class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">New contact added</div>
-                      <div class="text-[11px] text-slate-500 dark:text-[#A5A79B] truncate">Rahul Sharma</div>
-                    </div>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap" x-text="act.time"></span>
                   </div>
-                  <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">10 min ago</span>
-                </div>
-
-                <!-- Activity 2 -->
-                <div class="py-2.5 flex items-start justify-between gap-2.5">
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-7 h-7 rounded-full bg-[#A5A79B]/30 text-[#590907] dark:bg-[#A5A79B]/20 dark:text-[#E8D2B5] flex items-center justify-center text-xs font-bold shrink-0">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                    </div>
-                    <div class="min-w-0">
-                      <div class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">Project updated</div>
-                      <div class="text-[11px] text-slate-500 dark:text-[#A5A79B] truncate">E-commerce Website</div>
-                    </div>
-                  </div>
-                  <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">1 hour ago</span>
-                </div>
-
-                <!-- Activity 3 -->
-                <div class="py-2.5 flex items-start justify-between gap-2.5">
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-7 h-7 rounded-full bg-[#E8D2B5]/50 text-[#590907] dark:bg-[#590907]/30 dark:text-[#E8D2B5] flex items-center justify-center text-xs font-bold shrink-0">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
-                    </div>
-                    <div class="min-w-0">
-                      <div class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">Invoice created</div>
-                      <div class="text-[11px] text-slate-500 dark:text-[#A5A79B] truncate">INV-2024-001</div>
-                    </div>
-                  </div>
-                  <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">3 hours ago</span>
-                </div>
+                </template>
               </div>
             </div>
 
@@ -3321,8 +3305,8 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                       :class="(c.category || '').toLowerCase() === 'client' ? 'bg-blue-100 text-blue-700' : ((c.category || '').toLowerCase() === 'lead' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700')"
                       x-text="(c.name || 'C').substring(0, 2)"></div>
                     <div class="min-w-0">
-                      <div class="text-xs font-extrabold text-slate-900 truncate" x-text="c.name">Rahul Sharma</div>
-                      <div class="text-[11px] text-slate-400 truncate mt-0.5" x-text="c.company || c.position || c.phone">ABC Tech Solutions</div>
+                      <div class="text-xs font-extrabold text-slate-900 truncate" x-text="c.name">Client</div>
+                      <div class="text-[11px] text-slate-400 truncate mt-0.5" x-text="c.company || c.position || c.phone">Company</div>
                     </div>
                   </div>
 
@@ -3353,18 +3337,18 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               
               <!-- Large Avatar Circle -->
               <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-2xl font-bold uppercase mx-auto mb-3 shadow-lg shadow-blue-500/20"
-                x-text="activeContact ? (activeContact.name || 'C').substring(0, 2) : 'RS'">
-                RS
+                x-text="activeContact ? (activeContact.name || 'C').substring(0, 2) : 'C'">
+                C
               </div>
 
               <!-- Name & Status Badge -->
               <div class="flex items-center justify-center gap-2">
-                <h2 class="text-lg font-black text-slate-900" x-text="activeContact ? activeContact.name : 'Rahul Sharma'">Rahul Sharma</h2>
+                <h2 class="text-lg font-black text-slate-900" x-text="activeContact ? activeContact.name : 'Client'">Client</h2>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize"
                   :class="activeContact && (activeContact.category || '').toLowerCase() === 'client' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-blue-50 text-blue-700 border border-blue-200/60'"
                   x-text="activeContact ? (activeContact.category || 'Client') : 'Client'">Client</span>
               </div>
-              <div class="text-xs font-semibold text-slate-500 mt-0.5" x-text="activeContact ? (activeContact.company || activeContact.position || 'Software Client') : 'ABC Tech Solutions'">ABC Tech Solutions</div>
+              <div class="text-xs font-semibold text-slate-500 mt-0.5" x-text="activeContact ? (activeContact.company || activeContact.position || 'Software Client') : 'Client Company'">Client Company</div>
 
               <!-- 4 Action Buttons Row: Call, WhatsApp, Email, More (Screen 3 & 4) -->
               <div class="grid grid-cols-4 gap-2 mt-5 pt-4 border-t border-slate-100">
@@ -3750,7 +3734,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                       </div>
                       <div class="min-w-0">
-                        <h4 class="text-xs font-black text-slate-900 truncate" x-text="p.title">E-commerce Website</h4>
+                        <h4 class="text-xs font-black text-slate-900 truncate" x-text="p.title">Project</h4>
                         <p class="text-[11px] text-slate-400 font-medium truncate mt-0.5" x-text="p.client_name">ABC Tech Solutions</p>
                       </div>
                     </div>
@@ -3834,7 +3818,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                         <span x-text="activeProject.title ? activeProject.title.trim()[0].toUpperCase() : 'P'">E</span>
                       </div>
                       <div class="min-w-0">
-                        <h2 class="text-base font-black text-slate-900 truncate leading-snug" x-text="activeProject.title">E-commerce Website</h2>
+                        <h2 class="text-base font-black text-slate-900 truncate leading-snug" x-text="activeProject.title">Project</h2>
                         <div class="flex items-center gap-1.5 mt-0.5 text-xs text-slate-500 font-semibold truncate">
                           <span x-text="activeProject.company_name ? ('Company: ' + activeProject.company_name) : (activeProject.client_name ? ('Client: ' + activeProject.client_name) : 'No Company Linked')">Website development for Test Client</span>
                           <template x-if="activeProject.company_id || activeProject.company_name">
@@ -4567,7 +4551,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                         <h2 class="text-sm font-black text-slate-900 leading-snug"
                           :class="Number(activeTask.completed) === 1 ? 'line-through text-slate-400' : ''"
                           x-text="activeTask.title">Design Homepage</h2>
-                        <p class="text-xs text-slate-500 font-semibold mt-0.5" x-text="activeTask.project_name || activeTask.client_name || 'E-commerce Website'"></p>
+                        <p class="text-xs text-slate-500 font-semibold mt-0.5" x-text="activeTask.project_name || activeTask.client_name || 'Software Project'"></p>
                         <p class="text-[11px] text-slate-400 font-medium" x-text="activeTask.category || 'Web Development'"></p>
                       </div>
                     </div>
@@ -4651,7 +4635,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         <span>Project</span>
                       </div>
-                      <span class="font-bold text-blue-600" x-text="activeTask.project_name || activeTask.client_name || 'E-commerce Website'">E-commerce Website</span>
+                      <span class="font-bold text-blue-600" x-text="activeTask.project_name || activeTask.client_name || 'Software Project'">Software Project</span>
                     </div>
 
                     <!-- Assign To -->
@@ -8650,7 +8634,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
           <!-- Full Name (Required) -->
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Full Name <span class="text-rose-500">*</span></label>
-            <input type="text" x-model="contactForm.name" required placeholder="e.g. Rahul Sharma" 
+            <input type="text" x-model="contactForm.name" required placeholder="e.g. Surrender Kumar" 
               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"/>
           </div>
 
@@ -10528,7 +10512,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
         <form @submit.prevent="submitProjectForm()" class="space-y-2.5 text-xs">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 mb-1">Project Title *</label>
-            <input type="text" x-model="projectForm.title" @input="onProjectTitleInput()" required placeholder="e.g. E-commerce Website" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"/>
+            <input type="text" x-model="projectForm.title" @input="onProjectTitleInput()" required placeholder="e.g. Enterprise Software Platform" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"/>
           </div>
 
           <div>
@@ -10586,7 +10570,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
             </div>
             <div>
               <label class="block text-[10px] font-bold text-slate-500 mb-1">Project Manager</label>
-              <input type="text" x-model="projectForm.project_manager" placeholder="Rahul Sharma" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"/>
+              <input type="text" x-model="projectForm.project_manager" placeholder="Dhanush" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"/>
             </div>
           </div>
 
@@ -13794,7 +13778,7 @@ function softwareCRMApp(serverUser) {
         bulkMode: false,
         selectedTaskIds: [],
         modalBulkAssignOpen: false,
-        bulkAssignStaff: 'Rahul Sharma',
+        bulkAssignStaff: 'Dhanush',
         modalBulkMoveOpen: false,
         bulkMoveProjectId: '',
 
@@ -13874,7 +13858,7 @@ function softwareCRMApp(serverUser) {
           status: 'In Progress',
           description: '',
           budget: '$12,000',
-          project_manager: 'Rahul Sharma',
+          project_manager: 'Dhanush',
           start_date: '2024-08-01',
           deadline: '2024-11-30'
         },
@@ -14129,7 +14113,7 @@ function softwareCRMApp(serverUser) {
           } else if (p.project_manager) {
             names = [p.project_manager];
           }
-          if (names.length === 0) names = ['Rahul Sharma', 'Priya Verma'];
+          if (names.length === 0) names = ['Dhanush', 'Suresh Kumar'];
           
           return names.map(n => {
             const found = (this.teamMembers || []).find(m => m.name && m.name.toLowerCase() === n.toLowerCase());
@@ -14870,6 +14854,48 @@ function softwareCRMApp(serverUser) {
           } catch (e) {
             console.error('Data load error:', e);
           }
+        },
+
+        // Computed Recent Activity Feed
+        get recentActivities() {
+          const acts = [];
+          if (this.contacts && this.contacts.length > 0) {
+            const c = this.contacts[0];
+            acts.push({
+              type: 'contact',
+              title: 'New contact added',
+              subtitle: c.name || 'Client',
+              time: c.last_contact || 'Recently'
+            });
+          }
+          if (this.projects && this.projects.length > 0) {
+            const p = this.projects[0];
+            acts.push({
+              type: 'project',
+              title: 'Project updated',
+              subtitle: p.title || 'Project',
+              time: 'Active'
+            });
+          }
+          if (this.invoices && this.invoices.length > 0) {
+            const inv = this.invoices[0];
+            acts.push({
+              type: 'invoice',
+              title: 'Invoice created',
+              subtitle: (inv.invoice_no || 'INV') + ' • ' + (inv.customer_name || 'Client'),
+              time: inv.due_date || 'Recent'
+            });
+          }
+          if (this.tasks && this.tasks.length > 0) {
+            const t = this.tasks[0];
+            acts.push({
+              type: 'task',
+              title: 'Task assigned',
+              subtitle: (t.title || 'Task') + ' • ' + (t.client_name || 'Client'),
+              time: t.due_time || 'Today'
+            });
+          }
+          return acts.slice(0, 3);
         },
 
         // Computed Filters
@@ -16890,7 +16916,7 @@ function softwareCRMApp(serverUser) {
 
         openBulkAssignModal() {
           if (this.selectedTaskIds.length === 0) return;
-          this.bulkAssignStaff = 'Rahul Sharma';
+          this.bulkAssignStaff = 'Dhanush';
           this.modalBulkAssignOpen = true;
         },
 
@@ -16954,8 +16980,8 @@ function softwareCRMApp(serverUser) {
           const tid = t.id || 'default';
           if (!this.taskComments[tid]) {
             this.taskComments[tid] = [
-              { id: 1, user: 'Rahul Sharma', time: '2 hours ago', text: 'Checked the requirements with client. Looking good to proceed with the core sprint.' },
-              { id: 2, user: 'Priya Verma', time: 'Yesterday', text: 'Attached the latest design specifications and mobile mockups.' }
+              { id: 1, user: 'Dhanush', time: '2 hours ago', text: 'Checked the requirements with client. Looking good to proceed with the core sprint.' },
+              { id: 2, user: 'Suresh Kumar', time: 'Yesterday', text: 'Attached the latest design specifications and mobile mockups.' }
             ];
           }
           return this.taskComments[tid];
@@ -16966,7 +16992,7 @@ function softwareCRMApp(serverUser) {
           const comments = this.getTaskComments(t);
           comments.unshift({
             id: Date.now(),
-            user: 'Rahul Sharma',
+            user: (this.currentUser && this.currentUser.name) ? this.currentUser.name : 'Dhanush',
             time: 'Just now',
             text: this.newCommentText.trim()
           });
@@ -17142,8 +17168,8 @@ function softwareCRMApp(serverUser) {
           const tid = t.id || 'default';
           if (!this.taskActivity[tid]) {
             this.taskActivity[tid] = [
-              { title: 'Task created', description: 'Created and assigned to ' + (t.assigned_staff || 'Rahul Sharma'), user: 'Admin', time: '2 days ago' },
-              { title: 'Priority updated', description: 'Set priority to ' + (t.priority || 'Medium'), user: 'Rahul Sharma', time: 'Yesterday' }
+              { title: 'Task created', description: 'Created and assigned to ' + (t.assigned_staff || 'Dhanush'), user: 'Admin', time: '2 days ago' },
+              { title: 'Priority updated', description: 'Set priority to ' + (t.priority || 'Medium'), user: (t.assigned_staff || 'Dhanush'), time: 'Yesterday' }
             ];
           }
           return this.taskActivity[tid];
@@ -17341,7 +17367,7 @@ function softwareCRMApp(serverUser) {
               status: 'In Progress',
               description: '',
               budget: '$12,000',
-              project_manager: 'Rahul Sharma',
+              project_manager: 'Dhanush',
               start_date: new Date().toISOString().split('T')[0],
               deadline: ''
             };
@@ -17717,10 +17743,10 @@ function softwareCRMApp(serverUser) {
           }
           // Matching reference items for rich timeline
           return [
-            { title: 'Project updated', description: 'Project progress updated to ' + (p.progress !== undefined ? p.progress : 70) + '% by ' + (p.project_manager || 'Rahul Sharma') + ' • 2 hours ago', user: p.project_manager || 'Rahul Sharma', time: '2 hours ago' },
-            { title: 'New task added', description: 'Design product listing page by Priya Verma • 5 hours ago', user: 'Priya Verma', time: '5 hours ago' },
+            { title: 'Project updated', description: 'Project progress updated to ' + (p.progress !== undefined ? p.progress : 70) + '% by ' + (p.project_manager || 'Dhanush') + ' • 2 hours ago', user: p.project_manager || 'Dhanush', time: '2 hours ago' },
+            { title: 'New task added', description: 'Design product listing page by Suresh Kumar • 5 hours ago', user: 'Suresh Kumar', time: '5 hours ago' },
             { title: 'Milestone reached', description: 'Sprint 2 deliverables verified and approved by Suresh Kumar • Yesterday', user: 'Suresh Kumar', time: 'Yesterday' },
-            { title: 'Files uploaded', description: 'Added E-commerce Architecture Spec v2.1.pdf by Amit Patel • 3 days ago', user: 'Amit Patel', time: '3 days ago' },
+            { title: 'Files uploaded', description: 'Added Architecture Spec v2.1.pdf by Akash Dev • 3 days ago', user: 'Akash Dev', time: '3 days ago' },
             { title: 'Project kick-off', description: 'Project initialized with budget allocation by Admin • 01 Aug 2024', user: 'Admin', time: '01 Aug 2024' }
           ];
         },
