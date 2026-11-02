@@ -10483,10 +10483,16 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
 
         <div class="space-y-1 text-xs font-bold text-slate-700">
           <template x-if="actionCalendarItem && actionCalendarItem.type === 'event'">
-            <button @click="deleteCalendarEvent(actionCalendarItem.id)" type="button" class="w-full py-2.5 px-3 rounded-xl hover:bg-rose-50 text-rose-600 flex items-center gap-3 text-left touch-press">
-              <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-              <span>Delete Event</span>
-            </button>
+            <div class="space-y-1">
+              <button @click="openEditEventModal(actionCalendarItem)" type="button" class="w-full py-2.5 px-3 rounded-xl hover:bg-slate-50 text-slate-700 flex items-center gap-3 text-left touch-press">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <span>Edit Event</span>
+              </button>
+              <button @click="deleteCalendarEvent(actionCalendarItem.id)" type="button" class="w-full py-2.5 px-3 rounded-xl hover:bg-rose-50 text-rose-600 flex items-center gap-3 text-left touch-press">
+                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <span>Delete Event</span>
+              </button>
+            </div>
           </template>
 
           <template x-if="actionCalendarItem && actionCalendarItem.type === 'task'">
@@ -17308,13 +17314,40 @@ function softwareCRMApp(serverUser) {
           this.selectedCalendarDate = `${y}-${m}-${d}`;
         },
 
+        normalizeDateStr(dateStr) {
+          if (!dateStr) return '';
+          dateStr = String(dateStr).trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            return dateStr;
+          }
+          const m = dateStr.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+          if (m) {
+            const d = m[1].padStart(2, '0');
+            const mo = m[2].padStart(2, '0');
+            const y = m[3];
+            if (parseInt(mo, 10) > 12 && parseInt(d, 10) <= 12) {
+              return `${y}-${d}-${mo}`;
+            }
+            return `${y}-${mo}-${d}`;
+          }
+          const dt = new Date(dateStr);
+          if (!isNaN(dt.getTime())) {
+            const y = dt.getFullYear();
+            const mo = String(dt.getMonth() + 1).padStart(2, '0');
+            const d = String(dt.getDate()).padStart(2, '0');
+            return `${y}-${mo}-${d}`;
+          }
+          return dateStr;
+        },
+
         selectCalendarDate(dateStr) {
           if (!dateStr) return;
+          dateStr = this.normalizeDateStr(dateStr);
           this.selectedCalendarDate = dateStr;
 
           // If clicked date is in adjacent month, align calendar view
           const parts = dateStr.split('-');
-          if (parts.length === 3) {
+          if (parts.length === 3 && parts[0].length === 4) {
             const yr = parseInt(parts[0], 10);
             const mo = parseInt(parts[1], 10) - 1;
             if (this.calendarViewYear !== yr || this.calendarViewMonth !== mo) {
@@ -17328,14 +17361,32 @@ function softwareCRMApp(serverUser) {
           this.eventForm = {
             id: '',
             title: '',
-            event_date: this.selectedCalendarDate || this.todayDateStr,
+            event_date: this.normalizeDateStr(this.selectedCalendarDate || this.todayDateStr),
             event_time: '09:00 AM',
             end_time: '10:00 AM',
             category: 'Meeting',
-            color: '#590907',
+            color: '#2563eb',
             location: 'Internal • Conference Room',
             description: ''
           };
+          this.modalEventOpen = true;
+        },
+
+        openEditEventModal(item) {
+          if (!item) return;
+          const e = item.raw || item;
+          this.eventForm = {
+            id: e.id || item.id,
+            title: e.title || item.title || '',
+            event_date: this.normalizeDateStr(e.event_date || item.date || this.selectedCalendarDate || this.todayDateStr),
+            event_time: e.event_time || item.time || '10:00 AM',
+            end_time: e.end_time || item.endTime || '',
+            category: e.category || item.category || 'Meeting',
+            color: e.color || item.color || '#2563eb',
+            location: e.location || item.location || '',
+            description: e.description || item.description || ''
+          };
+          this.modalEventActionOpen = false;
           this.modalEventOpen = true;
         },
 
@@ -17352,6 +17403,7 @@ function softwareCRMApp(serverUser) {
           if (!this.eventForm.event_date) {
             this.eventForm.event_date = this.selectedCalendarDate || this.todayDateStr;
           }
+          this.eventForm.event_date = this.normalizeDateStr(this.eventForm.event_date);
 
           const isEditing = !!this.eventForm.id;
           const action = isEditing ? 'update' : 'create';

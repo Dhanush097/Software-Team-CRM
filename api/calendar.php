@@ -14,12 +14,12 @@ SessionGuard::requireAuth(true);
 require_once __DIR__ . '/db.php';
 $pdo = Database::getConnection();
 
-// Defensive column migration for crm_calendar_events
+// Defensive column migration for crm_calendar_events (MySQL & SQLite safe)
 if ($pdo) {
-    try { $pdo->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `end_time` TEXT DEFAULT ''"); } catch (Exception $e) {}
-    try { $pdo->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `location` TEXT DEFAULT ''"); } catch (Exception $e) {}
-    try { $pdo->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `color` TEXT DEFAULT '#2563eb'"); } catch (Exception $e) {}
-    try { $pdo->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `description` TEXT DEFAULT ''"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `end_time` VARCHAR(64) DEFAULT ''"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `location` VARCHAR(255) DEFAULT ''"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `color` VARCHAR(32) DEFAULT '#2563eb'"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `description` TEXT"); } catch (Exception $e) {}
     try { $pdo->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `updated_at` DATETIME"); } catch (Exception $e) {}
 }
 
@@ -54,6 +54,25 @@ function getCategoryColor(string $category): string {
         'Deadline' => '#dc2626'
     ];
     return $colors[$category] ?? '#2563eb';
+}
+
+function getSQLitePdo(): ?PDO {
+    $sqlitePath = dirname(__DIR__) . '/data/pocket_crm.sqlite';
+    if (file_exists($sqlitePath)) {
+        try {
+            $sq = new PDO('sqlite:' . $sqlitePath, null, null, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ]);
+            try { $sq->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `end_time` TEXT DEFAULT ''"); } catch (Exception $e) {}
+            try { $sq->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `location` TEXT DEFAULT ''"); } catch (Exception $e) {}
+            try { $sq->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `color` TEXT DEFAULT '#2563eb'"); } catch (Exception $e) {}
+            try { $sq->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `description` TEXT DEFAULT ''"); } catch (Exception $e) {}
+            try { $sq->exec("ALTER TABLE `crm_calendar_events` ADD COLUMN `updated_at` DATETIME"); } catch (Exception $e) {}
+            return $sq;
+        } catch (Exception $e) {}
+    }
+    return null;
 }
 
 function sendJson($data, $code = 200) {
@@ -126,6 +145,16 @@ if ($method === 'POST') {
         try {
             $stmt = $pdo->prepare("DELETE FROM crm_calendar_events WHERE id = ?");
             $stmt->execute([$id]);
+
+            // Mirror to SQLite if active engine is MySQL
+            $sq = getSQLitePdo();
+            if ($sq && Database::getEngine() !== 'sqlite') {
+                try {
+                    $sqStmt = $sq->prepare("DELETE FROM crm_calendar_events WHERE id = ?");
+                    $sqStmt->execute([$id]);
+                } catch (Exception $e2) {}
+            }
+
             sendJson(['status' => 'success', 'message' => 'Event deleted successfully', 'id' => $id]);
         } catch (Exception $e) {
             sendJson(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -152,7 +181,8 @@ if ($method === 'POST') {
                     category = :category,
                     color = :color,
                     description = :description,
-                    location = :location
+                    location = :location,
+                    updated_at = CURRENT_TIMESTAMP
                 WHERE id = :id
             ");
 
@@ -160,7 +190,7 @@ if ($method === 'POST') {
             $color = !empty($input['color']) ? trim((string)$input['color']) : getCategoryColor($category);
             $eventDate = normalizeEventDate((string)($input['event_date'] ?? ''));
 
-            $stmt->execute([
+            $params = [
                 ':id' => $id,
                 ':title' => trim($input['title']),
                 ':event_date' => $eventDate,
@@ -170,7 +200,29 @@ if ($method === 'POST') {
                 ':color' => $color,
                 ':description' => trim($input['description'] ?? ''),
                 ':location' => trim($input['location'] ?? '')
-            ]);
+            ];
+            $stmt->execute($params);
+
+            // Mirror to SQLite if active engine is MySQL
+            $sq = getSQLitePdo();
+            if ($sq && Database::getEngine() !== 'sqlite') {
+                try {
+                    $sqStmt = $sq->prepare("
+                        UPDATE crm_calendar_events SET
+                            title = :title,
+                            event_date = :event_date,
+                            event_time = :event_time,
+                            end_time = :end_time,
+                            category = :category,
+                            color = :color,
+                            description = :description,
+                            location = :location,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = :id
+                    ");
+                    $sqStmt->execute($params);
+                } catch (Exception $e2) {}
+            }
 
             sendJson(['status' => 'success', 'success' => true, 'id' => $id, 'message' => 'Event updated successfully']);
         } catch (Exception $e) {
@@ -186,16 +238,16 @@ if ($method === 'POST') {
     try {
         $stmt = $pdo->prepare("
             INSERT INTO crm_calendar_events 
-            (title, event_date, event_time, end_time, category, color, description, location)
+            (title, event_date, event_time, end_time, category, color, description, location, created_at, updated_at)
             VALUES 
-            (:title, :event_date, :event_time, :end_time, :category, :color, :description, :location)
+            (:title, :event_date, :event_time, :end_time, :category, :color, :description, :location, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ");
 
         $category = trim((string)($input['category'] ?? 'Meeting'));
         $color = !empty($input['color']) ? trim((string)$input['color']) : getCategoryColor($category);
         $eventDate = normalizeEventDate((string)($input['event_date'] ?? ''));
 
-        $stmt->execute([
+        $insertParams = [
             ':title' => trim($input['title']),
             ':event_date' => $eventDate,
             ':event_time' => trim($input['event_time'] ?? '10:00 AM'),
@@ -204,9 +256,25 @@ if ($method === 'POST') {
             ':color' => $color,
             ':description' => trim($input['description'] ?? ''),
             ':location' => trim($input['location'] ?? '')
-        ]);
+        ];
+        $stmt->execute($insertParams);
+        $newId = $pdo->lastInsertId();
 
-        sendJson(['status' => 'success', 'success' => true, 'id' => $pdo->lastInsertId(), 'message' => 'Event scheduled successfully']);
+        // Mirror to SQLite if active engine is MySQL
+        $sq = getSQLitePdo();
+        if ($sq && Database::getEngine() !== 'sqlite') {
+            try {
+                $sqStmt = $sq->prepare("
+                    INSERT INTO crm_calendar_events 
+                    (id, title, event_date, event_time, end_time, category, color, description, location, created_at, updated_at)
+                    VALUES 
+                    (:id, :title, :event_date, :event_time, :end_time, :category, :color, :description, :location, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ");
+                $sqStmt->execute(array_merge([':id' => $newId], $insertParams));
+            } catch (Exception $e2) {}
+        }
+
+        sendJson(['status' => 'success', 'success' => true, 'id' => $newId, 'message' => 'Event scheduled successfully']);
     } catch (Exception $e) {
         sendJson(['status' => 'error', 'success' => false, 'message' => $e->getMessage()], 500);
     }
