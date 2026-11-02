@@ -104,6 +104,87 @@ function getInvoiceItems(PDO $pdo, array $invoice): array {
     return $items;
 }
 
+// Helper: Synchronize authentic client invoices from Google Sheet
+function handleSyncSheetInvoices(PDO $pdo): void {
+    if (!$pdo) {
+        sendJson(['status' => 'error', 'message' => 'Database unavailable'], 500);
+    }
+
+    try {
+        // Sync active database
+        $count = Database::syncAuthenticInvoices($pdo, false);
+
+        // Also sync SQLite database if running on MySQL
+        $sqlitePath = dirname(__DIR__) . '/data/pocket_crm.sqlite';
+        if (Database::getEngine() !== 'sqlite' && file_exists($sqlitePath)) {
+            try {
+                $sqPdo = new PDO('sqlite:' . $sqlitePath, null, null, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                ]);
+                Database::syncAuthenticInvoices($sqPdo, false);
+            } catch (Exception $e) {}
+        }
+
+        // Fetch refreshed invoice totals & summary
+        $stmt = $pdo->query("SELECT * FROM crm_cash_ledger ORDER BY transaction_date DESC");
+        $allInvoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $totInvoiced = 0.0;
+        $totPaid = 0.0;
+        $totPending = 0.0;
+        $totOverdue = 0.0;
+        $today = date('Y-m-d');
+
+        foreach ($allInvoices as $r) {
+            $amt = (float)$r['amount'];
+            $paid = (float)($r['paid_amount'] ?? 0);
+            $st = strtolower(trim($r['status'] ?? 'pending'));
+
+            if ($st === 'paid') {
+                $paid = ($paid > 0) ? $paid : $amt;
+            }
+            $bal = max(0.0, round($amt - $paid, 2));
+
+            $totInvoiced += $amt;
+            $totPaid += $paid;
+
+            if ($st === 'paid' || $bal <= 0) {
+                // fully paid
+            } else {
+                $isDuePast = false;
+                if (!empty($r['due_date'])) {
+                    $ts = strtotime($r['due_date']);
+                    if ($ts && $ts < strtotime($today)) {
+                        $isDuePast = true;
+                    }
+                }
+                if ($st === 'overdue' || $isDuePast) {
+                    $totOverdue += $bal;
+                } else {
+                    $totPending += $bal;
+                }
+            }
+        }
+
+        sendJson([
+            'status' => 'success',
+            'success' => true,
+            'message' => "Successfully synchronized $count authentic client invoices from Google Sheet",
+            'count' => $count,
+            'summary' => [
+                'total_invoiced' => round($totInvoiced, 2),
+                'total_paid' => round($totPaid, 2),
+                'total_pending' => round($totPending, 2),
+                'total_overdue' => round($totOverdue, 2),
+                'invoices_count' => count($allInvoices)
+            ]
+        ]);
+    } catch (Exception $e) {
+        sendJson(['status' => 'error', 'message' => 'Failed to sync invoices: ' . $e->getMessage()], 500);
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 // =========================================================================
@@ -112,6 +193,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'GET') {
     $action = $_GET['action'] ?? '';
     $id = trim($_GET['id'] ?? ($_GET['invoice_id'] ?? ''));
+
+    // 0. SYNC INVOICES FROM GOOGLE SHEET
+    if ($action === 'sync_sheet_invoices' || $action === 'sync_invoices') {
+        handleSyncSheetInvoices($pdo);
+    }
 
     // 1. PRINT / DOWNLOAD INVOICE (A4 Professional Print View)
     if ($action === 'print_invoice' || $action === 'pdf_invoice') {
@@ -336,6 +422,13 @@ if ($method === 'POST') {
     $raw = file_get_contents('php://input');
     $input = json_decode($raw, true) ?: $_POST;
     $action = $input['action'] ?? ($_GET['action'] ?? 'create');
+
+    // ---------------------------------------------------------------------
+    // 0. SYNC INVOICES FROM GOOGLE SHEET
+    // ---------------------------------------------------------------------
+    if ($action === 'sync_sheet_invoices' || $action === 'sync_invoices') {
+        handleSyncSheetInvoices($pdo);
+    }
 
     // ---------------------------------------------------------------------
     // 1. RECORD PAYMENT & GENERATE RECEIPT

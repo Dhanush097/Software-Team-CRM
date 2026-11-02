@@ -419,24 +419,14 @@ foreach ($databases as $dbName => $db) {
     }
     echo "  - Synchronized authentic tasks into $dbName.\n";
 
-    // Reconcile Invoices in Cash Ledger
-    $invoicesSeed = [
-        ["inv_1", "INV-2024-001", "income", 2500.00, 2500.00, 0.00, "Enterprise Software Platform Milestone 1", "Development", "Online Transfer", "Admin", "Surrender Kumar kasana", "+91 94507 48909", "Paid", "10 Aug 2024"],
-        ["inv_2", "INV-2024-002", "income", 1200.00, 0.00, 1200.00, "Real Estate Portal UI Design Phase", "Design", "Bank Wire", "Admin", "Babbar properties", "+91 94507 48901", "Pending", "12 Aug 2024"],
-        ["inv_3", "INV-2024-003", "income", 3000.00, 0.00, 3000.00, "DND Silver Jewellery E-Commerce System", "Branding", "Cheque", "Admin", "Davendra Soni", "+91 94507 48902", "Overdue", "05 Aug 2024"],
-        ["inv_4", "INV-2024-004", "income", 800.00, 800.00, 0.00, "Client Management & Cloud Consultation", "Consulting", "UPI", "Admin", "Himalaya", "+91 94507 48904", "Paid", "28 Jul 2024"],
-        ["inv_5", "INV-2024-005", "income", 4950.00, 4950.00, 0.00, "Digital Business Suite Delivery", "Enterprise", "Online Transfer", "Admin", "Akash Jaisawat", "+91 94507 48906", "Paid", "15 Jul 2024"]
-    ];
-    $insInv = $db->prepare("REPLACE INTO crm_cash_ledger (id, invoice_no, type, amount, paid_amount, balance_amount, title, category, payment_mode, handled_by, customer_name, customer_phone, status, due_date, transaction_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
-    foreach ($invoicesSeed as $iv) {
-        $insInv->execute($iv);
-    }
-    echo "  - Synchronized authentic invoices into $dbName.\n";
+    // Reconcile Invoices in Cash Ledger & Itemized Line Items
+    $syncedInvoices = Database::syncAuthenticInvoices($db, true);
+    echo "  - Synchronized $syncedInvoices authentic invoices and itemized line items into $dbName.\n";
 
     // Reconcile Payments
     $paymentsSeed = [
         ['pay_seed_1', 'REC-2026-001', 'inv_1', 'INV-2024-001', 'Surrender Kumar kasana', 2500.00, '2026-10-15', 'Online Transfer', 'Bank Transfer', 'TXN-901', 'Full payment for invoice 1', 'Advance payment', 'Suresh Kumar', 'Suresh Kumar', 'Paid', '2026-10-15 10:00:00'],
-        ['pay_seed_2', 'REC-2026-002', 'inv_2', 'INV-2024-002', 'Babbar properties', 1200.00, '2026-10-18', 'Online Transfer', 'Bank Transfer', 'TXN-902', 'Milestone 1 payment', 'Online transfer', 'Suresh Kumar', 'Suresh Kumar', 'Paid', '2026-10-18 14:30:00']
+        ['pay_seed_2', 'REC-2026-002', 'inv_4', 'INV-2024-004', 'Himalaya', 5000.00, '2026-10-18', 'UPI', 'UPI', 'TXN-902', 'Full payment for invoice 4', 'UPI payment', 'Suresh Kumar', 'Suresh Kumar', 'Paid', '2026-10-18 14:30:00']
     ];
     $insPay = $db->prepare("REPLACE INTO crm_payments (id, receipt_no, invoice_id, invoice_no, customer_name, amount, payment_date, payment_method, payment_mode, transaction_id, reference, notes, recorded_by, received_by, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     foreach ($paymentsSeed as $p) {

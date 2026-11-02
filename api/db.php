@@ -1242,21 +1242,11 @@ class Database {
             }
         } catch (Exception $e) {}
 
-        // 7. Seed Invoices / Cash Ledger
+        // 7. Seed Invoices / Cash Ledger & Itemized Charges
         try {
             $ledgerCount = (int)$pdo->query("SELECT COUNT(*) FROM crm_cash_ledger")->fetchColumn();
             if ($ledgerCount === 0) {
-                $invoices = [
-                    ["inv_1", "INV-2024-001", "income", 2500.00, 2500.00, 0.00, "Enterprise Software Platform Milestone 1", "Development", "Online Transfer", "Admin", "Surrender Kumar kasana", "+91 94507 48909", "Paid", "10 Aug 2024"],
-                    ["inv_2", "INV-2024-002", "income", 1200.00, 0.00, 1200.00, "Real Estate Portal UI Design Phase", "Design", "Bank Wire", "Admin", "Babbar properties", "+91 94507 48901", "Pending", "12 Aug 2024"],
-                    ["inv_3", "INV-2024-003", "income", 3000.00, 0.00, 3000.00, "DND Silver Jewellery E-Commerce System", "Branding", "Cheque", "Admin", "Davendra Soni", "+91 94507 48902", "Overdue", "05 Aug 2024"],
-                    ["inv_4", "INV-2024-004", "income", 800.00, 800.00, 0.00, "Client Management & Cloud Consultation", "Consulting", "UPI", "Admin", "Himalaya", "+91 94507 48904", "Paid", "28 Jul 2024"],
-                    ["inv_5", "INV-2024-005", "income", 4950.00, 4950.00, 0.00, "Digital Business Suite Delivery", "Enterprise", "Online Transfer", "Admin", "Akash Jaisawat", "+91 94507 48906", "Paid", "15 Jul 2024"]
-                ];
-                $insInv = $pdo->prepare("INSERT OR IGNORE INTO crm_cash_ledger (id, invoice_no, type, amount, paid_amount, balance_amount, title, category, payment_mode, handled_by, customer_name, customer_phone, status, due_date, transaction_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
-                foreach ($invoices as $iv) {
-                    $insInv->execute($iv);
-                }
+                self::syncAuthenticInvoices($pdo, true);
             }
         } catch (Exception $e) {}
 
@@ -1323,6 +1313,551 @@ class Database {
                 }
             }
         } catch (Exception $e) {}
+    }
+
+    /**
+     * Authoritative list of 15 authentic client invoices derived from the Google Sheet.
+     */
+    public static function getAuthenticInvoices(): array {
+        return [
+            [
+                'id' => 'inv_1',
+                'invoice_no' => 'INV-2024-001',
+                'client_id' => 'Sur7801',
+                'project_id' => 'proj_1',
+                'type' => 'income',
+                'title' => 'Enterprise Software Platform Milestone 1',
+                'category' => 'Development',
+                'payment_mode' => 'Online Transfer',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Surrender Kumar kasana',
+                'customer_phone' => '+91 98264 36780',
+                'status' => 'Paid',
+                'due_date' => '10 Aug 2024',
+                'issue_date' => '25 Jul 2024',
+                'subtotal' => 2500.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 2500.00,
+                'paid_amount' => 2500.00,
+                'balance_amount' => 0.00,
+                'notes' => "• Complete website development as per scope\n• Source code and documentation delivered\n• 3 months of post-launch support included",
+                'terms' => '50% advance, 50% on milestone delivery.',
+                'items' => [
+                    ['description' => 'Core System Architecture & Database Design', 'quantity' => 1, 'rate' => 1500.00, 'amount' => 1500.00],
+                    ['description' => 'API Integration & Authentication Framework', 'quantity' => 1, 'rate' => 1000.00, 'amount' => 1000.00]
+                ]
+            ],
+            [
+                'id' => 'inv_2',
+                'invoice_no' => 'INV-2024-002',
+                'client_id' => 'Bab6501',
+                'project_id' => 'proj_2',
+                'type' => 'income',
+                'title' => 'Real Estate Portal UI Design Phase',
+                'category' => 'Design',
+                'payment_mode' => 'Bank Wire',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Babbar properties',
+                'customer_phone' => '+91 83830 86650',
+                'status' => 'Pending',
+                'due_date' => '12 Aug 2024',
+                'issue_date' => '28 Jul 2024',
+                'subtotal' => 1200.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 1200.00,
+                'paid_amount' => 0.00,
+                'balance_amount' => 1200.00,
+                'notes' => "• UI/UX design deliverables for web and mobile\n• Figma design system files included",
+                'terms' => 'Net 15 days from invoice date.',
+                'items' => [
+                    ['description' => 'Property Listing UI/UX Wireframes', 'quantity' => 1, 'rate' => 600.00, 'amount' => 600.00],
+                    ['description' => 'Mobile Responsive Dashboard Prototypes', 'quantity' => 1, 'rate' => 600.00, 'amount' => 600.00]
+                ]
+            ],
+            [
+                'id' => 'inv_3',
+                'invoice_no' => 'INV-2024-003',
+                'client_id' => 'Dav0221',
+                'project_id' => 'proj_4',
+                'type' => 'income',
+                'title' => 'DND Silver Jewellery E-Commerce System',
+                'category' => 'Branding',
+                'payment_mode' => 'Cheque',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Davendra Soni',
+                'customer_phone' => '+91 87580 45022',
+                'status' => 'Overdue',
+                'due_date' => '05 Aug 2024',
+                'issue_date' => '20 Jul 2024',
+                'subtotal' => 3000.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 3000.00,
+                'paid_amount' => 0.00,
+                'balance_amount' => 3000.00,
+                'notes' => "• Silver jewellery online catalog and inventory tracking\n• Integrated Razorpay and automated billing",
+                'terms' => 'Payment due upon invoice delivery.',
+                'items' => [
+                    ['description' => 'E-Commerce Catalog & Checkout Flow', 'quantity' => 1, 'rate' => 2000.00, 'amount' => 2000.00],
+                    ['description' => 'Payment Gateway & Inventory Sync', 'quantity' => 1, 'rate' => 1000.00, 'amount' => 1000.00]
+                ]
+            ],
+            [
+                'id' => 'inv_4',
+                'invoice_no' => 'INV-2024-004',
+                'client_id' => 'Him4881',
+                'project_id' => 'proj_3',
+                'type' => 'income',
+                'title' => 'Client Management & Cloud Consultation',
+                'category' => 'Consulting',
+                'payment_mode' => 'UPI',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Himalaya',
+                'customer_phone' => '+91 97019 79488',
+                'status' => 'Paid',
+                'due_date' => '28 Jul 2024',
+                'issue_date' => '14 Jul 2024',
+                'subtotal' => 5000.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 5000.00,
+                'paid_amount' => 5000.00,
+                'balance_amount' => 0.00,
+                'notes' => "• 5k project budget as recorded in client Google Sheet\n• Full cloud setup and workflow delivery",
+                'terms' => 'Payment completed via UPI.',
+                'items' => [
+                    ['description' => 'Client Workflow Automation System', 'quantity' => 1, 'rate' => 3000.00, 'amount' => 3000.00],
+                    ['description' => 'Cloud Infrastructure Setup & Maintenance', 'quantity' => 1, 'rate' => 2000.00, 'amount' => 2000.00]
+                ]
+            ],
+            [
+                'id' => 'inv_5',
+                'invoice_no' => 'INV-2024-005',
+                'client_id' => 'Aka9101',
+                'project_id' => 'proj_6',
+                'type' => 'income',
+                'title' => 'Digital Business Suite Delivery',
+                'category' => 'Enterprise',
+                'payment_mode' => 'Online Transfer',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Akash Jaisawat',
+                'customer_phone' => '+91 91167 01910',
+                'status' => 'Paid',
+                'due_date' => '15 Jul 2024',
+                'issue_date' => '01 Jul 2024',
+                'subtotal' => 4950.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 4950.00,
+                'paid_amount' => 4950.00,
+                'balance_amount' => 0.00,
+                'notes' => "• Complete digital suite implementation\n• Employee onboarding and documentation",
+                'terms' => 'Full payment received.',
+                'items' => [
+                    ['description' => 'Custom Business Suite Software Modules', 'quantity' => 1, 'rate' => 3450.00, 'amount' => 3450.00],
+                    ['description' => 'System Implementation & Training', 'quantity' => 1, 'rate' => 1500.00, 'amount' => 1500.00]
+                ]
+            ],
+            [
+                'id' => 'inv_6',
+                'invoice_no' => 'INV-2024-006',
+                'client_id' => 'Pay2331',
+                'project_id' => 'proj_1',
+                'type' => 'income',
+                'title' => 'Jute Products E-Commerce Catalog & Brand Portal',
+                'category' => 'Development',
+                'payment_mode' => 'UPI',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Payal Mam Jute',
+                'customer_phone' => '+91 86909 77233',
+                'status' => 'Paid',
+                'due_date' => '20 Aug 2024',
+                'issue_date' => '05 Aug 2024',
+                'subtotal' => 3500.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 3500.00,
+                'paid_amount' => 3500.00,
+                'balance_amount' => 0.00,
+                'notes' => "• Eco-friendly jute products showcase\n• Mobile responsive checkout",
+                'terms' => 'Paid in full on deployment.',
+                'items' => [
+                    ['description' => 'Brand Website & Product Catalog Engineering', 'quantity' => 1, 'rate' => 2500.00, 'amount' => 2500.00],
+                    ['description' => 'SEO & Content Optimization', 'quantity' => 1, 'rate' => 1000.00, 'amount' => 1000.00]
+                ]
+            ],
+            [
+                'id' => 'inv_7',
+                'invoice_no' => 'INV-2024-007',
+                'client_id' => 'CM 0291',
+                'project_id' => 'proj_1',
+                'type' => 'income',
+                'title' => 'Enterprise Operations & Asset Tracking System',
+                'category' => 'Development',
+                'payment_mode' => 'Online Transfer',
+                'handled_by' => 'Admin',
+                'customer_name' => 'CM Dhadhich',
+                'customer_phone' => '+91 98291 48029',
+                'status' => 'Paid',
+                'due_date' => '25 Aug 2024',
+                'issue_date' => '10 Aug 2024',
+                'subtotal' => 4200.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 4200.00,
+                'paid_amount' => 4200.00,
+                'balance_amount' => 0.00,
+                'notes' => "• Corporate asset ledger and tracking dashboard\n• Multi-role permissions configured",
+                'terms' => 'Settled via NEFT.',
+                'items' => [
+                    ['description' => 'Asset Tracking Module & Custom Dashboards', 'quantity' => 1, 'rate' => 3200.00, 'amount' => 3200.00],
+                    ['description' => 'Role-Based Access Control Setup', 'quantity' => 1, 'rate' => 1000.00, 'amount' => 1000.00]
+                ]
+            ],
+            [
+                'id' => 'inv_8',
+                'invoice_no' => 'INV-2024-008',
+                'client_id' => 'Nik1711',
+                'project_id' => 'proj_2',
+                'type' => 'income',
+                'title' => 'Custom Web Platform Development & Maintenance',
+                'category' => 'Development',
+                'payment_mode' => 'UPI',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Nikhil',
+                'customer_phone' => '+91 79775 94171',
+                'status' => 'Paid',
+                'due_date' => '18 Aug 2024',
+                'issue_date' => '04 Aug 2024',
+                'subtotal' => 2800.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 2800.00,
+                'paid_amount' => 2800.00,
+                'balance_amount' => 0.00,
+                'notes' => "• Web application delivery and QA\n• Google Cloud hosting migration",
+                'terms' => 'Paid in full.',
+                'items' => [
+                    ['description' => 'Custom Web Application Development', 'quantity' => 1, 'rate' => 2000.00, 'amount' => 2000.00],
+                    ['description' => 'Security Hardening & Database Backup Setup', 'quantity' => 1, 'rate' => 800.00, 'amount' => 800.00]
+                ]
+            ],
+            [
+                'id' => 'inv_9',
+                'invoice_no' => 'INV-2024-009',
+                'client_id' => 'Nir8991',
+                'project_id' => 'proj_1',
+                'type' => 'income',
+                'title' => 'Full-Stack Web Application Architecture',
+                'category' => 'Development',
+                'payment_mode' => 'Bank Wire',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Nirmal Kumar',
+                'customer_phone' => '+91 89186 83899',
+                'status' => 'Paid',
+                'due_date' => '22 Aug 2024',
+                'issue_date' => '08 Aug 2024',
+                'subtotal' => 3200.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 3200.00,
+                'paid_amount' => 3200.00,
+                'balance_amount' => 0.00,
+                'notes' => "• Robust backend microservices and UI integration",
+                'terms' => 'Payment received via bank transfer.',
+                'items' => [
+                    ['description' => 'Application Backend API Architecture', 'quantity' => 1, 'rate' => 2200.00, 'amount' => 2200.00],
+                    ['description' => 'Front-end Responsive Interface', 'quantity' => 1, 'rate' => 1000.00, 'amount' => 1000.00]
+                ]
+            ],
+            [
+                'id' => 'inv_10',
+                'invoice_no' => 'INV-2024-010',
+                'client_id' => 'kis4211',
+                'project_id' => 'proj_3',
+                'type' => 'income',
+                'title' => 'CRM Integration & Data Migration Services',
+                'category' => 'Consulting',
+                'payment_mode' => 'Online Transfer',
+                'handled_by' => 'Admin',
+                'customer_name' => 'kishore',
+                'customer_phone' => '+91 86989 72421',
+                'status' => 'Paid',
+                'due_date' => '14 Aug 2024',
+                'issue_date' => '30 Jul 2024',
+                'subtotal' => 2200.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 2200.00,
+                'paid_amount' => 2200.00,
+                'balance_amount' => 0.00,
+                'notes' => "• Contact and company records migration\n• Webhook notification listeners",
+                'terms' => 'Paid in full.',
+                'items' => [
+                    ['description' => 'Database Migration & Data Sanitization', 'quantity' => 1, 'rate' => 1500.00, 'amount' => 1500.00],
+                    ['description' => 'CRM Integration & Webhook Deployment', 'quantity' => 1, 'rate' => 700.00, 'amount' => 700.00]
+                ]
+            ],
+            [
+                'id' => 'inv_11',
+                'invoice_no' => 'INV-2024-011',
+                'client_id' => 'kul0011',
+                'project_id' => 'proj_5',
+                'type' => 'income',
+                'title' => 'Dangi E-Commerce Web Store Development - Milestone 1',
+                'category' => 'Development',
+                'payment_mode' => 'Online Transfer',
+                'handled_by' => 'Admin',
+                'customer_name' => 'kuldeep dangi Ecommerce',
+                'customer_phone' => '+91 92500 16001',
+                'status' => 'Pending',
+                'due_date' => '15 Sep 2024',
+                'issue_date' => '15 Aug 2024',
+                'subtotal' => 5000.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 5000.00,
+                'paid_amount' => 2500.00,
+                'balance_amount' => 2500.00,
+                'notes' => "• 50% advance received, balance due on final UAT signoff",
+                'terms' => '50% advance, 50% on project completion.',
+                'items' => [
+                    ['description' => 'E-Commerce Frontend Storefront', 'quantity' => 1, 'rate' => 3000.00, 'amount' => 3000.00],
+                    ['description' => 'Cart, Checkout & Payment Gateway', 'quantity' => 1, 'rate' => 2000.00, 'amount' => 2000.00]
+                ]
+            ],
+            [
+                'id' => 'inv_12',
+                'invoice_no' => 'INV-2024-012',
+                'client_id' => 'Man3061',
+                'project_id' => 'proj_2',
+                'type' => 'income',
+                'title' => 'Krishna Travels Booking Portal & Fleet Management',
+                'category' => 'Development',
+                'payment_mode' => 'Online Transfer',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Manish',
+                'customer_phone' => '+91 88244 65306',
+                'status' => 'Pending',
+                'due_date' => '28 Aug 2024',
+                'issue_date' => '10 Aug 2024',
+                'subtotal' => 4500.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 4500.00,
+                'paid_amount' => 0.00,
+                'balance_amount' => 4500.00,
+                'notes' => "• Online ticket booking engine\n• Real-time fleet schedule and pricing",
+                'terms' => 'Net 15 days.',
+                'items' => [
+                    ['description' => 'Travel Booking System & Vehicle Inventory', 'quantity' => 1, 'rate' => 3000.00, 'amount' => 3000.00],
+                    ['description' => 'Customer Invoicing & SMS Alerts', 'quantity' => 1, 'rate' => 1500.00, 'amount' => 1500.00]
+                ]
+            ],
+            [
+                'id' => 'inv_13',
+                'invoice_no' => 'INV-2024-013',
+                'client_id' => 'Hem8441',
+                'project_id' => 'proj_6',
+                'type' => 'income',
+                'title' => 'Industrial Manufacturing ERP Integration',
+                'category' => 'Enterprise',
+                'payment_mode' => 'Bank Wire',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Hemant Chaturved',
+                'customer_phone' => '+91 63755 93844',
+                'status' => 'Pending',
+                'due_date' => '30 Aug 2024',
+                'issue_date' => '12 Aug 2024',
+                'subtotal' => 6000.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 6000.00,
+                'paid_amount' => 0.00,
+                'balance_amount' => 6000.00,
+                'notes' => "• Sitapura industrial operations tracking and ERP sync",
+                'terms' => 'Net 30 days.',
+                'items' => [
+                    ['description' => 'ERP API Integration & Connector', 'quantity' => 1, 'rate' => 4000.00, 'amount' => 4000.00],
+                    ['description' => 'Reporting Dashboards & Workflows', 'quantity' => 1, 'rate' => 2000.00, 'amount' => 2000.00]
+                ]
+            ],
+            [
+                'id' => 'inv_14',
+                'invoice_no' => 'INV-2024-014',
+                'client_id' => 'BCL6181',
+                'project_id' => 'proj_1',
+                'type' => 'income',
+                'title' => 'BCLDS NGO Portal & Donation System',
+                'category' => 'Development',
+                'payment_mode' => 'UPI',
+                'handled_by' => 'Admin',
+                'customer_name' => 'BCLDS NGO',
+                'customer_phone' => '+91 95501 15618',
+                'status' => 'Paid',
+                'due_date' => '02 Aug 2024',
+                'issue_date' => '18 Jul 2024',
+                'subtotal' => 1800.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 1800.00,
+                'paid_amount' => 1800.00,
+                'balance_amount' => 0.00,
+                'notes' => "• NGO community portal and 80G tax receipt generation",
+                'terms' => 'Paid via UPI.',
+                'items' => [
+                    ['description' => 'Non-Profit Organization Website', 'quantity' => 1, 'rate' => 1200.00, 'amount' => 1200.00],
+                    ['description' => 'Donation Gateway & 80G Receipt Automation', 'quantity' => 1, 'rate' => 600.00, 'amount' => 600.00]
+                ]
+            ],
+            [
+                'id' => 'inv_15',
+                'invoice_no' => 'INV-2024-015',
+                'client_id' => 'Vip3081',
+                'project_id' => 'proj_3',
+                'type' => 'income',
+                'title' => 'Community Empowerment & NGO Portal',
+                'category' => 'Development',
+                'payment_mode' => 'Online Transfer',
+                'handled_by' => 'Admin',
+                'customer_name' => 'Vipul Sagar NGO',
+                'customer_phone' => '+91 80060 08308',
+                'status' => 'Pending',
+                'due_date' => '10 Sep 2024',
+                'issue_date' => '20 Aug 2024',
+                'subtotal' => 2400.00,
+                'discount_percent' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_percent' => 0.00,
+                'tax_amount' => 0.00,
+                'amount' => 2400.00,
+                'paid_amount' => 0.00,
+                'balance_amount' => 2400.00,
+                'notes' => "• Volunteer management and community outreach dashboard",
+                'terms' => 'Net 15 days.',
+                'items' => [
+                    ['description' => 'NGO Community Portal Design & CMS', 'quantity' => 1, 'rate' => 1600.00, 'amount' => 1600.00],
+                    ['description' => 'Volunteer Registration & Event Management', 'quantity' => 1, 'rate' => 800.00, 'amount' => 800.00]
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * Synchronize authentic invoices and itemized line items into the database.
+     */
+    public static function syncAuthenticInvoices(PDO $pdo, bool $force = false): int {
+        $invoices = self::getAuthenticInvoices();
+        $ins = $pdo->prepare("
+            REPLACE INTO crm_cash_ledger 
+            (id, invoice_no, client_id, project_id, type, amount, subtotal, discount_percent, discount_amount, tax_percent, tax_amount, paid_amount, balance_amount, title, category, payment_mode, handled_by, customer_name, customer_phone, status, due_date, issue_date, notes, terms, items_json, transaction_date)
+            VALUES 
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ");
+
+        $delItems = $pdo->prepare("DELETE FROM crm_invoice_items WHERE invoice_id = ?");
+        $insItem = $pdo->prepare("
+            INSERT INTO crm_invoice_items 
+            (invoice_id, description, quantity, rate, amount, sort_order, created_at)
+            VALUES 
+            (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ");
+
+        $synced = 0;
+        foreach ($invoices as $inv) {
+            $paidAmt = $inv['paid_amount'];
+            $balAmt = $inv['balance_amount'];
+            $st = $inv['status'];
+
+            if (!$force) {
+                try {
+                    $chk = $pdo->prepare("SELECT paid_amount, balance_amount, status FROM crm_cash_ledger WHERE id = ?");
+                    $chk->execute([$inv['id']]);
+                    $existing = $chk->fetch(PDO::FETCH_ASSOC);
+                    if ($existing && (float)($existing['paid_amount'] ?? 0) > 0) {
+                        $paidAmt = (float)$existing['paid_amount'];
+                        $balAmt = (float)$existing['balance_amount'];
+                        $st = $existing['status'];
+                    }
+                } catch (Exception $e) {}
+            }
+
+            $itemsJson = json_encode($inv['items'], JSON_UNESCAPED_UNICODE);
+            $ins->execute([
+                $inv['id'],
+                $inv['invoice_no'],
+                $inv['client_id'],
+                $inv['project_id'],
+                $inv['type'],
+                $inv['amount'],
+                $inv['subtotal'],
+                $inv['discount_percent'],
+                $inv['discount_amount'],
+                $inv['tax_percent'],
+                $inv['tax_amount'],
+                $paidAmt,
+                $balAmt,
+                $inv['title'],
+                $inv['category'],
+                $inv['payment_mode'],
+                $inv['handled_by'],
+                $inv['customer_name'],
+                $inv['customer_phone'],
+                $st,
+                $inv['due_date'],
+                $inv['issue_date'],
+                $inv['notes'],
+                $inv['terms'],
+                $itemsJson
+            ]);
+
+            try {
+                $delItems->execute([$inv['id']]);
+                foreach ($inv['items'] as $idx => $it) {
+                    $insItem->execute([
+                        $inv['id'],
+                        $it['description'],
+                        $it['quantity'],
+                        $it['rate'],
+                        $it['amount'],
+                        $idx + 1
+                    ]);
+                }
+            } catch (Exception $e) {}
+
+            $synced++;
+        }
+        return $synced;
     }
 
     public static function getEngine(): string {

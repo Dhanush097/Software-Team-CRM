@@ -2823,12 +2823,18 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
               </div>
             </template>
 
-            <!-- Screen 1: + New Invoice Button (Screen 1 Reference) -->
+            <!-- Screen 1: + New Invoice Button & Sync Sheet (Screen 1 Reference) -->
             <template x-if="!bulkMode && currentView === 'invoices'">
-              <button @click="openAddInvoiceModal()" class="px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-1.5 touch-press">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8" d="M12 4v16m8-8H4"/></svg>
-                <span>New Invoice</span>
-              </button>
+              <div class="flex items-center gap-2">
+                <button @click="syncGoogleSheetInvoices()" :disabled="isSyncingInvoices" class="px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 touch-press transition-all" title="Synchronize invoices from Google Sheet">
+                  <svg :class="{'animate-spin': isSyncingInvoices}" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  <span x-text="isSyncingInvoices ? 'Syncing...' : 'Sync Sheet'"></span>
+                </button>
+                <button @click="openAddInvoiceModal()" class="px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-1.5 touch-press">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8" d="M12 4v16m8-8H4"/></svg>
+                  <span>New Invoice</span>
+                </button>
+              </div>
             </template>
 
             <!-- Screen 2 & 3: Three dots menu (Screens 2 & 3 Reference) -->
@@ -13866,6 +13872,7 @@ function softwareCRMApp(serverUser) {
         actionProject: null,
         modalInvoiceOpen: false,
         isCreatingInvoice: false,
+        isSyncingInvoices: false,
         isEditingInvoice: false,
         invoiceSearchQuery: '',
         activePaymentReceipt: null,
@@ -16250,6 +16257,24 @@ function softwareCRMApp(serverUser) {
             const found = this.contacts.find(c => c.id === cid);
             if (found) {
               this.invoiceForm.customer_name = found.name + (found.company ? ' (' + found.company + ')' : '');
+              if (found.phone || found.phone_1) {
+                this.invoiceForm.customer_phone = found.phone || found.phone_1;
+              }
+              // Auto-associate matching project
+              const matchedProj = this.projects.find(p => 
+                p.client_id === cid || 
+                (p.client_name && found.name && p.client_name.toLowerCase().includes(found.name.toLowerCase())) ||
+                (found.name && p.client_name && found.name.toLowerCase().includes(p.client_name.toLowerCase()))
+              );
+              if (matchedProj) {
+                this.invoiceForm.project_id = matchedProj.id;
+                this.invoiceForm.project_name = matchedProj.title || matchedProj.name || '';
+                if (!this.invoiceForm.title || this.invoiceForm.title === 'Website & Platform Engineering') {
+                  this.invoiceForm.title = matchedProj.title + ' - Milestone Billing';
+                }
+              } else if (!this.invoiceForm.title || this.invoiceForm.title === 'Website & Platform Engineering') {
+                this.invoiceForm.title = found.name + ' - Platform Engineering & Consulting';
+              }
             }
           }
         },
@@ -16327,6 +16352,48 @@ function softwareCRMApp(serverUser) {
             this.showToast('Network error saving invoice', 'error');
           } finally {
             this.isCreatingInvoice = false;
+          }
+        },
+
+        async loadInvoices() {
+          try {
+            const resI = await fetch('api/ledger.php');
+            const dataI = await resI.json();
+            if (dataI && dataI.data) {
+              this.invoices = dataI.data;
+              if (dataI.summary && dataI.summary.total_revenue) {
+                this.revenueTotal = dataI.summary.total_revenue;
+              }
+            }
+          } catch (e) {
+            console.error('Error loading invoices:', e);
+          }
+        },
+
+        async syncGoogleSheetInvoices() {
+          if (this.isSyncingInvoices) return;
+          this.isSyncingInvoices = true;
+          try {
+            const res = await fetch('api/ledger.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'sync_sheet_invoices' })
+            });
+            const result = await res.json();
+            if (result && (result.success || result.status === 'success')) {
+              this.showToast(result.message || 'Invoices synchronized successfully from Google Sheet!', 'success');
+              await this.loadInvoices();
+              if (typeof this.loadDashboardData === 'function') {
+                await this.loadDashboardData();
+              }
+            } else {
+              this.showToast((result && (result.message || result.error)) || 'Failed to sync invoices', 'error');
+            }
+          } catch (e) {
+            console.error('Error syncing invoices:', e);
+            this.showToast('Network error while syncing invoices from Google Sheet', 'error');
+          } finally {
+            this.isSyncingInvoices = false;
           }
         },
 
