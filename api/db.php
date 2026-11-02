@@ -744,6 +744,9 @@ class Database {
         ];
 
         foreach ($tables as $sql) {
+            if ($engine === 'mysql') {
+                $sql = self::translateToMysql($sql);
+            }
             try { $pdo->exec($sql); } catch (Exception $e) {}
         }
 
@@ -752,6 +755,26 @@ class Database {
 
         // Pre-seed default baseline data if tables are empty
         self::seedBaselineData($pdo);
+    }
+
+    public static function translateToMysql(string $sql): string {
+        $sql = preg_replace('/\bINTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT\b/i', 'INT AUTO_INCREMENT PRIMARY KEY', $sql);
+        $sql = preg_replace('/\bAUTOINCREMENT\b/i', 'AUTO_INCREMENT', $sql);
+        $sql = preg_replace('/\bTEXT\s+PRIMARY\s+KEY\b/i', 'VARCHAR(191) PRIMARY KEY', $sql);
+        $sql = preg_replace('/\bTEXT\s+NOT\s+NULL\s+UNIQUE\b/i', 'VARCHAR(191) NOT NULL UNIQUE', $sql);
+        $sql = preg_replace('/\bTEXT\s+UNIQUE\b/i', 'VARCHAR(191) UNIQUE', $sql);
+        $sql = preg_replace('/`task_id`\s+TEXT/i', '`task_id` VARCHAR(64)', $sql);
+        $sql = preg_replace('/`employee_id`\s+TEXT/i', '`employee_id` VARCHAR(64)', $sql);
+        $sql = preg_replace('/`user_id`\s+TEXT/i', '`user_id` VARCHAR(64)', $sql);
+        $sql = preg_replace('/`project_id`\s+TEXT/i', '`project_id` VARCHAR(64)', $sql);
+        $sql = preg_replace('/`contact_id`\s+TEXT/i', '`contact_id` VARCHAR(64)', $sql);
+        $sql = preg_replace('/`invoice_id`\s+TEXT/i', '`invoice_id` VARCHAR(64)', $sql);
+        $sql = preg_replace('/`invoice_no`\s+TEXT/i', '`invoice_no` VARCHAR(64)', $sql);
+        $sql = preg_replace('/`setting_key`\s+TEXT/i', '`setting_key` VARCHAR(191)', $sql);
+        $sql = preg_replace('/`credential_id`\s+TEXT/i', '`credential_id` VARCHAR(191)', $sql);
+        $sql = preg_replace('/`challenge`\s+TEXT/i', '`challenge` VARCHAR(191)', $sql);
+        $sql = preg_replace('/`name`\s+TEXT\s+NOT\s+NULL\s+UNIQUE/i', '`name` VARCHAR(191) NOT NULL UNIQUE', $sql);
+        return $sql;
     }
 
     private static function ensureColumns(PDO $pdo): void {

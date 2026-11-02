@@ -944,9 +944,9 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
     /* 1. BUTTON DESIGN SYSTEM */
     /* Primary Buttons: Primary Burgundy (#781B1B) */
     .btn-primary,
-    button.bg-blue-600,
+    button.bg-blue-600:not(.theme-selector-btn),
     a.bg-blue-600,
-    button[type="submit"]:not(.btn-secondary):not(.btn-tertiary):not(.bg-rose-600):not(.bg-emerald-600) {
+    button[type="submit"]:not(.btn-secondary):not(.btn-tertiary):not(.bg-rose-600):not(.bg-emerald-600):not(.theme-selector-btn) {
       background-color: #781B1B !important;
       color: #FFFFFF !important;
       border: 1px solid rgba(120, 27, 27, 0.45) !important;
@@ -954,23 +954,32 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
       transition: all 0.15s ease !important;
     }
     .btn-primary:hover,
-    button.bg-blue-600:hover,
+    button.bg-blue-600:not(.theme-selector-btn):hover,
     a.bg-blue-600:hover,
-    button[type="submit"]:not(.btn-secondary):not(.btn-tertiary):not(.bg-rose-600):not(.bg-emerald-600):hover {
+    button[type="submit"]:not(.btn-secondary):not(.btn-tertiary):not(.bg-rose-600):not(.bg-emerald-600):not(.theme-selector-btn):hover {
       background-color: #922626 !important;
       color: #FFFFFF !important;
       box-shadow: 0 4px 12px rgba(120, 27, 27, 0.35) !important;
     }
     .btn-primary:active,
-    button.bg-blue-600:active {
+    button.bg-blue-600:not(.theme-selector-btn):active {
       background-color: #551414 !important;
       transform: scale(0.98);
     }
     .btn-primary:disabled,
-    button.bg-blue-600:disabled {
+    button.bg-blue-600:not(.theme-selector-btn):disabled {
       background-color: #8A7D73 !important;
       border-color: transparent !important;
       opacity: 0.6 !important;
+    }
+
+    /* Dedicated Theme Selector Button Styling (Never Burgundy) */
+    .theme-selector-btn.theme-btn-active {
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
+      background-color: #2563EB !important;
+      color: #FFFFFF !important;
+      border: 1px solid #2563EB !important;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
     }
 
     /* Secondary Buttons: Soft Champagne (#E9D5C2) */
@@ -8164,7 +8173,7 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                   </template>
                 </div>
                 <div class="space-y-1 text-[10px] text-slate-500 font-mono">
-                  <p>Spreadsheet: <span class="text-slate-800 font-bold" x-text="settingsDiagnostics?.google_sheets?.spreadsheet_id ? (settingsDiagnostics.google_sheets.spreadsheet_id.substring(0, 16) + '...') : '1eC09oWaqhe2T...'"></span> (Sheet2)</p>
+                  <p>Spreadsheet: <span class="text-slate-800 font-bold" x-text="settingsDiagnostics?.google_sheets?.spreadsheet_id ? (settingsDiagnostics.google_sheets.spreadsheet_id.substring(0, 16) + '...') : '1lmZRMJqDVLKD...'"></span> (Sheet2)</p>
                   <p>Target Range: <span class="text-slate-800 font-semibold" x-text="settingsDiagnostics?.google_sheets?.target_range || 'Sheet2!A1:Z1000'"></span></p>
                   <p>Service Account: <span class="text-slate-700 font-semibold truncate block max-w-full" x-text="settingsDiagnostics?.google_sheets?.service_account_email && settingsDiagnostics.google_sheets.service_account_email !== 'None configured' ? settingsDiagnostics.google_sheets.service_account_email : 'Database Registry (Optional Google Sheets)'"></span></p>
                 </div>
@@ -8323,19 +8332,19 @@ if (!$isAuthenticated && in_array($reqView, $protectedDashboardViews, true)) {
                 <span class="text-[11px] font-bold text-slate-700">Interface Theme</span>
                 <div class="grid grid-cols-3 gap-2">
                   <button type="button" @click="setAppTheme('light')"
-                    :class="(settingsData.preferences?.theme || 'light') === 'light' ? 'bg-blue-600 text-white font-bold border-blue-600 shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'"
+                    :class="(settingsData.preferences?.theme || 'light') === 'light' ? 'theme-selector-btn theme-btn-active font-bold' : 'theme-selector-btn bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'"
                     class="py-2 rounded-xl border text-[11px] flex items-center justify-center gap-1.5 touch-press transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9h-1m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                     <span>Light</span>
                   </button>
                   <button type="button" @click="setAppTheme('dark')"
-                    :class="(settingsData.preferences?.theme) === 'dark' ? 'bg-blue-600 text-white font-bold border-blue-600 shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'"
+                    :class="(settingsData.preferences?.theme) === 'dark' ? 'theme-selector-btn theme-btn-active font-bold' : 'theme-selector-btn bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'"
                     class="py-2 rounded-xl border text-[11px] flex items-center justify-center gap-1.5 touch-press transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
                     <span>Dark</span>
                   </button>
                   <button type="button" @click="setAppTheme('system')"
-                    :class="(settingsData.preferences?.theme) === 'system' ? 'bg-blue-600 text-white font-bold border-blue-600 shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'"
+                    :class="(settingsData.preferences?.theme) === 'system' ? 'theme-selector-btn theme-btn-active font-bold' : 'theme-selector-btn bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'"
                     class="py-2 rounded-xl border text-[11px] flex items-center justify-center gap-1.5 touch-press transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                     <span>System</span>

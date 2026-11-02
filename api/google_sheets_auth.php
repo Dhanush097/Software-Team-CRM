@@ -3,8 +3,8 @@
  * Software CRM - Google Sheets Employee Authorization Service
  *
  * Implements strict, server-side employee authorization against Google Spreadsheet:
- *   Spreadsheet Name: Team_crm_1
- *   Spreadsheet ID:   1eC09oWaqhe2T-Uq8IoXhM-VIStb9KQLH-pEPqFwroO4
+ *   Spreadsheet Name: XernLabs software clients Work Team
+ *   Spreadsheet ID:   1lmZRMJqDVLKDQVcz4Wj9J8frSCQm0TLSA1fMkRa3HpM
  *   Worksheet Name:   Sheet2
  *   Header Row (Row 1): employee_id, full_name, email, role, status
  *   Employee Records:   Row 2..N
@@ -28,7 +28,7 @@ if (!defined('CRM_ACCESS')) {
 require_once __DIR__ . '/security_audit.php';
 
 class GoogleSheetsAuthService {
-    public const DEFAULT_SPREADSHEET_ID = '1eC09oWaqhe2T-Uq8IoXhM-VIStb9KQLH-pEPqFwroO4';
+    public const DEFAULT_SPREADSHEET_ID = '1lmZRMJqDVLKDQVcz4Wj9J8frSCQm0TLSA1fMkRa3HpM';
     public const DEFAULT_SHEET_NAME      = 'Sheet2';
     public const DEFAULT_CACHE_TTL       = 180; // 3 minutes
 
